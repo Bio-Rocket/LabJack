@@ -63,8 +63,15 @@ class LabJack:
             https://support.labjack.com/docs/a-3-3-2-t8-noise-and-resolution-t-series-datasheet
         @param settling_us: Settling time in microseconds, recommended to keep to 0 (automatic selection)
 
+        @return: Actual scan rate, 0 on error
+
         @reference https://github.com/labjack/labjack-ljm-python/blob/master/Examples/More/Stream/stream_callback.py
         """
+        # --- Input Cleaning ---
+        if scan_list is None or len(scan_list) == 0 or scan_rate <= 0:
+            print("\033[91mInvalid input. Please enter valid scan list and scan rate.\033[0m")
+            return 0
+
         try:
             # --- Input Processing ---
             # Calculate scans per read
