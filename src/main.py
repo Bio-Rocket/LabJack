@@ -20,15 +20,11 @@ def initialize_threads():
         t7_workq = mp.Queue()
         t8_workq = mp.Queue()
         db_workq = mp.Queue()
-        message_handler_workq = mp.Queue()
-
-        # Create a main thread for handling thread messages
-        thread_pool['message_handler'] = {'thread': None, 'workq': message_handler_workq}
 
         # Initialize the threads
-        t7_thread = mp.Process(target=serial_thread, args=(t7_workq, message_handler_workq))
-        t8_thread = mp.Process(target=t8_thread, args=(t8_workq, db_workq, message_handler_workq))
-        db_thread = mp.Process(target=database_thread, args=('database', db_workq, message_handler_workq, t8_workq))
+        t7_thread = mp.Process(target=serial_thread, args=(t7_workq, db_workq))
+        t8_thread = mp.Process(target=t8_thread, args=(t8_workq, db_workq))
+        db_thread = mp.Process(target=database_thread, args=('database', db_workq))
         
         # Add the threads to the thread pool
         thread_pool['T7'] = {'thread': t7_thread, 'workq': t7_workq}

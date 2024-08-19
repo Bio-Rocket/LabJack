@@ -76,9 +76,6 @@ class ThreadManager:
         '''
         Handle the messages in the thread work queues
         '''
-        message_workq = ThreadManager.thread_pool['message_handler']['workq']
-        
-        message = message_workq.get(block=True)
 
         logger.debug(f"Handling thread messages from {message.src_thread} to {message.dest_thread} with message type: {message.message_type}")
 

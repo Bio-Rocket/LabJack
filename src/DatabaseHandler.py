@@ -5,16 +5,15 @@ import multiprocessing as mp
 from typing import Tuple
 from pocketbase import Client
 from pocketbase.services.realtime_service import MessageData
-from dotenv import load_dotenv
 
 # Project specific imports ========================================================================
-from src.support.CommonLogger import logger
-from src.ThreadManager import THREAD_MESSAGE_DB_WRITE, THREAD_MESSAGE_KILL, THREAD_MESSAGE_LOAD_CELL_COMMAND, THREAD_MESSAGE_LOAD_CELL_SLOPE, THREAD_MESSAGE_REQUEST_LOAD_CELL_SLOPE, THREAD_MESSAGE_SERIAL_WRITE, THREAD_MESSAGE_STORE_LOAD_CELL_SLOPE, THREAD_MESSAGE_HEARTBEAT, WorkQ_Message
-from src.Utils import Utils as utl
+# from src.support.CommonLogger import logger
+# from src.ThreadManager import THREAD_MESSAGE_DB_WRITE, THREAD_MESSAGE_KILL, THREAD_MESSAGE_LOAD_CELL_COMMAND, THREAD_MESSAGE_LOAD_CELL_SLOPE, THREAD_MESSAGE_REQUEST_LOAD_CELL_SLOPE, THREAD_MESSAGE_SERIAL_WRITE, THREAD_MESSAGE_STORE_LOAD_CELL_SLOPE, THREAD_MESSAGE_HEARTBEAT, WorkQ_Message
+# from src.Utils import Utils as utl
 
 # Class Definitions ===============================================================================
 class DatabaseHandler():
-    def __init__(self, thread_name: str, thread_workq: mp.Queue, message_handler_workq: mp.Queue):
+    def __init__(self, thread_name: str, thread_workq: mp.Queue):
         """
         Thread to handle the pocketbase database communication.
         The Thread is subscribed to the CommandMessage
@@ -22,23 +21,22 @@ class DatabaseHandler():
         The handler can also send telemetry data to the database
         to be read by the front end.
         """
-        logger.info("DatabaseHandler initializing")
+        #logger.info("DatabaseHandler initializing")
         DatabaseHandler.thread_workq = thread_workq
-        DatabaseHandler.send_message_workq = message_handler_workq
         DatabaseHandler.thread_name = thread_name
 
-        load_dotenv()
-        db_user = os.getenv('DB_USER')
-        db_password = os.getenv('DB_PASSWORD')
+        # load_dotenv()
+        # db_user = os.getenv('DB_USER')
+        # db_password = os.getenv('DB_PASSWORD')
 
-        DatabaseHandler.client = Client('http://192.168.0.69:8090')
-        DatabaseHandler.client.auth_store.clear()
-        DatabaseHandler.client.admins.auth_with_password(db_user, db_password)
+        DatabaseHandler.client = Client('http://127.0.0.1:8090')
+        # DatabaseHandler.client.auth_store.clear()
+        # DatabaseHandler.client.admins.auth_with_password(db_user, db_password)
 
-        DatabaseHandler.client.collection('Heartbeat').subscribe(DatabaseHandler._handle_heartbeat_callback)
-        DatabaseHandler.client.collection('CommandMessage').subscribe(DatabaseHandler._handle_command_callback)
-        DatabaseHandler.client.collection('LoadCellCommands').subscribe(DatabaseHandler._handle_load_cell_command_callback)
-        logger.success(f"Successfully started {thread_name} thread")
+        # DatabaseHandler.client.collection('Heartbeat').subscribe(DatabaseHandler._handle_heartbeat_callback)
+        # DatabaseHandler.client.collection('CommandMessage').subscribe(DatabaseHandler._handle_command_callback)
+        # DatabaseHandler.client.collection('LoadCellCommands').subscribe(DatabaseHandler._handle_load_cell_command_callback)
+        #logger.success(f"Successfully started {thread_name} thread")
 
     @staticmethod
     def _handle_heartbeat_callback(document: MessageData):
@@ -182,44 +180,54 @@ class DatabaseHandler():
         except Exception as e:
             logger.error(f"Failed to get {load_cell_name} calibration curve from the database: {e}")
 
+
+    @staticmethod
+    def write_to_load_cell_table(load_cell_voltage_arr: list):
+        """
+        Send the loadcell voltage list to the database.
+        """
+        voltage_dict = {f"LC{i+1}": voltage for i, voltage in enumerate(load_cell_voltage_arr)}
+
+        # Push the list to PocketBase using the correct schema
+        try:
+            DatabaseHandler.client.collection("LabjackLoadCells").create(voltage_dict)
+        except Exception:
+            print(f"Failed to create entry in LabjackLoadCells: {voltage_dict}")
+            #logger.error(f"Failed to create entry in {table_name}: {json_data}")
+
+
 # Procedures ======================================================================================
-def database_thread(thread_name: str, db_workq: mp.Queue, message_handler_workq: mp.Queue, t8_workq: mp.Queue) -> None:
+def database_thread(thread_name: str, db_workq: mp.Queue) -> None:
     """
     The main loop of the database handler. It subscribes to the CommandMessage collection
     """
 
-    DatabaseHandler(thread_name, db_workq, message_handler_workq)
+    DatabaseHandler(thread_name, db_workq)
 
     while 1:
         # If there is any workq messages, process them
-        if not process_workq_message(db_workq.get(block=True), t8_workq):
+        if not process_workq_message(db_workq.get(block=True)):
             return
         
-def process_workq_message(message: WorkQ_Message) -> bool:
-    """
-    Process the message from the workq.
+# def process_workq_message(message: WorkQ_Message) -> bool:
+#     """
+#     Process the message from the workq.
 
-    Args:
-        message (WorkQ_Message):
-            The message from the workq.
-    """
-    logger.debug(f"Processing db workq message: {message.message_type}")
-    messageID = message.message_type
+#     Args:
+#         message (WorkQ_Message):
+#             The message from the workq.
+#     """
 
-    if messageID == THREAD_MESSAGE_KILL:
-        logger.debug(f"Killing database thread")
-        return False
-    elif messageID == THREAD_MESSAGE_DB_WRITE:   
-        logger.debug(f"Writing {utl.get_message_from_enum(message.message[0])}")
-        DatabaseHandler.send_telemetry_message_to_database(message.message[1])
-        return True
-    elif messageID == THREAD_MESSAGE_STORE_LOAD_CELL_SLOPE:
-        logger.debug(f"Writing a new load cell calibration to the database")
-        DatabaseHandler.send_load_cell_cali_to_database(message.message)
-        return True
-    elif messageID == THREAD_MESSAGE_REQUEST_LOAD_CELL_SLOPE:
-        logger.debug(f"Requesting the last load cell slope from the database")
-        DatabaseHandler.get_load_cell_cali_from_database(message.message[0])
-        return True
+#     device, data = message
 
-    return True
+#     if device == "T8":
+#         a_data, device_scan_backlog, ljm_scan_backlog = data
+
+#         load_cell_voltage_arr = a_data[:4]
+#         pt_voltage_arr = a_data[4:8]
+
+#         DatabaseHandler.write_to_load_cell_table(load_cell_voltage_arr)
+#         DatabaseHandler.write_to_pt_table(pt_voltage_arr)
+#         DatabaseHandler.write_to_backlog_table(device_scan_backlog, ljm_scan_backlog)  
+
+#     return True
