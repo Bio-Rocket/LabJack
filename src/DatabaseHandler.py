@@ -182,6 +182,20 @@ class DatabaseHandler():
 
 
     @staticmethod
+    def write_to_pressure_transducer_table(pressure_transducer_voltage_arr: list):
+        """
+        Send the pressure transducer voltage list to the database.
+        """
+        voltage_dict = {f"PT{i+1}": voltage for i, voltage in enumerate(pressure_transducer_voltage_arr)}
+
+        # Push the list to PocketBase using the correct schema
+        try:
+            DatabaseHandler.client.collection("LabjackPressureTransducers").create(voltage_dict)
+        except Exception:
+            print(f"Failed to create entry in LabjackPressureTransducers: {voltage_dict}")
+            #logger.error(f"Failed to create entry in {table_name}: {json_data}")
+
+    @staticmethod
     def write_to_load_cell_table(load_cell_voltage_arr: list):
         """
         Send the loadcell voltage list to the database.
@@ -193,6 +207,20 @@ class DatabaseHandler():
             DatabaseHandler.client.collection("LabjackLoadCells").create(voltage_dict)
         except Exception:
             print(f"Failed to create entry in LabjackLoadCells: {voltage_dict}")
+            #logger.error(f"Failed to create entry in {table_name}: {json_data}")
+
+    @staticmethod
+    def write_to_backlog_table(backlog_arr: list):
+        """
+        Send the backlog list to the database.
+        """
+        backlog_dict = {f"deviceScanBacklog": backlog_arr[0], "ljmScanBacklog": backlog_arr[1]}
+
+        # Push the list to PocketBase using the correct schema
+        try:
+            DatabaseHandler.client.collection("LabjackBackLog").create(backlog_dict)
+        except Exception:
+            print(f"Failed to create entry in LabjackBackLog: {backlog_dict}")
             #logger.error(f"Failed to create entry in {table_name}: {json_data}")
 
 
@@ -209,25 +237,25 @@ def database_thread(thread_name: str, db_workq: mp.Queue) -> None:
         if not process_workq_message(db_workq.get(block=True)):
             return
         
-# def process_workq_message(message: WorkQ_Message) -> bool:
-#     """
-#     Process the message from the workq.
+def process_workq_message(message: WorkQ_Message) -> bool:
+    """
+    Process the message from the workq.
 
-#     Args:
-#         message (WorkQ_Message):
-#             The message from the workq.
-#     """
+    Args:
+        message (WorkQ_Message):
+            The message from the workq.
+    """
 
-#     device, data = message
+    device, data = message
 
-#     if device == "T8":
-#         a_data, device_scan_backlog, ljm_scan_backlog = data
+    if device == "T8":
+        a_data, device_scan_backlog, ljm_scan_backlog = data
 
-#         load_cell_voltage_arr = a_data[:4]
-#         pt_voltage_arr = a_data[4:8]
+        load_cell_voltage_arr = a_data[:4]
+        pt_voltage_arr = a_data[4:8]
 
-#         DatabaseHandler.write_to_load_cell_table(load_cell_voltage_arr)
-#         DatabaseHandler.write_to_pt_table(pt_voltage_arr)
-#         DatabaseHandler.write_to_backlog_table(device_scan_backlog, ljm_scan_backlog)  
+        DatabaseHandler.write_to_load_cell_table(load_cell_voltage_arr)
+        DatabaseHandler.write_to_pressure_transducer_table(pt_voltage_arr)
+        DatabaseHandler.write_to_backlog_table([device_scan_backlog, ljm_scan_backlog])  
 
-#     return True
+    return True
