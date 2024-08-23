@@ -49,7 +49,7 @@ class LabJack:
         ljm.close(self.handle)
         self.handle = 0
 
-    def start_stream(self, scan_list, scan_rate, scans_per_read = None, callback = None, stream_resolution_index : int = DEFAULT_STREAM_RESOLUTION, settling_us : float = 0):
+    def start_stream(self, scan_list, scan_rate, scans_per_read = None, callback = None, obj = None, stream_resolution_index : int = DEFAULT_STREAM_RESOLUTION, settling_us : float = 0):
         """
         Start a stream with the given parameters.
         @assumptions ADC range and resolution have been configured.
@@ -97,9 +97,8 @@ class LabJack:
             act_scan_rate = ljm.eStreamStart(self.handle, scans_per_read, len(scan_list), scan_list, scans_per_read)
             print("\nStream started with a scan rate of %0.0f Hz." % act_scan_rate)
 
-            # --- Stream Read Configuration ---
             if callback is not None:
-                ljm.setStreamCallback(callback)
+                ljm.setStreamCallback(self.handle, callback, obj)
         
         except:
             print("\033[91mError starting stream. Please check the LabJack connection and configuration.\033[0m")
