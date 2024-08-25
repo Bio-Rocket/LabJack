@@ -94,7 +94,7 @@ class LabJack:
             ljm.eWriteName(self.handle, "STREAM_SETTLING_US", settling_us)
 
             # --- Stream Start ---
-            act_scan_rate = ljm.eStreamStart(self.handle, scans_per_read, len(scan_list), scan_list, scans_per_read)
+            act_scan_rate = ljm.eStreamStart(self.handle, scans_per_read, len(scan_list), scan_list, scan_rate)
             print("\nStream started with a scan rate of %0.0f Hz." % act_scan_rate)
 
             # --- Stream Read Configuration ---
@@ -284,6 +284,13 @@ class DigitalOutput:
         
         self.lj = lj
         self.channel_name = channel_name
+
+    def get_state(self):
+        """
+        Get the state of the digital output channel.
+        @return: 0 = low, 1 = high
+        """
+        return ljm.eReadName(self.lj.handle, self.channel_name)
 
     def write(self, value : int):
         """
