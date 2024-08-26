@@ -1,17 +1,31 @@
 import time
-from labjack import ljm
+from modified_ljm import ljm
 import multiprocessing as mp
-import LabJackInterface
+from LabJackInterface import LabJack
 
-from src.DatabaseHandler import database_thread
-from src.SerialHandler import SerialDevices as sd, serial_thread
-from src.ThreadManager import ThreadManager as tm
+from DatabaseHandler import database_thread
+#from SerialHandler import SerialDevices as sd, serial_thread
+from ThreadManager import ThreadManager as tm
+import datetime
+counter = 0
+def t8_callback(lji, data, db_workq):
+    ff = lji.read_stream()
 
-def t8_callback(lji, db_workq):
-    data = lji.read_stream()
-    db_workq.put("T8", data)
+    
+    # print(timestamp, count)
+    # count += 1
+    global counter
+    if counter == 100:
+        timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
+        with open('output.txt', 'a') as file:
+            file.write(f"Timestamp: {timestamp} ")
+            file.write(f"Data: {ff}\n")
+        counter = 0
+    counter += 1
+    #print(ff)
+    #db_workq.put(("T8", ff))
         
-def t8_thread(db_workq, message_handler_workq):
+def t8_thread(t8_workq, db_workq):
     '''
     Stream data from LabJack T8 and put it into the queue
     '''
@@ -21,5 +35,9 @@ def t8_thread(db_workq, message_handler_workq):
     stream_resolution_index = 0 
     a_scan_list = ljm.namesToAddresses(len(a_scan_list_names), a_scan_list_names)[0]
 
-    lji = LabJackInterface("T8", "ANY", "ANY")
-    lji.start_stream(a_scan_list_names, scan_rate, lambda: t8_callback(lji, db_workq), stream_resolution_index)
+    lji = LabJack("ANY", "USB", "ANY")    
+    lji.start_stream(a_scan_list_names, scan_rate, scans_per_read=1, callback=t8_callback, obj = lji, workq = db_workq, stream_resolution_index= stream_resolution_index)
+    #lji.start_stream(a_scan_list_names, scan_rate, scans_per_read=1, callback=None, obj = None, workq = None, stream_resolution_index= stream_resolution_index)
+    while 1:
+        time.sleep(0.1)
+    

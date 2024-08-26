@@ -7,7 +7,7 @@ import multiprocessing as mp
 from dataclasses import dataclass
 
 # Project specific imports ========================================================================
-from src.support.CommonLogger import logger
+#from src.support.CommonLogger import logger
 
 # Constants ========================================================================================
 THREAD_MESSAGE_KILL = 'stop'
@@ -76,21 +76,21 @@ class ThreadManager:
         '''
         Handle the messages in the thread work queues
         '''
+        pass
+        #logger.debug(f"Handling thread messages from {message.src_thread} to {message.dest_thread} with message type: {message.message_type}")
 
-        logger.debug(f"Handling thread messages from {message.src_thread} to {message.dest_thread} with message type: {message.message_type}")
-
-        if message.dest_thread == "all_serial":
-            for serial_thread in ['uart', 'radio']:
-                if ((serial_thread not in ThreadManager.thread_pool) or
-                    (not ThreadManager.thread_pool[serial_thread]['thread'].is_alive())):
-                    logger.error(f"Attempting to send message to non-existent thread: {serial_thread}")
-                    continue
-                ThreadManager.thread_pool[serial_thread]['workq'].put(message)
-        else:
-            if ((message.dest_thread not in ThreadManager.thread_pool) or 
-                (not ThreadManager.thread_pool[message.dest_thread]['thread'].is_alive())):
-                logger.error(f"Attempting to send message to non-existent thread: {message.dest_thread}")
-                return
-            dest_workq = ThreadManager.thread_pool[message.dest_thread]['workq']
-            if dest_workq:
-                dest_workq.put(message)
+        # if message.dest_thread == "all_serial":
+        #     for serial_thread in ['uart', 'radio']:
+        #         if ((serial_thread not in ThreadManager.thread_pool) or
+        #             (not ThreadManager.thread_pool[serial_thread]['thread'].is_alive())):
+        #             #logger.error(f"Attempting to send message to non-existent thread: {serial_thread}")
+        #             continue
+        #         ThreadManager.thread_pool[serial_thread]['workq'].put(message)
+        # else:
+        #     if ((message.dest_thread not in ThreadManager.thread_pool) or 
+        #         (not ThreadManager.thread_pool[message.dest_thread]['thread'].is_alive())):
+        #         #logger.error(f"Attempting to send message to non-existent thread: {message.dest_thread}")
+        #         return
+        #     dest_workq = ThreadManager.thread_pool[message.dest_thread]['workq']
+        #     if dest_workq:
+        #         dest_workq.put(message)

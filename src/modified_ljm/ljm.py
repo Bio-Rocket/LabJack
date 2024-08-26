@@ -11,10 +11,11 @@ from labjack.ljm import errorcodes
 
 class _StreamCallbackData:
     """Class containing the stream callback information."""
-    def __init__(self, handle, callback, obj):
+    def __init__(self, handle, callback, obj, workq):
         self.callbackUser = callback
         self.obj = obj
-        self.callbackWrapper = lambda arg: self.callbackUser(self.obj, self.argInner.value)
+        self.workq = workq
+        self.callbackWrapper = lambda arg: self.callbackUser(self.obj, self.argInner.value, self.workq)
         callbackC = ctypes.CFUNCTYPE(None, ctypes.POINTER(ctypes.c_int))
         self.callbackLjm = callbackC(self.callbackWrapper)
         self.argInner = ctypes.c_int(handle)
@@ -1334,7 +1335,7 @@ def eStreamRead(handle):
     return _convertCtypeArrayToList(cData), cD_SBL.value, cLJM_SBL.value
 
 
-def setStreamCallback(handle, callback, obj=None):
+def setStreamCallback(handle, callback, obj=None, workq=None):
     """Sets a callback that is called by LJM when the stream has
     collected scansPerRead scans (see eStreamStart) or if an error has
     occurred.
@@ -1364,7 +1365,7 @@ def setStreamCallback(handle, callback, obj=None):
         cbLjm = 0
         cbArg = 0
     else:
-        cbData = _StreamCallbackData(handle, callback, obj)
+        cbData = _StreamCallbackData(handle, callback, obj, workq)
         _g_streamCallbackData[handle] = cbData
         cbLjm = cbData.callbackLjm
         cbArg = cbData.argRef

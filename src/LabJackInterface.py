@@ -19,7 +19,7 @@ Classes:
 @date: 2023-10-12
 @version: 0.1
 """""""""""""""""""""""""""""""""""""""""""""
-from labjack import ljm
+from modified_ljm import ljm
 import sys, time
 
 # Constants for configuration
@@ -49,7 +49,7 @@ class LabJack:
         ljm.close(self.handle)
         self.handle = 0
 
-    def start_stream(self, scan_list, scan_rate, scans_per_read = None, callback = None, obj = None, stream_resolution_index : int = DEFAULT_STREAM_RESOLUTION, settling_us : float = 0):
+    def start_stream(self, scan_list, scan_rate, scans_per_read = None, callback = None, obj = None, workq = None, stream_resolution_index : int = DEFAULT_STREAM_RESOLUTION, settling_us : float = 0):
         """
         Start a stream with the given parameters.
         @assumptions ADC range and resolution have been configured.
@@ -75,10 +75,11 @@ class LabJack:
         try:
             # --- Input Processing ---
             # Calculate scans per read
-            n_channels = len(scan_list)
-            scans_per_read = MAX_SAMPLES_PER_PACKET_ETH // n_channels
-            if self.get_connection_type() == "USB":
-                scans_per_read = MAX_SAMPLES_PER_PACKET_USB // n_channels
+            if scans_per_read is None:
+                n_channels = len(scan_list)
+                scans_per_read = MAX_SAMPLES_PER_PACKET_ETH // n_channels
+                if self.get_connection_type() == "USB":
+                    scans_per_read = MAX_SAMPLES_PER_PACKET_USB // n_channels
 
             # Convert scan names to addresses
             scan_list = ljm.namesToAddresses(len(scan_list), scan_list)[0]
@@ -94,11 +95,11 @@ class LabJack:
             ljm.eWriteName(self.handle, "STREAM_SETTLING_US", settling_us)
 
             # --- Stream Start ---
-            act_scan_rate = ljm.eStreamStart(self.handle, scans_per_read, len(scan_list), scan_list, scans_per_read)
+            act_scan_rate = ljm.eStreamStart(self.handle, scans_per_read, len(scan_list), scan_list, scan_rate)
             print("\nStream started with a scan rate of %0.0f Hz." % act_scan_rate)
 
             if callback is not None:
-                ljm.setStreamCallback(self.handle, callback, obj)
+                ljm.setStreamCallback(self.handle, callback, obj, workq)
         
         except:
             print("\033[91mError starting stream. Please check the LabJack connection and configuration.\033[0m")

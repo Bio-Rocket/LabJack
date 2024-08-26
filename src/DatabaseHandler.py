@@ -200,7 +200,8 @@ class DatabaseHandler():
         """
         Send the loadcell voltage list to the database.
         """
-        voltage_dict = {f"LC{i+1}": voltage for i, voltage in enumerate(load_cell_voltage_arr)}
+        #voltage_dict = {f"LC{i+1}": voltage for i, voltage in enumerate(load_cell_voltage_arr)}
+        voltage_dict = {"LC1" : 123.4, "LC2" : 123.4, "LC3" : 123.4, "LC4" : 123.4}
 
         # Push the list to PocketBase using the correct schema
         try:
@@ -225,7 +226,7 @@ class DatabaseHandler():
 
 
 # Procedures ======================================================================================
-def database_thread(thread_name: str, db_workq: mp.Queue) -> None:
+def database_thread(thread_name: str, db_workq) -> None:
     """
     The main loop of the database handler. It subscribes to the CommandMessage collection
     """
@@ -236,8 +237,10 @@ def database_thread(thread_name: str, db_workq: mp.Queue) -> None:
         # If there is any workq messages, process them
         if not process_workq_message(db_workq.get(block=True)):
             return
-        
-def process_workq_message(message: WorkQ_Message) -> bool:
+
+import datetime  
+count = 0
+def process_workq_message(message) -> bool:
     """
     Process the message from the workq.
 
@@ -245,17 +248,28 @@ def process_workq_message(message: WorkQ_Message) -> bool:
         message (WorkQ_Message):
             The message from the workq.
     """
-
+    global count 
     device, data = message
 
-    if device == "T8":
-        a_data, device_scan_backlog, ljm_scan_backlog = data
+    timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
+    # print(timestamp, count)
+    # count += 1
+    with open('output.txt', 'a') as file:
+        file.write(f"Timestamp: {timestamp} ")
+        file.write(f"Data: {data}\n")
 
-        load_cell_voltage_arr = a_data[:4]
-        pt_voltage_arr = a_data[4:8]
+    # if device == "T8":
+    #     a_data, device_scan_backlog, ljm_scan_backlog = data
 
-        DatabaseHandler.write_to_load_cell_table(load_cell_voltage_arr)
-        DatabaseHandler.write_to_pressure_transducer_table(pt_voltage_arr)
-        DatabaseHandler.write_to_backlog_table([device_scan_backlog, ljm_scan_backlog])  
+    #     load_cell_voltage_arr = a_data[:4]
+    #     pt_voltage_arr = a_data[4:8]
+
+
+
+
+
+        #DatabaseHandler.write_to_load_cell_table(load_cell_voltage_arr)
+        #DatabaseHandler.write_to_pressure_transducer_table(pt_voltage_arr)
+        #DatabaseHandler.write_to_backlog_table([device_scan_backlog, ljm_scan_backlog])  
 
     return True
