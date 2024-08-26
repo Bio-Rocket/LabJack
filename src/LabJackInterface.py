@@ -285,6 +285,13 @@ class DigitalOutput:
         self.lj = lj
         self.channel_name = channel_name
 
+    def get_state(self):
+        """
+        Get the state of the digital output channel.
+        @return: 0 = low, 1 = high
+        """
+        return ljm.eReadName(self.lj.handle, self.channel_name)
+
     def write(self, value : int):
         """
         Write a value to the digital output channel.
