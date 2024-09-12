@@ -42,9 +42,11 @@ class ThreadManager:
         '''
         Start the threads in the thread pool
         '''
+        print("hello start")
         for thread in ThreadManager.thread_pool:
             if ThreadManager.thread_pool[thread]['thread']:
                 ThreadManager.thread_pool[thread]['thread'].start()
+        print("hello end")
         return
 
     @staticmethod
