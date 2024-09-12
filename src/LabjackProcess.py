@@ -3,29 +3,35 @@ from modified_ljm import ljm
 import multiprocessing as mp
 from LabJackInterface import LabJack
 
-from DatabaseHandler import database_thread
 #from SerialHandler import SerialDevices as sd, serial_thread
 from ThreadManager import ThreadManager as tm
 import datetime
 counter = 0
+
 def t8_callback(lji, data, db_workq):
     ff = lji.read_stream()
+    db_workq.put(("T8", ff))
+    global counter
+    timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
+    print(timestamp, counter)
 
+    counter += 1
     
     # print(timestamp, count)
     # count += 1
-    global counter
-    if counter == 100:
-        timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
-        with open('output.txt', 'a') as file:
-            file.write(f"Timestamp: {timestamp} ")
-            file.write(f"Data: {ff}\n")
-        counter = 0
-    counter += 1
+    # global counter
+    # if counter == 100:
+    #     timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
+    #     with open('output.txt', 'a') as file:
+    #         file.write(f"Timestamp: {timestamp} ")
+    #         file.write(f"Data: {ff}\n")
+    #     counter = 0
+    # counter += 1
     #print(ff)
     #db_workq.put(("T8", ff))
         
-def t8_thread(t8_workq, db_workq):
+def t8_thread(db_workq):
+    print("hello")
     '''
     Stream data from LabJack T8 and put it into the queue
     '''

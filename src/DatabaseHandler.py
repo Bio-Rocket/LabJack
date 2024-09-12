@@ -251,12 +251,12 @@ def process_workq_message(message) -> bool:
     global count 
     device, data = message
 
-    timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
+    #timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
     # print(timestamp, count)
     # count += 1
-    with open('output.txt', 'a') as file:
-        file.write(f"Timestamp: {timestamp} ")
-        file.write(f"Data: {data}\n")
+    # with open('output.txt', 'a') as file:
+    #     file.write(f"Timestamp: {timestamp} ")
+    #     file.write(f"Data: {data}\n")
 
     # if device == "T8":
     #     a_data, device_scan_backlog, ljm_scan_backlog = data
@@ -268,7 +268,7 @@ def process_workq_message(message) -> bool:
 
 
 
-        #DatabaseHandler.write_to_load_cell_table(load_cell_voltage_arr)
+    DatabaseHandler.write_to_load_cell_table(data)
         #DatabaseHandler.write_to_pressure_transducer_table(pt_voltage_arr)
         #DatabaseHandler.write_to_backlog_table([device_scan_backlog, ljm_scan_backlog])  
 
