@@ -42,11 +42,9 @@ class ThreadManager:
         '''
         Start the threads in the thread pool
         '''
-        print("hello start")
         for thread in ThreadManager.thread_pool:
             if ThreadManager.thread_pool[thread]['thread']:
                 ThreadManager.thread_pool[thread]['thread'].start()
-        print("hello end")
         return
 
     @staticmethod
@@ -89,7 +87,7 @@ class ThreadManager:
         #             continue
         #         ThreadManager.thread_pool[serial_thread]['workq'].put(message)
         # else:
-        #     if ((message.dest_thread not in ThreadManager.thread_pool) or 
+        #     if ((message.dest_thread not in ThreadManager.thread_pool) or
         #         (not ThreadManager.thread_pool[message.dest_thread]['thread'].is_alive())):
         #         #logger.error(f"Attempting to send message to non-existent thread: {message.dest_thread}")
         #         return
