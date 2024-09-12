@@ -17,7 +17,7 @@ class DatabaseHandler():
         """
         Thread to handle the pocketbase database communication.
         The Thread is subscribed to the CommandMessage
-        collection to wait for commands created in the front end. 
+        collection to wait for commands created in the front end.
         The handler can also send telemetry data to the database
         to be read by the front end.
         """
@@ -53,8 +53,8 @@ class DatabaseHandler():
         DatabaseHandler.send_message_workq.put(
             WorkQ_Message(
                 DatabaseHandler.thread_name,
-                'heartbeat', 
-                THREAD_MESSAGE_HEARTBEAT, 
+                'heartbeat',
+                THREAD_MESSAGE_HEARTBEAT,
                 (document.record.message,)
             )
         )
@@ -62,7 +62,7 @@ class DatabaseHandler():
     @staticmethod
     def _handle_command_callback(document: MessageData):
         """
-        Whenever a new entry is created in the CommandMessage 
+        Whenever a new entry is created in the CommandMessage
         collection, this function is called to handle the
         command and forward it to the serial port.
 
@@ -75,8 +75,8 @@ class DatabaseHandler():
         DatabaseHandler.send_message_workq.put(
             WorkQ_Message(
                 DatabaseHandler.thread_name,
-                'all_serial', 
-                THREAD_MESSAGE_SERIAL_WRITE, 
+                'all_serial',
+                THREAD_MESSAGE_SERIAL_WRITE,
                 (document.record.command,
                  document.record.target,
                  document.record.command_param,
@@ -93,7 +93,7 @@ class DatabaseHandler():
         and forward it to the load cell handler.
 
         Args:
-            document (MessageData): 
+            document (MessageData):
                 the change notification from the database.
         """
         logger.info("Received new load cell command from the database")
@@ -238,8 +238,6 @@ def database_thread(thread_name: str, db_workq) -> None:
         if not process_workq_message(db_workq.get(block=True)):
             return
 
-import datetime  
-count = 0
 def process_workq_message(message) -> bool:
     """
     Process the message from the workq.
@@ -248,28 +246,4 @@ def process_workq_message(message) -> bool:
         message (WorkQ_Message):
             The message from the workq.
     """
-    global count 
-    device, data = message
-
-    #timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
-    # print(timestamp, count)
-    # count += 1
-    # with open('output.txt', 'a') as file:
-    #     file.write(f"Timestamp: {timestamp} ")
-    #     file.write(f"Data: {data}\n")
-
-    # if device == "T8":
-    #     a_data, device_scan_backlog, ljm_scan_backlog = data
-
-    #     load_cell_voltage_arr = a_data[:4]
-    #     pt_voltage_arr = a_data[4:8]
-
-
-
-
-
-    DatabaseHandler.write_to_load_cell_table(data)
-        #DatabaseHandler.write_to_pressure_transducer_table(pt_voltage_arr)
-        #DatabaseHandler.write_to_backlog_table([device_scan_backlog, ljm_scan_backlog])  
-
     return True
