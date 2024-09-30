@@ -6,31 +6,7 @@
 import multiprocessing as mp
 from dataclasses import dataclass
 
-# Project specific imports ========================================================================
-#from src.support.CommonLogger import logger
-
-# Constants ========================================================================================
-THREAD_MESSAGE_KILL = 'stop'
-THREAD_MESSAGE_DB_WRITE = 'db_write'
-THREAD_MESSAGE_SERIAL_WRITE = 'serial_write'
-THREAD_MESSAGE_DB_COMMAND_NOTIF = 'db_command_notif'
-THREAD_MESSAGE_DB_BACKEND_NOTIF = 'db_backend_notif'
-THREAD_MESSAGE_HEARTBEAT = 'heartbeat'
-THREAD_MESSAGE_HEARTBEAT_SERIAL = 'heartbeat_serial'
-THREAD_MESSAGE_LOAD_CELL_VOLTAGE = 'loadcell_voltage'
-THREAD_MESSAGE_LOAD_CELL_COMMAND = 'loadcell_command'
-THREAD_MESSAGE_STORE_LOAD_CELL_SLOPE = 'store_load_cell_slope'
-THREAD_MESSAGE_REQUEST_LOAD_CELL_SLOPE = 'get_last_loadcell_slope'
-THREAD_MESSAGE_LOAD_CELL_SLOPE = 'loadcell_slope'
-
-
-# Data Classes =====================================================================================
-@dataclass
-class WorkQ_Message:
-    src_thread: str
-    dest_thread: str
-    message_type: str
-    message: tuple
+from WorkQCmnd import WorkQCmnd, WorkQCmnd_e
 
 # Class Definitions ===============================================================================
 class ThreadManager:
@@ -54,7 +30,7 @@ class ThreadManager:
         '''
         for thread in ThreadManager.thread_pool:
             if ThreadManager.thread_pool[thread]['thread']:
-                ThreadManager._get_workq(thread).put(WorkQ_Message("all", "main", THREAD_MESSAGE_KILL, None))
+                ThreadManager._get_workq(thread).put(WorkQCmnd(WorkQCmnd_e.KILL_PROCESS, None))
                 ThreadManager._get_thread(thread).join()
 
     @staticmethod
@@ -77,20 +53,3 @@ class ThreadManager:
         Handle the messages in the thread work queues
         '''
         pass
-        #logger.debug(f"Handling thread messages from {message.src_thread} to {message.dest_thread} with message type: {message.message_type}")
-
-        # if message.dest_thread == "all_serial":
-        #     for serial_thread in ['uart', 'radio']:
-        #         if ((serial_thread not in ThreadManager.thread_pool) or
-        #             (not ThreadManager.thread_pool[serial_thread]['thread'].is_alive())):
-        #             #logger.error(f"Attempting to send message to non-existent thread: {serial_thread}")
-        #             continue
-        #         ThreadManager.thread_pool[serial_thread]['workq'].put(message)
-        # else:
-        #     if ((message.dest_thread not in ThreadManager.thread_pool) or
-        #         (not ThreadManager.thread_pool[message.dest_thread]['thread'].is_alive())):
-        #         #logger.error(f"Attempting to send message to non-existent thread: {message.dest_thread}")
-        #         return
-        #     dest_workq = ThreadManager.thread_pool[message.dest_thread]['workq']
-        #     if dest_workq:
-        #         dest_workq.put(message)
