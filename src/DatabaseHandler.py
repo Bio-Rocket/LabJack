@@ -6,6 +6,8 @@ from typing import Tuple
 from pocketbase import Client
 from pocketbase.services.realtime_service import MessageData
 
+from WorkQCmnd import WorkQCmnd, WorkQCmnd_e
+
 # Project specific imports ========================================================================
 # from src.support.CommonLogger import logger
 # from src.ThreadManager import THREAD_MESSAGE_DB_WRITE, THREAD_MESSAGE_KILL, THREAD_MESSAGE_LOAD_CELL_COMMAND, THREAD_MESSAGE_LOAD_CELL_SLOPE, THREAD_MESSAGE_REQUEST_LOAD_CELL_SLOPE, THREAD_MESSAGE_SERIAL_WRITE, THREAD_MESSAGE_STORE_LOAD_CELL_SLOPE, THREAD_MESSAGE_HEARTBEAT, WorkQ_Message
@@ -21,7 +23,6 @@ class DatabaseHandler():
         The handler can also send telemetry data to the database
         to be read by the front end.
         """
-        #logger.info("DatabaseHandler initializing")
         DatabaseHandler.thread_workq = thread_workq
         DatabaseHandler.thread_name = thread_name
 
@@ -48,15 +49,8 @@ class DatabaseHandler():
         Args:
             document (MessageData): the change notification from the database.
         """
-        logger.info("Received new heartbeat from the database")
-        logger.debug(f"Record command: {document.record.message}")
-        DatabaseHandler.send_message_workq.put(
-            WorkQ_Message(
-                DatabaseHandler.thread_name,
-                'heartbeat',
-                THREAD_MESSAGE_HEARTBEAT,
-                (document.record.message,)
-            )
+        DatabaseHandler.thread_workq.put(
+            WorkQCmnd(WorkQCmnd_e.HEART_BEAT, None)
         )
 
     @staticmethod
