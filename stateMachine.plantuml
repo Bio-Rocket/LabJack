@@ -1,0 +1,99 @@
+@startuml stateMachine
+scale 350 width
+[*] --> PREFIRE
+PREFIRE --> FILL : GOTO_FILL \n
+PREFIRE --> TEST : GOTO_TEST
+FILL --> IGNITION : GOTO_IGNITION
+IGNITION --> FIRE : 3.5 SECONDS
+FIRE --> ABORT : GOTO_ABORT
+ABORT --> PREFIRE : GOTO_PREFIRE
+TEST --> PREFIRE : GOTO_PREFIRE \n\n
+ 
+state PREFIRE {
+  state Prefire_Valve_State: PBV1: CLOSED
+  state Prefire_Valve_State: PBV2: OPEN
+  state Prefire_Valve_State: PBV3: CLOSED
+  state Prefire_Valve_State: PBV4: OPEN
+  state Prefire_Valve_State: PBV5: CLOSED
+  state Prefire_Valve_State: PBV6: CLOSED
+  state Prefire_Valve_State: PBV7: OPEN
+  state Prefire_Valve_State: PBV8: OPEN
+  state Prefire_Valve_State: SOL1: CLOSED
+  state Prefire_Valve_State: SOL2: CLOSED
+  state Prefire_Valve_State: SOL3: CLOSED
+  state Prefire_Valve_State: SOL4: CLOSED
+ 
+  state Prefire_Valve_Control
+  state Prefire_Valve_Control: Manual: NONE
+  state Prefire_Valve_Control: EPR_State: DISABLED
+  state Prefire_Valve_Control: EPR_Status: INACTIVE
+}
+ 
+state FILL {
+  state MANUAL_FILL {
+    state Manual_Fill_Valve_Control
+    state Manual_Fill_Valve_Control: Manual: ALL
+    state Manual_Fill_Valve_Control: EPR_State: ENABLED
+    state Manual_Fill_Valve_Control: EPR_Status: INACTIVE
+  }
+ 
+  MANUAL_FILL ---> EPR_FILL : EPR_START \n\n
+ 
+  state EPR_FILL {
+    state EPR_Fill_Valve_Control
+    state EPR_Fill_Valve_Control: Manual: ALL except SOL1, 2, 3, 4
+    state EPR_Fill_Valve_Control: EPR_State: ENABLED
+    state EPR_Fill_Valve_Control: EPR_Status: ACTIVE
+  }
+ 
+  EPR_FILL ---> MANUAL_FILL : EPR_STOP
+}
+ 
+state IGNITION {
+  IGNITION : IGNITORS LIVE
+  IGNITION : TIMER START
+}
+ 
+state FIRE {
+  state Fire_Valve_State: PBV1: CLOSED
+  state Fire_Valve_State: PBV2: CLOSED
+  state Fire_Valve_State: PBV3: CLOSED
+  state Fire_Valve_State: PBV4: CLOSED
+  state Fire_Valve_State: PBV5: OPEN
+  state Fire_Valve_State: PBV6: OPEN
+  state Fire_Valve_State: PBV7: CLOSED
+  state Fire_Valve_State: PBV8: CLOSED
+ 
+  state Fire_Valve_Control
+  state Fire_Valve_Control: Manual: NONE
+  state Fire_Valve_Control: EPR_State: ENABLED
+  state Fire_Valve_Control: EPR_Status: ACTIVE
+}
+ 
+state ABORT {
+  state Abort_Valve_State: PBV1: CLOSED
+  state Abort_Valve_State: PBV2: OPEN
+  state Abort_Valve_State: PBV3: CLOSED
+  state Abort_Valve_State: PBV4: OPEN
+  state Abort_Valve_State: PBV5: CLOSED
+  state Abort_Valve_State: PBV6: CLOSED
+  state Abort_Valve_State: PBV7: OPEN
+  state Abort_Valve_State: PBV8: OPEN
+  state Abort_Valve_State: SOL1: CLOSED
+  state Abort_Valve_State: SOL2: CLOSED
+  state Abort_Valve_State: SOL3: CLOSED
+  state Abort_Valve_State: SOL4: CLOSED
+ 
+  state Abort_Valve_Control
+  state Abort_Valve_Control: Manual: NONE
+  state Abort_Valve_Control: EPR_State: DISABLED
+  state Abort_Valve_Control: EPR_Status: INACTIVE
+}
+ 
+state TEST {
+  state Test_Valve_Control
+  state Test_Valve_Control: Manual: ALL
+  state Test_Valve_Control: EPR_State: ENABLED
+  state Test_Valve_Control: EPR_Status: INACTIVE ? ACTIVE
+}
+@enduml
