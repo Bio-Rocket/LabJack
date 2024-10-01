@@ -1,15 +1,21 @@
 @startuml stateMachine
-scale 350 width
-[*] --> PREFIRE
-PREFIRE --> FILL : GOTO_FILL \n
-PREFIRE --> TEST : GOTO_TEST
-FILL --> IGNITION : GOTO_IGNITION
+scale 500 width
+[*] --> PRE_FIRE
+PRE_FIRE --> FILL : GOTO_FILL \n
+PRE_FIRE --> TEST : GOTO_TEST
+FILL --> IGNITION : ENSURE EPR_FILL ACTIVE \n GOTO_IGNITION
+FILL --> ABORT : GOTO_ABORT
+FILL --> PRE_FIRE : GOTO_PRE_FIRE
 IGNITION --> FIRE : 3.5 SECONDS
+IGNITION --> ABORT : GOTO_ABORT
 FIRE --> ABORT : GOTO_ABORT
-ABORT --> PREFIRE : GOTO_PREFIRE
-TEST --> PREFIRE : GOTO_PREFIRE \n\n
+FIRE --> POST_FIRE : TIMER or \n SOFT_ABORT
+POST_FIRE --> FILL : GOTO_FILL
+POST_FIRE --> ABORT : GOTO_ABORT
+ABORT --> PRE_FIRE : GOTO_PRE_FIRE
+TEST --> PRE_FIRE : GOTO_PRE_FIRE \n\n
  
-state PREFIRE {
+state PRE_FIRE {
   state Prefire_Valve_State: PBV1: CLOSED
   state Prefire_Valve_State: PBV2: OPEN
   state Prefire_Valve_State: PBV3: CLOSED
@@ -22,6 +28,10 @@ state PREFIRE {
   state Prefire_Valve_State: SOL2: CLOSED
   state Prefire_Valve_State: SOL3: CLOSED
   state Prefire_Valve_State: SOL4: CLOSED
+  state Prefire_Valve_State: PUMP1: OFF
+  state Prefire_Valve_State: PUMP2: OFF
+  state Prefire_Valve_State: PUMP3: OFF
+  state Prefire_Valve_State: GAS BOOSTER: OFF
  
   state Prefire_Valve_Control
   state Prefire_Valve_Control: Manual: NONE
@@ -63,12 +73,40 @@ state FIRE {
   state Fire_Valve_State: PBV6: OPEN
   state Fire_Valve_State: PBV7: CLOSED
   state Fire_Valve_State: PBV8: CLOSED
+  state Fire_Valve_State: PUMP1: OFF
+  state Fire_Valve_State: PUMP2: OFF
+  state Fire_Valve_State: PUMP3: OFF
+  state Fire_Valve_State: GAS BOOSTER: OFF
  
   state Fire_Valve_Control
   state Fire_Valve_Control: Manual: NONE
   state Fire_Valve_Control: EPR_State: ENABLED
   state Fire_Valve_Control: EPR_Status: ACTIVE
 }
+
+state POST_FIRE {
+  state Post_Fire_Valve_State: PBV1: CLOSED
+  state Post_Fire_Valve_State: PBV2: CLOSED
+  state Post_Fire_Valve_State: PBV3: CLOSED
+  state Post_Fire_Valve_State: PBV4: CLOSED
+  state Post_Fire_Valve_State: PBV5: CLOSED
+  state Post_Fire_Valve_State: PBV6: CLOSED
+  state Post_Fire_Valve_State: PBV7: CLOSED
+  state Post_Fire_Valve_State: PBV8: CLOSED
+  state Post_Fire_Valve_State: SOL1: CLOSED
+  state Post_Fire_Valve_State: SOL2: CLOSED
+  state Post_Fire_Valve_State: SOL3: CLOSED
+  state Post_Fire_Valve_State: SOL4: CLOSED
+  state Post_Fire_Valve_State: PUMP1: OFF
+  state Post_Fire_Valve_State: PUMP2: OFF
+  state Post_Fire_Valve_State: PUMP3: OFF
+  state Post_Fire_Valve_State: GAS BOOSTER: OFF
+ 
+  state Post_Fire_Valve_Control
+  state Post_Fire_Valve_Control: Manual: ALL
+  state Post_Fire_Valve_Control: EPR_State: DISABLED
+  state Post_Fire_Valve_Control: EPR_Status: INACTIVE
+} 
  
 state ABORT {
   state Abort_Valve_State: PBV1: CLOSED
@@ -83,6 +121,10 @@ state ABORT {
   state Abort_Valve_State: SOL2: CLOSED
   state Abort_Valve_State: SOL3: CLOSED
   state Abort_Valve_State: SOL4: CLOSED
+  state Abort_Valve_State: PUMP1: OFF
+  state Abort_Valve_State: PUMP2: OFF
+  state Abort_Valve_State: PUMP3: OFF
+  state Abort_Valve_State: GAS BOOSTER: OFF
  
   state Abort_Valve_Control
   state Abort_Valve_Control: Manual: NONE
