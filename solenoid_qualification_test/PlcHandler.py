@@ -51,7 +51,6 @@ def process_workq_message(message: WorkQCmnd, db_workq: mp.Queue) -> bool:
         db_workq (mp.Queue):
             workq for the database.
     """
-    print(f"PLC - Received workQ {message.command.name}")
     if message.command == WorkQCmnd_e.KILL_PROCESS:
         print("PLC - Received kill command")
         return False
@@ -60,19 +59,16 @@ def process_workq_message(message: WorkQCmnd, db_workq: mp.Queue) -> bool:
         state = 1
         plc_command = int.to_bytes(relay_num, 1, "little") + int.to_bytes(state, 1, "little")
         PlcHandler.send_command(plc_command)
-        print(f"PLC - Opening the solenoid {message.data}, {plc_command}")
     elif message.command == WorkQCmnd_e.PLC_CLOSE_SOL:
         relay_num = message.data + PLC_SOL_OFFSET # Relay number to open the solenoid 1 = 10, 2 = 11...
         state = 0
         plc_command = int.to_bytes(relay_num, 1, "little") + int.to_bytes(state, 1, "little")
         PlcHandler.send_command(plc_command)
-        print(f"PLC - Closing the solenoid {message.data}, {plc_command}")
     elif message.command == WorkQCmnd_e.PLC_REQUEST_DATA:
         plc_command = int.to_bytes(PLC_REQUEST, 1, "little") + int.to_bytes(0, 1, "little")
         PlcHandler.send_command(plc_command)
         response = PlcHandler.read_response()
         db_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_DATA, response))
-        print(f"PLC - Requesting data: {response}")
 
     return True
 
