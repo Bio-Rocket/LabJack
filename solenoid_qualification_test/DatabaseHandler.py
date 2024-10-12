@@ -43,7 +43,6 @@ class DatabaseHandler():
 
     @staticmethod
     def write_plc_data(plc_data: bytes):
-        print(f"DB - writing plc data {plc_data}")
         entry = {}
         entry["plc_data"] = list(plc_data)
 
@@ -51,6 +50,18 @@ class DatabaseHandler():
             DatabaseHandler.client.collection("PLC").create(entry)
         except Exception as e:
             print(f"failed to create a plc_data entry {e}")
+
+    @staticmethod
+    def write_lj1_data(lj1_data: tuple):
+        entry = {}
+        entry["lj1_data"] = lj1_data[0]
+        entry["device_scan_backlog"] = lj1_data[1]
+        entry["ljm_scan_backlog"] = lj1_data[2]
+
+        try:
+            DatabaseHandler.client.collection("LabJack1").create(entry)
+        except Exception as e:
+            print(f"failed to create a lj1_data entry {e}")
 
 # Procedures ======================================================================================
 def process_database_command(command: str, plc_workq: mp.Queue) -> None:
@@ -61,9 +72,7 @@ def process_database_command(command: str, plc_workq: mp.Queue) -> None:
         command (str):
             The command from the database.
     """
-    print("here1")
     if command == "OPEN_SOL":
-        print("here2")
         plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_SOL, 1)) # Open PLC solenoid 1
     elif command == "CLOSE_SOL":
         plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_SOL, 1)) # Close PLC solenoid 1
@@ -78,7 +87,6 @@ def process_workq_message(message: WorkQCmnd, plc_workq: mp.Queue) -> bool:
         message (WorkQCmnd):
             The message from the workq.
     """
-    print("DB - Received workQ")
     if message.command == WorkQCmnd_e.KILL_PROCESS:
         print("DB - Received kill command")
         return False
@@ -86,6 +94,8 @@ def process_workq_message(message: WorkQCmnd, plc_workq: mp.Queue) -> bool:
         process_database_command(message.data, plc_workq)
     elif message.command == WorkQCmnd_e.PLC_DATA:
         DatabaseHandler.write_plc_data(message.data)
+    elif message.command == WorkQCmnd_e.LJ1_DATA:
+        DatabaseHandler.write_lj1_data(message.data)
 
     return True
 

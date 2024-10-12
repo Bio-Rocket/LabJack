@@ -14,6 +14,5 @@ class TimerThread(threading.Thread):
 
     def run(self):
         while not self.stopped.wait(self.delay):
-            print("my thread")
             self.target()
             # call a function

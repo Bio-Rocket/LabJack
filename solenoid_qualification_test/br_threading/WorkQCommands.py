@@ -8,7 +8,7 @@ class WorkQCmnd_e(Enum):
 
     COMMAND_FROM_DB = auto() # Command from the database
 
-    LJ_T7_DATA = auto() # Log LabJack data to csv
+    LJ1_DATA = auto() # Log LabJack data to csv
 
     PLC_REQUEST_DATA = auto() # Request data from the PLC
     PLC_DATA = auto()
