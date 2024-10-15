@@ -1,7 +1,7 @@
 # General imports =================================================================================
 import multiprocessing as mp
 from socket import socket, AF_INET, SOCK_STREAM
-from time import sleep
+from typing import Tuple
 from br_threading.WorkQCommands import WorkQCmnd, WorkQCmnd_e
 from br_threading.TimerThread import TimerThread
 
@@ -13,6 +13,10 @@ PLC_SOL_OFFSET = 9
 PLC_REQUEST = 2
 
 REQUEST_DELAY = (1.0/50.0) # in seconds
+
+PLC_TC_DATA_SIZE = 11 * 2 # 9 TCs 2 LCs and each are int16_t
+PLC_PT_DATA_SIZE = 8 * 2 # 8 PTs and each are int16_t
+PLC_VALVE_DATA_SIZE = 13 # 13 valves and each are uint8_t
 
 # Class Definitions ===============================================================================
 class PlcHandler():
@@ -36,8 +40,11 @@ class PlcHandler():
         PlcHandler.socket.send(command)
 
     @staticmethod
-    def read_response() -> bytes:
-        return PlcHandler.socket.recv(64)
+    def read_response() -> Tuple[bytes]:
+        tc_data = PlcHandler.socket.recv(PLC_TC_DATA_SIZE)
+        pt_data = PlcHandler.socket.recv(PLC_PT_DATA_SIZE)
+        valve_data = PlcHandler.socket.recv(PLC_VALVE_DATA_SIZE)
+        return tc_data, pt_data, valve_data
 
 # Procedures ======================================================================================
 
@@ -67,8 +74,7 @@ def process_workq_message(message: WorkQCmnd, db_workq: mp.Queue) -> bool:
     elif message.command == WorkQCmnd_e.PLC_REQUEST_DATA:
         plc_command = int.to_bytes(PLC_REQUEST, 1, "little") + int.to_bytes(0, 1, "little")
         PlcHandler.send_command(plc_command)
-        response = PlcHandler.read_response()
-        db_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_DATA, response))
+        db_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_DATA, PlcHandler.read_response()))
 
     return True
 
