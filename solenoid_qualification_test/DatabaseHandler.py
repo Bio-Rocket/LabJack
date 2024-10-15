@@ -18,8 +18,7 @@ class DatabaseHandler():
         to be read by the front end.
         """
         DatabaseHandler.db_thread_workq = db_thread_workq
-        # DatabaseHandler.client = Client('http://192.168.0.70:8090')
-        DatabaseHandler.client = Client('http://192.168.0.130:8090')
+        DatabaseHandler.client = Client('http://192.168.0.69:8090')
         # DatabaseHandler.client = Client('http://127.0.0.1:8090')
 
         DatabaseHandler.client.collection('PlcCommands').subscribe(DatabaseHandler._handle_command_callback)
