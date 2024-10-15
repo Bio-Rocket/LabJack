@@ -1,5 +1,4 @@
 # General imports =================================================================================
-import json
 import multiprocessing as mp
 from pocketbase import Client
 from pocketbase.services.realtime_service import MessageData

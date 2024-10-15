@@ -1,7 +1,6 @@
 # General imports =================================================================================
 import multiprocessing as mp
 from socket import socket, AF_INET, SOCK_STREAM
-from time import sleep
 from br_threading.WorkQCommands import WorkQCmnd, WorkQCmnd_e
 from br_threading.TimerThread import TimerThread
 
