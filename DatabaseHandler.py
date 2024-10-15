@@ -1,6 +1,7 @@
 # General imports =================================================================================
 import json
 import multiprocessing as mp
+from typing import Tuple
 from pocketbase import Client
 from pocketbase.services.realtime_service import MessageData
 
@@ -42,9 +43,16 @@ class DatabaseHandler():
         DatabaseHandler.db_thread_workq.put(message)
 
     @staticmethod
-    def write_plc_data(plc_data: bytes):
+    def write_plc_data(plc_data: Tuple[bytes]):
+
+        if len(plc_data) != 3:
+            print("plc_data tuple is not of length 3")
+            return
+
         entry = {}
-        entry["plc_data"] = list(plc_data)
+        entry["plc_tc_data"] = list(plc_data[0])
+        entry["plc_pt_data"] = list(plc_data[1])
+        entry["plc_valve_data"] = list(plc_data[2])
 
         try:
             DatabaseHandler.client.collection("PLC").create(entry)
