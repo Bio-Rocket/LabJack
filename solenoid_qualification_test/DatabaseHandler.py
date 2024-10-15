@@ -45,7 +45,7 @@ class DatabaseHandler():
         entry["plc_data"] = list(plc_data)
 
         try:
-            DatabaseHandler.client.collection("PLC").create(entry)
+            DatabaseHandler.client.collection("Plc").create(entry)
         except Exception as e:
             print(f"failed to create a plc_data entry {e}")
 
