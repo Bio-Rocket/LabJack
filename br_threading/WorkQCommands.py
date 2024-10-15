@@ -11,7 +11,7 @@ class WorkQCmnd_e(Enum):
     LJ1_DATA = auto() # Log LabJack data to csv
 
     PLC_REQUEST_DATA = auto() # Request data from the PLC
-    PLC_DATA = auto()
+    PLC_DATA = auto() # Includes TC, PT, and Valve data in a bytes tuple
     PLC_OPEN_SOL = auto() # Open the solenoid
     PLC_CLOSE_SOL = auto() # Close the solenoid
 
