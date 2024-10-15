@@ -10,9 +10,10 @@ PLC_IP = "192.168.0.70"
 PLC_PORT = 69
 
 PLC_SOL_OFFSET = 9
-PLC_REQUEST = 2
+PLC_REQUEST = 1
 
 REQUEST_DELAY = (1.0/50.0) # in seconds
+RESPONSE_SIZE = 1 # bytes
 
 # Class Definitions ===============================================================================
 class PlcHandler():
@@ -37,7 +38,7 @@ class PlcHandler():
 
     @staticmethod
     def read_response() -> bytes:
-        return PlcHandler.socket.recv(64)
+        return PlcHandler.socket.recv(RESPONSE_SIZE)
 
 # Procedures ======================================================================================
 
