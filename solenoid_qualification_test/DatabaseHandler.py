@@ -56,17 +56,22 @@ class DatabaseHandler():
 
     @staticmethod
     def write_lj1_data(lj1_data: tuple):
-        entry = {}
-        entry["lj1_data"] = lj1_data[0]
-        entry["device_scan_backlog"] = lj1_data[1]
-        entry["ljm_scan_backlog"] = lj1_data[2]
-        
-        DatabaseHandler.labjack_multi_entry_array.append(entry)
+        DatabaseHandler.labjack_multi_entry_array.append(lj1_data)
 
         if len(DatabaseHandler.labjack_multi_entry_array) < LABJACK_ENTRY_SIZE:
             return
 
         try:
+            entry = {}
+            entry["lj1_data"] = []
+            entry["device_scan_backlog"] = []
+            entry["ljm_scan_backlog"] = []
+
+            for lj_entry in DatabaseHandler.labjack_multi_entry_array:
+                entry["lj1_data"].append(lj_entry[0])
+                entry["device_scan_backlog"].append(lj_entry[1])
+                entry["ljm_scan_backlog"].append(lj_entry[2])
+        
             DatabaseHandler.client.collection("LabJack1").create(entry)
         except Exception as e:
             print(f"failed to create a lj1_data entry {e}")
