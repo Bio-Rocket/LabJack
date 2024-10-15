@@ -6,8 +6,13 @@ from pocketbase.services.realtime_service import MessageData
 from br_threading.WorkQCommands import WorkQCmnd, WorkQCmnd_e
 
 
+LABJACK_ENTRY_SIZE = 10 # Number of entries to store before writing to the database
+
 # Class Definitions ===============================================================================
 class DatabaseHandler():
+
+    labjack_multi_entry_array = [] # Array to store multiple entries before writing to the database
+
     def __init__(self, db_thread_workq: mp.Queue):
         """
         Thread to handle the pocketbase database communication.
@@ -56,10 +61,17 @@ class DatabaseHandler():
         entry["device_scan_backlog"] = lj1_data[1]
         entry["ljm_scan_backlog"] = lj1_data[2]
 
+        DatabaseHandler.labjack_multi_entry_array.append(entry)
+
+        if len(DatabaseHandler.labjack_multi_entry_array) < LABJACK_ENTRY_SIZE:
+            return
+
         try:
             DatabaseHandler.client.collection("LabJack1").create(entry)
         except Exception as e:
             print(f"failed to create a lj1_data entry {e}")
+
+        DatabaseHandler.labjack_multi_entry_array = []
 
 # Procedures ======================================================================================
 def process_database_command(command: str, plc_workq: mp.Queue) -> None:
