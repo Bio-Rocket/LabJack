@@ -22,9 +22,9 @@ class DatabaseHandler():
         to be read by the front end.
         """
         DatabaseHandler.db_thread_workq = db_thread_workq
-        DatabaseHandler.client = Client('http://192.168.0.69:8090')
+        #DatabaseHandler.client = Client('http://192.168.0.69:8090')
         # DatabaseHandler.client = Client('http://127.0.0.1:8090')
-
+        DatabaseHandler.client = Client('http://192.168.0.130:8090')
         DatabaseHandler.client.collection('PlcCommands').subscribe(DatabaseHandler._handle_command_callback)
 
         print("DB - thread started")
@@ -60,7 +60,7 @@ class DatabaseHandler():
         entry["lj1_data"] = lj1_data[0]
         entry["device_scan_backlog"] = lj1_data[1]
         entry["ljm_scan_backlog"] = lj1_data[2]
-
+        
         DatabaseHandler.labjack_multi_entry_array.append(entry)
 
         if len(DatabaseHandler.labjack_multi_entry_array) < LABJACK_ENTRY_SIZE:
@@ -120,3 +120,4 @@ def database_thread(db_workq: mp.Queue, plc_workq: mp.Queue) -> None:
         # If there is any workq messages, process them
         if not process_workq_message(db_workq.get(block=True), plc_workq):
             return
+
