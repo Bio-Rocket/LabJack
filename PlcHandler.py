@@ -9,7 +9,10 @@ from br_threading.TimerThread import TimerThread
 PLC_IP = "192.168.0.70"
 PLC_PORT = 69
 
-PLC_SOL_OFFSET = 9
+PLC_PBV_OFFSET = 9
+PLC_PUMP_OFFSET = 17
+PLC_IGN_OFFSET = 20
+PLC_HEATER_CMND = 23
 PLC_REQUEST = 2
 
 REQUEST_DELAY = (1.0/50.0) # in seconds
@@ -61,21 +64,48 @@ def process_workq_message(message: WorkQCmnd, db_workq: mp.Queue) -> bool:
     if message.command == WorkQCmnd_e.KILL_PROCESS:
         print("PLC - Received kill command")
         return False
-    elif message.command == WorkQCmnd_e.PLC_OPEN_SOL:
-        relay_num = message.data + PLC_SOL_OFFSET # Relay number to open the solenoid 1 = 10, 2 = 11...
+    elif message.command == WorkQCmnd_e.PLC_OPEN_PBV:
+        relay_num = message.data + PLC_PBV_OFFSET # Relay number to open the PBV 1 = 10, 2 = 11...
         state = 1
         plc_command = int.to_bytes(relay_num, 1, "little") + int.to_bytes(state, 1, "little")
         PlcHandler.send_command(plc_command)
-    elif message.command == WorkQCmnd_e.PLC_CLOSE_SOL:
-        relay_num = message.data + PLC_SOL_OFFSET # Relay number to open the solenoid 1 = 10, 2 = 11...
+    elif message.command == WorkQCmnd_e.PLC_CLOSE_PBV:
+        relay_num = message.data + PLC_PBV_OFFSET # Relay number to close the PBV 1 = 10, 2 = 11...
         state = 0
         plc_command = int.to_bytes(relay_num, 1, "little") + int.to_bytes(state, 1, "little")
+        PlcHandler.send_command(plc_command)
+    elif message.command == WorkQCmnd_e.PLC_PUMP_ON:
+        pump_num = message.data + PLC_PUMP_OFFSET # Pump number to turn on 1 = 18, 2 = 19...
+        state = 1
+        plc_command = int.to_bytes(pump_num, 1, "little") + int.to_bytes(state, 1, "little")
+        PlcHandler.send_command(plc_command)
+    elif message.command == WorkQCmnd_e.PLC_PUMP_OFF:
+        pump_num = message.data + PLC_PUMP_OFFSET
+        state = 0
+        plc_command = int.to_bytes(pump_num, 1, "little") + int.to_bytes(state, 1, "little")
+        PlcHandler.send_command(plc_command)
+    elif message.command == WorkQCmnd_e.PLC_IGN_ON:
+        ign_num = message.data + PLC_IGN_OFFSET
+        state = 1
+        plc_command = int.to_bytes(ign_num, 1, "little") + int.to_bytes(state, 1, "little")
+        PlcHandler.send_command(plc_command)
+    elif message.command == WorkQCmnd_e.PLC_IGN_OFF:
+        ign_num = message.data + PLC_IGN_OFFSET
+        state = 0
+        plc_command = int.to_bytes(ign_num, 1, "little") + int.to_bytes(state, 1, "little")
+        PlcHandler.send_command(plc_command)
+    elif message.command == WorkQCmnd_e.PLC_HEATER_ON:
+        state = 1
+        plc_command = int.to_bytes(PLC_HEATER_CMND, 1, "little") + int.to_bytes(state, 1, "little")
+        PlcHandler.send_command(plc_command)
+    elif message.command == WorkQCmnd_e.PLC_HEATER_OFF:
+        state = 0
+        plc_command = int.to_bytes(PLC_HEATER_CMND, 1, "little") + int.to_bytes(state, 1, "little")
         PlcHandler.send_command(plc_command)
     elif message.command == WorkQCmnd_e.PLC_REQUEST_DATA:
         plc_command = int.to_bytes(PLC_REQUEST, 1, "little") + int.to_bytes(0, 1, "little")
         PlcHandler.send_command(plc_command)
         db_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_DATA, PlcHandler.read_response()))
-
     return True
 
 def plc_thread(plc_workq: mp.Queue, db_workq: mp.Queue) -> None:
