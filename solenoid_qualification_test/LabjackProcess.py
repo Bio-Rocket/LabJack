@@ -49,7 +49,7 @@ def t7_pro_thread(t7_pro_workq: mp.Queue, db_workq: mp.Queue):
             storing sensor data in the database.
     """
 
-    a_scan_list_names = ["AIN0", "AIN1", "AIN2", "AIN3"]
+    a_scan_list_names = ["AIN0", "AIN1", "AIN2"]
     scan_rate = 1000  # Scan rate in Hz
     stream_resolution_index = 0
     # a_scan_list = ljm.namesToAddresses(len(a_scan_list_names), a_scan_list_names)[0]
