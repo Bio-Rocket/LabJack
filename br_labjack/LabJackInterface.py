@@ -4,9 +4,9 @@ LabJackInterface.py
 This file contains a wrapper for LabJack T-Series devices using the LabJack LJM library.
 
 Classes:
-- LabJack: Wrapper for the LabJack device, 
+- LabJack: Wrapper for the LabJack device,
     for initialization, and any device wide functions (e.g. stream start/stop)
-- AnalogInput: Wrapper for analog input channels, 
+- AnalogInput: Wrapper for analog input channels,
     for setting the range, resolution, and reading the value for AIN channels
 - AnalogOutput: Wrapper for analog output channels,
     for writing a voltage to the DAC channels
@@ -19,7 +19,7 @@ Classes:
 @date: 2023-10-12
 @version: 0.1
 """""""""""""""""""""""""""""""""""""""""""""
-from modified_ljm import ljm
+from labjack.ljm import ljm
 import sys, time
 
 # Constants for configuration
@@ -41,7 +41,7 @@ class LabJack:
         self.info = ljm.getHandleInfo(self.handle)
 
         self. dacMaxVolts = 10 # Note: Modify to 5V for T4/7
-        
+
         if self.is_streaming():
             self.stop_stream()
 
@@ -49,7 +49,7 @@ class LabJack:
         ljm.close(self.handle)
         self.handle = 0
 
-    def start_stream(self, scan_list, scan_rate, scans_per_read = None, callback = None, obj = None, workq = None, stream_resolution_index : int = DEFAULT_STREAM_RESOLUTION, settling_us : float = 0):
+    def start_stream(self, scan_list, scan_rate, scans_per_read = None, callback = None, obj = None, stream_resolution_index : int = DEFAULT_STREAM_RESOLUTION, settling_us : float = 0):
         """
         Start a stream with the given parameters.
         @assumptions ADC range and resolution have been configured.
@@ -99,34 +99,36 @@ class LabJack:
             print("\nStream started with a scan rate of %0.0f Hz." % act_scan_rate)
 
             if callback is not None:
-                ljm.setStreamCallback(self.handle, callback, obj, workq)
-        
+
+                callback_wrapper = lambda args: callback(obj, args)
+                ljm.setStreamCallback(self.handle, callback_wrapper)
+
         except:
             print("\033[91mError starting stream. Please check the LabJack connection and configuration.\033[0m")
             print(sys.exc_info()[1])
             exit(1)
         return act_scan_rate
-    
+
     def read_stream_start_time(self):
         return ljm.eReadName(self.handle, "STREAM_START_TIME_STAMP")
 
     def read_stream(self):
         return ljm.eStreamRead(self.handle)
-    
+
     def is_streaming(self):
         return ljm.eReadName(self.handle, "STREAM_ENABLE")
 
     def stop_stream(self):
         ljm.eStreamStop(self.handle)
         print(f"\nStream stopped at time: {time.time()}")
-    
+
     def print_info(self):
         info = self.info
         # From https://github.com/labjack/labjack-ljm-python/blob/master/Examples/More/Stream/stream_callback.py
         print("Opened a LabJack with Device type: %i, Connection type: %i,\n"
           "Serial number: %i, IP address: %s, Port: %i,\nMax bytes per MB: %i" %
           (info[0], info[1], info[2], ljm.numberToIP(info[3]), info[4], info[5]))
-    
+
     def print_info_pretty(self):
         print("———— LabJack Info ————")
         print(f"  Device Type : {self.get_device_type()}")
@@ -147,10 +149,10 @@ class LabJack:
 
     def get_serial_number(self):
         return self.info[2]
-    
+
     def get_ip_address(self):
         return ljm.numberToIP(self.info[3])
-    
+
     def get_connection_type(self):
         if self.info[1] == ljm.constants.ctUSB:
             return "USB"
@@ -160,7 +162,7 @@ class LabJack:
             return "WIFI"
         else:
             return f"{self.info[1]}"
-    
+
     def get_handle(self):
         return self.handle
 
@@ -182,7 +184,7 @@ class AnalogInput:
         self.resolution_index = resolution_index
 
         self.set_resolution(resolution_index)
-    
+
     def set_range(self, voltage_range):
         """
         Set the voltage range for the analog input channel.
@@ -281,7 +283,7 @@ class DigitalOutput:
         if channel_name[0:3] not in ["FIO", "EIO", "CIO", "MIO"]:
             print(f"Invalid channel name {channel_name}. Please enter a valid DIO channel name.")
             raise ValueError("Invalid channel name")
-        
+
         self.lj = lj
         self.channel_name = channel_name
 
@@ -298,7 +300,7 @@ class DigitalOutput:
         @param value: 0 = low, 1 = high
         """
         ljm.eWriteName(self.lj.handle, self.channel_name, value)
-        
+
     def write(self, value : bool):
         """
         Write a value to the digital output channel.
@@ -306,7 +308,7 @@ class DigitalOutput:
         """
         wVal = int(value)
         ljm.eWriteName(self.lj.handle, self.channel_name, wVal)
-    
+
     def off(self):
         """
         Set to low (0) state.
