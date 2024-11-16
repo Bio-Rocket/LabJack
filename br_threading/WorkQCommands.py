@@ -6,11 +6,9 @@ class WorkQCmnd_e(Enum):
     KILL_PROCESS = 0 # Kill the process
 
     PLC_DB_COMMAND = auto() # Command from the database
-    LJ1_DB_COMMAND = auto() # Command from the LabJack1
-    LJ2_DB_COMMAND = auto() # Command from the LabJack2
     DB_HEART_BEAT = auto() # Heart beat
 
-    LJ1_DATA = auto() # Log LabJack data to csv
+    LJ_DATA = auto() # Log LabJack data to csv
 
     PLC_REQUEST_DATA = auto() # Request data from the PLC
     PLC_DATA = auto() # Includes TC, PT, and Valve data in a bytes tuple

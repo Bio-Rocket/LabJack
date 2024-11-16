@@ -4,6 +4,8 @@ from labjack.ljm import ljm
 import multiprocessing as mp
 from br_labjack.LabJackInterface import LabJack
 
+LAB_JACK_SCAN_RATE = 4 # Scan rate in Hz
+
 class _CallbackClass:
     def __init__(self, lji: LabJack, workq_list: List[mp.Queue]):
         """
@@ -30,7 +32,7 @@ def t7_pro_callback(obj: _CallbackClass, stream_handle: Any):
         stream_handle (Any): The stream handle for the LabJack T7 Pro.
     """
     ff = obj.lji.read_stream()
-    cmnd = WorkQCmnd(WorkQCmnd_e.LJ1_DATA, ff)
+    cmnd = WorkQCmnd(WorkQCmnd_e.LJ_DATA, ff)
 
     for workq in obj.subscribed_workq_list:
         workq.put(cmnd)
@@ -49,8 +51,8 @@ def t7_pro_thread(t7_pro_workq: mp.Queue, db_workq: mp.Queue):
             storing sensor data in the database.
     """
 
-    a_scan_list_names = ["AIN0", "AIN1", "AIN2", "AIN3"]
-    scan_rate = 1000  # Scan rate in Hz
+    a_scan_list_names = ["AIN0",]
+    scan_rate = LAB_JACK_SCAN_RATE
     stream_resolution_index = 0
     # a_scan_list = ljm.namesToAddresses(len(a_scan_list_names), a_scan_list_names)[0]
 
