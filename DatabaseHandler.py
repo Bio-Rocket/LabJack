@@ -1,13 +1,13 @@
 # General imports =================================================================================
-import json
 import multiprocessing as mp
-from typing import Tuple
+from typing import List, Tuple
 from pocketbase import Client
 from pocketbase.services.realtime_service import MessageData
 
 from br_threading.WorkQCommands import WorkQCmnd, WorkQCmnd_e
 
 LOADCELL_COMMANDS = ["TARE", "CANCEL", "CALIBRATE", "FINISH"]
+LJ_PACKET_SIZE = 4
 
 # Class Definitions ===============================================================================
 class DatabaseHandler():
@@ -20,11 +20,11 @@ class DatabaseHandler():
         to be read by the front end.
         """
         DatabaseHandler.db_thread_workq = db_thread_workq
-        DatabaseHandler.client = Client('http://192.168.0.69:8090') # Database Pi IP
+        # DatabaseHandler.client = Client('http://192.168.0.69:8090') # Database Pi IP
+        DatabaseHandler.client = Client('http://127.0.0.1:8090') # Database Pi IP
+
 
         DatabaseHandler.client.collection('PlcCommands').subscribe(DatabaseHandler._handle_plc_command_callback)
-        DatabaseHandler.client.collection('LabJack1Commands').subscribe(DatabaseHandler._handle_lj1_command_callback)
-        DatabaseHandler.client.collection('LabJack2Commands').subscribe(DatabaseHandler._handle_lj2_command_callback)
         DatabaseHandler.client.collection('Heartbeat').subscribe(DatabaseHandler._handle_heartbeat_callback)
 
         print("DB - thread started")
@@ -40,30 +40,6 @@ class DatabaseHandler():
             document (MessageData): the change notification from the database.
         """
         DatabaseHandler.db_thread_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_DB_COMMAND, (document.record.command, document.record.loadcell, document.record.value)))
-
-    @staticmethod
-    def _handle_lj1_command_callback(document: MessageData):
-        """
-        Whenever a new entry is created in the LabJack1Commands
-        collection, this function is called to handle the
-        command and forward it to the LabJack1.
-
-        Args:
-            document (MessageData): the change notification from the database.
-        """
-        DatabaseHandler.db_thread_workq.put(WorkQCmnd(WorkQCmnd_e.LJ1_DB_COMMAND, (document.record.command, document.record.value)))
-
-    @staticmethod
-    def _handle_lj2_command_callback(document: MessageData):
-        """
-        Whenever a new entry is created in the LabJack2Commands
-        collection, this function is called to handle the
-        command and forward it to the LabJack2.
-
-        Args:
-            document (MessageData): the change notification from the database.
-        """
-        DatabaseHandler.db_thread_workq.put(WorkQCmnd(WorkQCmnd_e.LJ2_DB_COMMAND, (document.record.command, document.record.value)))
 
     @staticmethod
     def _handle_heartbeat_callback(document: MessageData):
@@ -134,17 +110,38 @@ class DatabaseHandler():
         except Exception as e:
             print(f"failed to create a plc_data entry {e}")
 
-    @staticmethod
-    def write_lj1_data(lj1_data: tuple):
-        entry = {}
-        entry["lj1_data"] = lj1_data[0]
-        entry["device_scan_backlog"] = lj1_data[1]
-        entry["ljm_scan_backlog"] = lj1_data[2]
+    lj_data_packet: List[float] = []
 
-        try:
-            DatabaseHandler.client.collection("LabJack1").create(entry)
-        except Exception as e:
-            print(f"failed to create a lj1_data entry {e}")
+    @staticmethod
+    def write_lj_data(lj_data: tuple):
+        """
+        Attempt to write incoming labjack data to the database.
+
+        If there is a LJ_PACKET_SIZE specified, the DB handler will
+        collect that many pieces of data and write to the DB once the
+        full package is complete, this allows for faster DB writes.
+
+        Args:
+            lj_data (tuple): The labjack data, with the first position
+            containing the list of data
+        """
+
+        pressure_converted = lj_data[0][0]*580
+
+        DatabaseHandler.lj_data_packet.append(pressure_converted) #TODO: this will only work for the test.
+
+        if len(DatabaseHandler.lj_data_packet) == LJ_PACKET_SIZE:
+            entry = {}
+            entry["lj_data"] = DatabaseHandler.lj_data_packet
+
+            print(pressure_converted)
+            try:
+                DatabaseHandler.client.collection("LabJack").create(entry)
+            except Exception as e:
+                print(f"failed to create a lj_data entry {e}")
+            DatabaseHandler.lj_data_packet.clear()
+
+
 
 # Procedures ======================================================================================
 def process_database_command(command: str, plc_workq: mp.Queue) -> None:
@@ -232,20 +229,16 @@ def process_workq_message(message: WorkQCmnd, plc_workq: mp.Queue) -> bool:
             print("LOAD_CELL_COMMAND NOT YET SUPPORTED") # TODO
         else:
             process_database_command(message.data, plc_workq)
-    elif message.command == WorkQCmnd_e.LJ1_DB_COMMAND:
-        pass # TODO
-    elif message.command == WorkQCmnd_e.LJ2_DB_COMMAND:
-        pass # TODO
     elif message.command == WorkQCmnd_e.DB_HEART_BEAT:
         pass # TODO
     elif message.command == WorkQCmnd_e.PLC_DATA:
         DatabaseHandler.write_plc_data(message.data)
-    elif message.command == WorkQCmnd_e.LJ1_DATA:
-        DatabaseHandler.write_lj1_data(message.data)
+    elif message.command == WorkQCmnd_e.LJ_DATA:
+        DatabaseHandler.write_lj_data(message.data)
 
     return True
 
-def database_thread(db_workq: mp.Queue, plc_workq: mp.Queue) -> None: #TODO: will need workq for LabJack
+def database_thread(db_workq: mp.Queue, plc_workq: mp.Queue) -> None:
     """
     The main loop of the database handler. It subscribes to the CommandMessage collection
     """
