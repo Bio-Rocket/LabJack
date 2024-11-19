@@ -43,6 +43,8 @@ state IGNITION {
   state Ignition_Valve_State: PBV2: CLOSED
   state Ignition_Valve_State: PBV3: CLOSED
   state Ignition_Valve_State: PBV4: CLOSED
+  state Ignition_Valve_State: PBV5: CLOSED
+  state Ignition_Valve_State: PBV6: CLOSED
   state Ignition_Valve_State: PBV7: CLOSED
   state Ignition_Valve_State: PBV8: CLOSED
   state Ignition_Valve_State: PUMP1: OFF
