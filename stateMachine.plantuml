@@ -25,13 +25,9 @@ state PRE_FIRE {
   state Prefire_Valve_State: PBV6: CLOSED
   state Prefire_Valve_State: PBV7: OPEN
   state Prefire_Valve_State: PBV8: OPEN
-  state Prefire_Valve_State: SOL1: CLOSED
-  state Prefire_Valve_State: SOL2: CLOSED
-  state Prefire_Valve_State: SOL3: CLOSED
-  state Prefire_Valve_State: SOL4: CLOSED
   state Prefire_Valve_State: PUMP1: OFF
-  state Prefire_Valve_State: PUMP2: OFF
-  state Prefire_Valve_State: PUMP3: OFF
+  state Prefire_Valve_State: SOL12: CLOSED
+  state Prefire_Valve_State: SOL13: CLOSED
  
   state Prefire_Valve_Control
   state Prefire_Valve_Control: Manual: NONE
@@ -40,11 +36,6 @@ state PRE_FIRE {
 state FILL {
   state Fill_Valve_Control
   state Fill_Valve_Control: Manual: ALL
-
-  state Fill_Valve_State: SOL1: CLOSED
-  state Fill_Valve_State: SOL2: CLOSED
-  state Fill_Valve_State: SOL3: CLOSED
-  state Fill_Valve_State: SOL4: CLOSED
 }
  
 state IGNITION {
@@ -55,8 +46,8 @@ state IGNITION {
   state Ignition_Valve_State: PBV7: CLOSED
   state Ignition_Valve_State: PBV8: CLOSED
   state Ignition_Valve_State: PUMP1: OFF
-  state Ignition_Valve_State: PUMP2: OFF
-  state Ignition_Valve_State: PUMP3: OFF
+  state Ignition_Valve_State: SOL12: CLOSED
+  state Ignition_Valve_State: SOL13: CLOSED
 
   state Ignition_Valve_Control
   state Ignition_Valve_Control: Manual: NONE
@@ -87,13 +78,9 @@ state ABORT {
   state Abort_Valve_State: PBV6: CLOSED
   state Abort_Valve_State: PBV7: OPEN
   state Abort_Valve_State: PBV8: OPEN
-  state Abort_Valve_State: SOL1: CLOSED
-  state Abort_Valve_State: SOL2: CLOSED
-  state Abort_Valve_State: SOL3: CLOSED
-  state Abort_Valve_State: SOL4: CLOSED
   state Abort_Valve_State: PUMP1: OFF
-  state Abort_Valve_State: PUMP2: OFF
-  state Abort_Valve_State: PUMP3: OFF
+  state Abort_Valve_State: SOL12: CLOSED
+  state Abort_Valve_State: SOL13: CLOSED
  
   state Abort_Valve_Control
   state Abort_Valve_Control: Manual: NONE
