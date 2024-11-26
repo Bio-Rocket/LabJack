@@ -10,6 +10,7 @@ PLC_IP = "192.168.0.70"
 PLC_PORT = 69
 
 PLC_PBV_OFFSET = 9
+SOL_OFFSET = 6
 PLC_PUMP_OFFSET = 17
 PLC_IGN_OFFSET = 20
 PLC_HEATER_CMND = 23
@@ -75,7 +76,7 @@ def process_workq_message(message: WorkQCmnd, db_workq: mp.Queue) -> bool:
         plc_command = int.to_bytes(relay_num, 1, "little") + int.to_bytes(state, 1, "little")
         PlcHandler.send_command(plc_command)
     elif message.command == WorkQCmnd_e.PLC_PUMP_ON:
-        pump_num = message.data + PLC_PUMP_OFFSET # Pump number to turn on 1 = 18, 2 = 19...
+        pump_num = message.data + PLC_PUMP_OFFSET # Pump number to turn on 3 = 20
         state = 1
         plc_command = int.to_bytes(pump_num, 1, "little") + int.to_bytes(state, 1, "little")
         PlcHandler.send_command(plc_command)
@@ -84,6 +85,16 @@ def process_workq_message(message: WorkQCmnd, db_workq: mp.Queue) -> bool:
         state = 0
         plc_command = int.to_bytes(pump_num, 1, "little") + int.to_bytes(state, 1, "little")
         PlcHandler.send_command(plc_command)
+    elif message.command == WorkQCmnd_e.PLC_OPEN_SOL:
+        sol_num = message.data + SOL_OFFSET # Solenoid 12 = case 18 (formerly pump 1), and 13 = case 19
+        state = 1
+        plc_command = int.to_bytes(sol_num, 1, "little") + int.to_bytes(state, 1, "little")
+        PlcHandler.send_command(plc_command)
+    elif message.command == WorkQCmnd_e.PLC_CLOSE_SOL:
+        sol_num = message.data + SOL_OFFSET
+        state = 0
+        plc_command = int.to_bytes(sol_num, 1, "little") + int.to_bytes(state, 1, "little")
+        PlcHandler.send_command
     elif message.command == WorkQCmnd_e.PLC_IGN_ON:
         ign_num = message.data + PLC_IGN_OFFSET
         state = 1
