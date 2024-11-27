@@ -32,7 +32,25 @@ def t7_pro_callback(obj: _CallbackClass, stream_handle: Any):
         stream_handle (Any): The stream handle for the LabJack T7 Pro.
     """
     ff = obj.lji.read_stream()
-    cmnd = WorkQCmnd(WorkQCmnd_e.LJ_DATA, ff)
+    data_arr = ff[0]
+
+    data_dict = {}
+
+    data_dict["LC3"] = data_arr[0]
+    data_dict["LC4"] = data_arr[1]
+    data_dict["LC5"] = data_arr[2]
+    data_dict["LC6"] = data_arr[3]
+
+    data_dict["PT7"] = data_arr[4]
+    data_dict["PT8"] = data_arr[5]
+    data_dict["PT9"] = data_arr[6]
+    data_dict["PT10"] = data_arr[7]
+    data_dict["PT11"] = data_arr[8]
+    data_dict["PT12"] = data_arr[9]
+    data_dict["PT13"] = data_arr[10]
+    data_dict["PT14"] = data_arr[11]
+
+    cmnd = WorkQCmnd(WorkQCmnd_e.LJ_DATA, data_dict)
 
     for workq in obj.subscribed_workq_list:
         workq.put(cmnd)
@@ -51,7 +69,7 @@ def t7_pro_thread(t7_pro_workq: mp.Queue, db_workq: mp.Queue):
             storing sensor data in the database.
     """
 
-    a_scan_list_names = ["AIN0",]
+    a_scan_list_names = ["AIN0", "AIN1", "AIN2", "AIN3", "AIN4", "AIN5", "AIN6", "AIN7", "AIN8", "AIN9", "AIN10", "AIN11"]
     scan_rate = LAB_JACK_SCAN_RATE
     stream_resolution_index = 0
     # a_scan_list = ljm.namesToAddresses(len(a_scan_list_names), a_scan_list_names)[0]
