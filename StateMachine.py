@@ -15,9 +15,10 @@ class SystemStates(Enum):
     ABORT = auto()
 
 class StateMachine():
-    def __init__(self, state_workq: mp.Queue, plc_workq: mp.Queue):
+    def __init__(self, state_workq: mp.Queue, plc_workq: mp.Queue, database_workq: mp.Queue):
         self.state_workq = state_workq
         self.plc_workq = plc_workq
+        self.db_workq = database_workq
         self.current_state = SystemStates.PRE_FIRE
         self.manual_override = False
         self.set_default_state_positions()
@@ -229,16 +230,22 @@ class StateMachine():
             print(f"SM - Invalid transition command: {new_state_cmd}")
             return False
 
+        if next_state == self.current_state:
+            print(f"SM - Already in state: {next_state}")
+            self.db_workq.put(WorkQCmnd(WorkQCmnd_e.DB_STATE_CHANGE, self.current_state.name))
+            return True
+
         if StateMachine.is_valid_transition(self.current_state, next_state):
             self.current_state = next_state
             self.set_default_state_positions()
+            self.db_workq.put(WorkQCmnd(WorkQCmnd_e.DB_STATE_CHANGE, self.current_state.name))
             print(f"SM - In state: {next_state}")
             return True
         else:
             print(f"SM - Invalid transition command: from {self.current_state} to {next_state}")
             return False
 
-def state_thread(state_workq: mp.Queue, plc_workq: mp.Queue):
+def state_thread(state_workq: mp.Queue, plc_workq: mp.Queue, database_workq: mp.Queue):
     """
     Start the state machine which controls the valve states and
     the manual value states.
@@ -248,7 +255,7 @@ def state_thread(state_workq: mp.Queue, plc_workq: mp.Queue):
             The work queue for the state machine, primarily for
             a state change request.
     """
-    state_machine = StateMachine(state_workq, plc_workq)
+    state_machine = StateMachine(state_workq, plc_workq, database_workq)
 
     while 1:
         message: WorkQCmnd = state_workq.get(block=True)
