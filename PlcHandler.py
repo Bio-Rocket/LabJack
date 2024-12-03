@@ -14,13 +14,13 @@ SOL_OFFSET = 6
 PLC_PUMP_OFFSET = 17
 PLC_IGN_OFFSET = 20
 PLC_HEATER_CMND = 23
-PLC_REQUEST = 2
+PLC_REQUEST = 1
 
 REQUEST_DELAY = (1.0/50.0) # in seconds
 
 PLC_TC_DATA_SIZE = 11 * 2 # 9 TCs 2 LCs and each are int16_t
 PLC_PT_DATA_SIZE = 8 * 2 # 8 PTs and each are int16_t
-PLC_VALVE_DATA_SIZE = 13 # 13 valves and each are uint8_t
+PLC_VALVE_DATA_SIZE = 14 # 14 valves and each are uint8_t
 
 # Class Definitions ===============================================================================
 class PlcHandler():
@@ -46,6 +46,9 @@ class PlcHandler():
     @staticmethod
     def read_response() -> Tuple[bytes]:
         tc_data = PlcHandler.socket.recv(PLC_TC_DATA_SIZE)
+        if b'Unknown command' == tc_data:
+            print("PLC - Unknown Command")
+            return None, None, None
         pt_data = PlcHandler.socket.recv(PLC_PT_DATA_SIZE)
         valve_data = PlcHandler.socket.recv(PLC_VALVE_DATA_SIZE)
         return tc_data, pt_data, valve_data
@@ -94,7 +97,7 @@ def process_workq_message(message: WorkQCmnd, db_workq: mp.Queue) -> bool:
         sol_num = message.data + SOL_OFFSET
         state = 0
         plc_command = int.to_bytes(sol_num, 1, "little") + int.to_bytes(state, 1, "little")
-        PlcHandler.send_command
+        PlcHandler.send_command(plc_command)
     elif message.command == WorkQCmnd_e.PLC_IGN_ON:
         ign_num = message.data + PLC_IGN_OFFSET
         state = 1
@@ -125,8 +128,8 @@ def plc_thread(plc_workq: mp.Queue, db_workq: mp.Queue) -> None:
     try:
         PlcHandler(plc_workq)
         timer_stop = mp.Event()
-        TimerThread(request_data, REQUEST_DELAY, timer_stop).start()
-        request_data()
+        t = TimerThread(request_data, REQUEST_DELAY, timer_stop)
+        t.start()
 
     except Exception as e:
         print(f"PLC - Error: {e}")

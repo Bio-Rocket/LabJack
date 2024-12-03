@@ -42,6 +42,7 @@ class DatabaseHandler():
         Args:
             document (MessageData): the change notification from the database.
         """
+        print(f"DB - PLC Command: {document.record.command}")
         DatabaseHandler.db_thread_workq.put(WorkQCmnd(WorkQCmnd_e.DB_PLC_COMMAND, document.record.command))
 
     @staticmethod
@@ -124,7 +125,7 @@ class DatabaseHandler():
         entry["PT6"] = pt_data[5]
         entry["PT15"] = pt_data[6]
         entry["PT16"] = pt_data[7]
-        #TODO: do we have a PT17??
+        # entry["PT17"] = pt_data[8] #TODO
 
         valve_data = list(plc_data[2])
         entry["PBV1"] = valve_data[0]
@@ -253,7 +254,7 @@ class DatabaseHandler():
             calibration = DatabaseHandler.client.collection("LoadCellCalibration").find_one({"loadcell": loadcell})
             return calibration["slope"], calibration["intercept"]
         except Exception as e:
-            print(f"failed to get load cell calibration {e}")
+            print(f"No calibration for {loadcell} -  {e}")
             return 1, 0
 
 # Procedures ======================================================================================

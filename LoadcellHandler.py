@@ -158,7 +158,7 @@ class LoadCellHandler():
             intercept (float):
                 The intercept of the load cell if a calibration has been previously stored.
         """
-        self.loadCells[key] = LoadCell()
+        self.loadCells[key] = LoadCell(key)
         self.loadCells[key].set_calibration(slope, intercept)
 
     def tare_load_cell(self, key: str):

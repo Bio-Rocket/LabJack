@@ -74,7 +74,11 @@ def t7_pro_thread(t7_pro_workq: mp.Queue, db_workq: mp.Queue):
     stream_resolution_index = 0
     # a_scan_list = ljm.namesToAddresses(len(a_scan_list_names), a_scan_list_names)[0]
 
-    lji = LabJack("ANY", "USB", "ANY")
+    try:
+        lji = LabJack("ANY", "USB", "ANY")
+    except Exception as e:
+        print(f"Error Connecting to LabJack - {e}")
+        return
 
     obj = _CallbackClass(lji, [db_workq,])
 
