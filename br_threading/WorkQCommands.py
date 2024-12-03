@@ -9,6 +9,7 @@ class WorkQCmnd_e(Enum):
     DB_PLC_COMMAND = auto() # Command from the database
     DB_LC_COMMAND = auto() # Internal DB Command for the Load Cell Handler
     DB_STATE_COMMAND = auto() # Command for DB to send to the state machine
+    DB_STATE_CHANGE = auto() # Change the system state in the DB
     DB_HEART_BEAT = auto() # Heart beat
 
     ## Labjack Data from LJ to the DB

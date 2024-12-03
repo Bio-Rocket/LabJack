@@ -223,6 +223,22 @@ class DatabaseHandler():
             print(f"failed to create a load cell calibration")
 
     @staticmethod
+    def write_system_state(state: str) -> None:
+        """
+        Write the system state to the database.
+
+        Args:
+            state (str): The system state to write to the database.
+        """
+        entry = {}
+        entry["system_state"] = state
+
+        try:
+            DatabaseHandler.client.collection("SystemState").create(entry)
+        except Exception:
+            print(f"failed to create a system state")
+
+    @staticmethod
     def get_loadcell_calibration(loadcell: str) -> Tuple[float, float]:
         """
         Get the load cell calibration from the database.
@@ -287,6 +303,8 @@ def process_workq_message(message: WorkQCmnd, state_workq: mp.Queue, lc_handler:
         handle_lc_command(message.data, lc_handler)
     elif message.command == WorkQCmnd_e.DB_STATE_COMMAND:
         state_workq.put(WorkQCmnd(WorkQCmnd_e.STATE_TRANSITION, message.data))
+    elif message.command == WorkQCmnd_e.DB_STATE_CHANGE:
+        DatabaseHandler.write_system_state(message.data)
     elif message.command == WorkQCmnd_e.DB_HEART_BEAT:
         pass # TODO
     elif message.command == WorkQCmnd_e.PLC_DATA:

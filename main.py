@@ -14,11 +14,13 @@ if __name__ == "__main__":
     t7_pro_workq = mp.Queue()
     state_workq = mp.Queue()
 
+    #TODO: ADD HEARTBEAT
+
     # Initialize the threads
     tm.create_thread(target=database_thread, args=(db_workq, plc_workq))
     tm.create_thread(target=t7_pro_thread, args=(t7_pro_workq, db_workq))
     tm.create_thread(target=plc_thread, args=(plc_workq, db_workq))
-    tm.create_thread(target=state_thread, args=(state_workq, plc_workq))
+    tm.create_thread(target=state_thread, args=(state_workq, plc_workq, db_workq))
 
     tm.start_threads()
     while 1:
