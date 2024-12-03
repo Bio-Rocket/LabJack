@@ -19,8 +19,9 @@ class StateMachine():
         self.state_workq = state_workq
         self.plc_workq = plc_workq
         self.db_workq = database_workq
-        self.current_state = SystemStates.PRE_FIRE
+        self.current_state = SystemStates.TEST
         self.manual_override = False
+        self.db_workq.put(WorkQCmnd(WorkQCmnd_e.DB_STATE_CHANGE, self.current_state.name))
         self.set_default_state_positions()
 
     @staticmethod
@@ -151,70 +152,71 @@ class StateMachine():
             command (str):
                 The command from the database.
         """
+        print(f"SM - Handle Valve Change: {command}")
 
         # First handle the commands that do not require a certain state to occur
         if command == "IGN1_ON":
-            self.plc_workq.put(WorkQCmnd(WorkQCmnd(WorkQCmnd_e.PLC_IGN_ON, 1)))
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_IGN_ON, 1))
         elif command == "IGN1_OFF":
-            self.plc_workq.put(WorkQCmnd(WorkQCmnd(WorkQCmnd_e.PLC_IGN_OFF, 1)))
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_IGN_OFF, 1))
         elif command == "IGN2_ON":
-            self.plc_workq.put(WorkQCmnd(WorkQCmnd(WorkQCmnd_e.PLC_IGN_ON, 2)))
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_IGN_ON, 2))
         elif command == "IGN2_OFF":
-            self.plc_workq.put(WorkQCmnd(WorkQCmnd(WorkQCmnd_e.PLC_IGN_OFF, 2)))
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_IGN_OFF, 2))
         elif command == "HEATER_ON":
-            self.plc_workq.put(WorkQCmnd(WorkQCmnd(WorkQCmnd_e.PLC_HEATER_ON, None)))
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_HEATER_ON, None))
         elif command == "HEATER_OFF":
-            self.plc_workq.put(WorkQCmnd(WorkQCmnd(WorkQCmnd_e.PLC_HEATER_OFF, None)))
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_HEATER_OFF, None))
 
         # Check if manual override is enabled
-        if not self.current_state.manual_override:
+        if not self.manual_override:
             return None
 
         # Handle the commands that require a certain state to occur
         if command == "PBV1_OPEN":
-            self.plc_workq.put(WorkQCmnd(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_PBV, 1)))
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_PBV, 1))
         elif command == "PBV2_OPEN":
-            self.plc_workq.put(WorkQCmnd(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_PBV, 2)))
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_PBV, 2))
         elif command == "PBV3_OPEN":
-            self.plc_workq.put(WorkQCmnd(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_PBV, 3)))
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_PBV, 3))
         elif command == "PBV4_OPEN":
-            self.plc_workq.put(WorkQCmnd(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_PBV, 4)))
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_PBV, 4))
         elif command == "PBV5_OPEN":
-            self.plc_workq.put(WorkQCmnd(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_PBV, 5)))
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_PBV, 5))
         elif command == "PBV6_OPEN":
-            self.plc_workq.put(WorkQCmnd(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_PBV, 6)))
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_PBV, 6))
         elif command == "PBV7_OPEN":
-            self.plc_workq.put(WorkQCmnd(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_PBV, 7)))
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_PBV, 7))
         elif command == "PBV8_OPEN":
-            self.plc_workq.put(WorkQCmnd(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_PBV, 8)))
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_PBV, 8))
         elif command == "PMP3_ON":
-            self.plc_workq.put(WorkQCmnd(WorkQCmnd(WorkQCmnd_e.PLC_PUMP_ON, 3)))
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_PUMP_ON, 3))
         elif command == "SOL12_OPEN":
-            self.plc_workq.put(WorkQCmnd(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_SOL, 12)))
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_SOL, 12))
         elif command == "SOL13_OPEN":
-            self.plc_workq.put(WorkQCmnd(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_SOL, 13)))
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_SOL, 13))
         elif command == "PBV1_CLOSE":
-            self.plc_workq.put(WorkQCmnd(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_PBV, 1)))
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_PBV, 1))
         elif command == "PBV2_CLOSE":
-            self.plc_workq.put(WorkQCmnd(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_PBV, 2)))
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_PBV, 2))
         elif command == "PBV3_CLOSE":
-            self.plc_workq.put(WorkQCmnd(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_PBV, 3)))
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_PBV, 3))
         elif command == "PBV4_CLOSE":
-            self.plc_workq.put(WorkQCmnd(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_PBV, 4)))
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_PBV, 4))
         elif command == "PBV5_CLOSE":
-            self.plc_workq.put(WorkQCmnd(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_PBV, 5)))
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_PBV, 5))
         elif command == "PBV6_CLOSE":
-            self.plc_workq.put(WorkQCmnd(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_PBV, 6)))
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_PBV, 6))
         elif command == "PBV7_CLOSE":
-            self.plc_workq.put(WorkQCmnd(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_PBV, 7)))
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_PBV, 7))
         elif command == "PBV8_CLOSE":
-            self.plc_workq.put(WorkQCmnd(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_PBV, 8)))
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_PBV, 8))
         elif command == "PMP3_OFF":
-            self.plc_workq.put(WorkQCmnd(WorkQCmnd(WorkQCmnd_e.PLC_PUMP_OFF, 3)))
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_PUMP_OFF, 3))
         elif command == "SOL12_CLOSE":
-            self.plc_workq.put(WorkQCmnd(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_SOL, 12)))
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_SOL, 12))
         elif command == "SOL13_CLOSE":
-            self.plc_workq.put(WorkQCmnd(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_SOL, 13)))
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_SOL, 13))
 
     def attempt_transition(self, new_state_cmd: str) -> bool:
         """
@@ -256,6 +258,7 @@ def state_thread(state_workq: mp.Queue, plc_workq: mp.Queue, database_workq: mp.
             a state change request.
     """
     state_machine = StateMachine(state_workq, plc_workq, database_workq)
+    print("SM - thread started")
 
     while 1:
         message: WorkQCmnd = state_workq.get(block=True)
