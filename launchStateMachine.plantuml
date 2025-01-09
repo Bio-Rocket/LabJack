@@ -21,13 +21,6 @@ state PRE_LAUNCH {
   state Prelaunch_Valve_State: PBV2: OPEN
   state Prelaunch_Valve_State: PBV3: CLOSED
   state Prelaunch_Valve_State: PBV4: OPEN
-  state Prelaunch_Valve_State: PBV5: OPEN
-  state Prelaunch_Valve_State: PBV6: CLOSED
-  state Prelaunch_Valve_State: PBV7: CLOSED
-  state Prelaunch_Valve_State: PBV8: CLOSED
-  state Prelaunch_Valve_State: PBV9: OPEN
-  state Prelaunch_Valve_State: PBV10: CLOSED
-  state Prelaunch_Valve_State: PBV11: CLOSED
   state Prelaunch_Valve_State: SOL1: CLOSED
   state Prelaunch_Valve_State: SOL2: CLOSED
   state Prelaunch_Valve_State: SOL3: CLOSED
@@ -57,13 +50,6 @@ state IGNITION {
   state Ignition_Valve_State: PBV2: CLOSED
   state Ignition_Valve_State: PBV3: CLOSED
   state Ignition_Valve_State: PBV4: CLOSED
-  state Ignition_Valve_State: PBV5: CLOSED
-  state Ignition_Valve_State: PBV6: CLOSED
-  state Ignition_Valve_State: PBV7: CLOSED
-  state Ignition_Valve_State: PBV8: OPEN
-  state Ignition_Valve_State: PBV9: CLOSED
-  state Ignition_Valve_State: PBV10: CLOSED
-  state Ignition_Valve_State: PBV11: CLOSED
   state Ignition_Valve_State: SOL1: CLOSED
   state Ignition_Valve_State: SOL2: CLOSED
   state Ignition_Valve_State: SOL3: OPEN
@@ -84,10 +70,6 @@ state IGNITION {
 }
  
 state LAUNCH {
-  state Launch_Valve_State: PBV6: OPEN
-  state Launch_Valve_State: PBV7: OPEN
-  state Launch_Valve_State: PBV10: OPEN
-  state Launch_Valve_State: PBV11: OPEN
   state Launch_Valve_State: SOL13: OPEN
   state Launch_Valve_State: SOL14: OPEN
 
@@ -96,10 +78,6 @@ state LAUNCH {
 }
 
 state POST_LAUNCH {
-  state Post_Launch_Valve_State: PBV6: CLOSED
-  state Post_Launch_Valve_State: PBV7: CLOSED
-  state Post_Launch_Valve_State: PBV10: CLOSED
-  state Post_Launch_Valve_State: PBV11: CLOSED
   state Post_Launch_Valve_State: SOL13: CLOSED
   state Post_Launch_Valve_State: SOL14: CLOSED
 
@@ -112,13 +90,6 @@ state ABORT {
   state Abort_Valve_State: PBV2: OPEN
   state Abort_Valve_State: PBV3: CLOSED
   state Abort_Valve_State: PBV4: OPEN
-  state Abort_Valve_State: PBV5: OPEN
-  state Abort_Valve_State: PBV6: CLOSED
-  state Abort_Valve_State: PBV7: CLOSED
-  state Abort_Valve_State: PBV8: CLOSED
-  state Abort_Valve_State: PBV9: OPEN
-  state Abort_Valve_State: PBV10: CLOSED
-  state Abort_Valve_State: PBV11: CLOSED
   state Abort_Valve_State: SOL1: CLOSED
   state Abort_Valve_State: SOL2: CLOSED
   state Abort_Valve_State: SOL3: CLOSED
