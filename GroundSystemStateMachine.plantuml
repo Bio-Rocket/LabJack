@@ -15,7 +15,7 @@ POST_FIRE --> FILL : GOTO_FILL
 POST_FIRE --> ABORT : GOTO_ABORT
 ABORT --> PRE_FIRE : GOTO_PRE_FIRE
 TEST --> PRE_FIRE : GOTO_PRE_FIRE \n\n
- 
+
 state PRE_FIRE {
   state Prefire_Valve_State: PBV1: CLOSED
   state Prefire_Valve_State: PBV2: OPEN
@@ -28,18 +28,31 @@ state PRE_FIRE {
   state Prefire_Valve_State: PBV9: OPEN
   state Prefire_Valve_State: PBV10: CLOSED
   state Prefire_Valve_State: PBV11: CLOSED
+
   state Prefire_Valve_State: SOL1: CLOSED
   state Prefire_Valve_State: SOL2: CLOSED
- 
+  state Prefire_Valve_State: SOL3: CLOSED
+  state Prefire_Valve_State: SOL4: CLOSED
+  state Prefire_Valve_State: SOL5: CLOSED
+  state Prefire_Valve_State: SOL6: CLOSED
+  state Prefire_Valve_State: SOL7: CLOSED
+  state Prefire_Valve_State: SOL8: CLOSED
+  state Prefire_Valve_State: SOL9: CLOSED
+  state Prefire_Valve_State: SOL10: CLOSED
+  state Prefire_Valve_State: SOL11: OPEN
+  state Prefire_Valve_State: SOL12: OPEN
+  state Prefire_Valve_State: SOL13: CLOSED
+  state Prefire_Valve_State: SOL14: CLOSED
+
   state Prefire_Valve_Control
   state Prefire_Valve_Control: Manual: NONE
 }
- 
+
 state FILL {
   state Fill_Valve_Control
   state Fill_Valve_Control: Manual: ALL
 }
- 
+
 state IGNITION {
   state Ignition_Valve_State: PBV1: CLOSED
   state Ignition_Valve_State: PBV2: CLOSED
@@ -52,18 +65,35 @@ state IGNITION {
   state Ignition_Valve_State: PBV9: CLOSED
   state Ignition_Valve_State: PBV10: CLOSED
   state Ignition_Valve_State: PBV11: CLOSED
+
   state Ignition_Valve_State: SOL1: CLOSED
   state Ignition_Valve_State: SOL2: CLOSED
+  state Ignition_Valve_State: SOL3: OPEN
+  state Ignition_Valve_State: SOL4: OPEN
+  state Ignition_Valve_State: SOL5: OPEN
+  state Ignition_Valve_State: SOL6: CLOSED
+  state Ignition_Valve_State: SOL7: OPEN
+  state Ignition_Valve_State: SOL8: OPEN
+  state Ignition_Valve_State: SOL9: CLOSED
+  state Ignition_Valve_State: SOL10: OPEN
+  state Ignition_Valve_State: SOL11: CLOSED
+  state Ignition_Valve_State: SOL12: CLOSED
+  state Ignition_Valve_State: SOL13: CLOSED
+  state Ignition_Valve_State: SOL14: CLOSED
+
 
   state Ignition_Valve_Control
   state Ignition_Valve_Control: Manual: NONE
 }
- 
+
 state FIRE {
   state Fire_Valve_State: PBV6: OPEN
   state Fire_Valve_State: PBV7: OPEN
   state Fire_Valve_State: PBV10: OPEN
   state Fire_Valve_State: PBV11: OPEN
+
+  state Fire_Valve_State: SOL13: OPEN
+  state Fire_Valve_State: SOL14: OPEN
 
   state Fire_Valve_Control
   state Fire_Valve_Control: Manual: NONE
@@ -75,10 +105,13 @@ state POST_FIRE {
   state Post_Fire_Valve_State: PBV10: CLOSED
   state Post_Fire_Valve_State: PBV11: CLOSED
 
+  state Post_Fire_Valve_State: SOL13: CLOSED
+  state Post_Fire_Valve_State: SOL14: CLOSED
+
   state Post_Fire_Valve_Control
   state Post_Fire_Valve_Control: Manual: ALL
-} 
- 
+}
+
 state ABORT {
   state Abort_Valve_State: PBV1: CLOSED
   state Abort_Valve_State: PBV2: OPEN
@@ -91,13 +124,27 @@ state ABORT {
   state Abort_Valve_State: PBV9: OPEN
   state Abort_Valve_State: PBV10: CLOSED
   state Abort_Valve_State: PBV11: CLOSED
+
   state Abort_Valve_State: SOL1: CLOSED
   state Abort_Valve_State: SOL2: CLOSED
- 
+  state Abort_Valve_State: SOL3: CLOSED
+  state Abort_Valve_State: SOL4: CLOSED
+  state Abort_Valve_State: SOL5: CLOSED
+  state Abort_Valve_State: SOL6: CLOSED
+  state Abort_Valve_State: SOL7: CLOSED
+  state Abort_Valve_State: SOL8: CLOSED
+  state Abort_Valve_State: SOL9: CLOSED
+  state Abort_Valve_State: SOL10: CLOSED
+  state Abort_Valve_State: SOL11: OPEN
+  state Abort_Valve_State: SOL12: OPEN
+  state Abort_Valve_State: SOL13: CLOSED
+  state Abort_Valve_State: SOL14: CLOSED
+
+
   state Abort_Valve_Control
   state Abort_Valve_Control: Manual: NONE
 }
- 
+
 state TEST {
   state Test_Valve_Control
   state Test_Valve_Control: Manual: ALL
