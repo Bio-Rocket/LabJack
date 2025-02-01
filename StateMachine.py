@@ -1,5 +1,4 @@
 import multiprocessing as mp
-from typing import Union
 from enum import Enum, auto
 
 from br_threading.WorkQCommands import WorkQCmnd, WorkQCmnd_e
@@ -95,13 +94,29 @@ class StateMachine():
             self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_PBV, 2))
             self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_PBV, 3))
             self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_PBV, 4))
-            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_PBV, 5))
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_PBV, 5))
             self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_PBV, 6))
-            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_PBV, 7))
-            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_PBV, 8))
-            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_PUMP_OFF, 3))
-            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_SOL, 12))
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_PBV, 7))
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_PBV, 8))
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_PBV, 9))
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_PBV, 10))
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_PBV, 11))
+
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_SOL, 1))
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_SOL, 2))
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_SOL, 3))
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_SOL, 4))
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_SOL, 5))
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_SOL, 6))
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_SOL, 7))
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_SOL, 8))
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_SOL, 9))
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_SOL, 10))
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_SOL, 11))
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_SOL, 12))
             self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_SOL, 13))
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_SOL, 14))
+
         if self.current_state == SystemStates.TEST:
             self.manual_override = True
             # All valves can be in any position by default (Note this will just be the previous state (Pre-Fire))
@@ -117,31 +132,76 @@ class StateMachine():
             self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_PBV, 5))
             self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_PBV, 6))
             self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_PBV, 7))
-            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_PBV, 8))
-            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_PUMP_OFF, 3))
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_PBV, 8))
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_PBV, 9))
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_PBV, 10))
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_PBV, 11))
+
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_SOL, 1))
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_SOL, 2))
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_SOL, 3))
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_SOL, 4))
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_SOL, 5))
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_SOL, 6))
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_SOL, 7))
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_SOL, 8))
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_SOL, 9))
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_SOL, 10))
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_SOL, 11))
             self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_SOL, 12))
             self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_SOL, 13))
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_SOL, 14))
+
         if self.current_state == SystemStates.FIRE:
             self.manual_override = False
-            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_PBV, 5))
             self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_PBV, 6))
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_PBV, 7))
+
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_PBV, 10))
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_PBV, 11))
+
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_SOL, 13))
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_SOL, 14))
+
         if self.current_state == SystemStates.POST_FIRE:
             self.manual_override = True
-            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_PBV, 5))
             self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_PBV, 6))
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_PBV, 7))
+
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_PBV, 10))
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_PBV, 11))
+
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_SOL, 13))
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_SOL, 14))
+
         if self.current_state == SystemStates.ABORT:
             self.manual_override = False
             self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_PBV, 1))
             self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_PBV, 2))
             self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_PBV, 3))
             self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_PBV, 4))
-            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_PBV, 5))
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_PBV, 5))
             self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_PBV, 6))
-            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_PBV, 7))
-            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_PBV, 8))
-            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_PUMP_OFF, 3))
-            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_SOL, 12))
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_PBV, 7))
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_PBV, 8))
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_PBV, 9))
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_PBV, 10))
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_PBV, 11))
+
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_SOL, 1))
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_SOL, 2))
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_SOL, 3))
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_SOL, 4))
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_SOL, 5))
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_SOL, 6))
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_SOL, 7))
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_SOL, 8))
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_SOL, 9))
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_SOL, 10))
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_SOL, 11))
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_SOL, 12))
             self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_SOL, 13))
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_SOL, 14))
 
     def handle_valve_change(self, command: str) -> None:
         """
@@ -189,12 +249,40 @@ class StateMachine():
             self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_PBV, 7))
         elif command == "PBV8_OPEN":
             self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_PBV, 8))
-        elif command == "PMP3_ON":
-            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_PUMP_ON, 3))
+        elif command == "PBV9_OPEN":
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_PBV, 9))
+        elif command == "PBV10_OPEN":
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_PBV, 10))
+        elif command == "PBV11_OPEN":
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_PBV, 11))
+
+        elif command == "SOL1_OPEN":
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_SOL, 1))
+        elif command == "SOL2_OPEN":
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_SOL, 2))
+        elif command == "SOL3_OPEN":
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_SOL, 3))
+        elif command == "SOL4_OPEN":
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_SOL, 4))
+        elif command == "SOL5_OPEN":
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_SOL, 5))
+        elif command == "SOL6_OPEN":
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_SOL, 6))
+        elif command == "SOL7_OPEN":
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_SOL, 7))
+        elif command == "SOL8_OPEN":
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_SOL, 8))
+        elif command == "SOL9_OPEN":
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_SOL, 9))
+        elif command == "SOL10_OPEN":
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_SOL, 10))
+        elif command == "SOL11_OPEN":
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_SOL, 11))
         elif command == "SOL12_OPEN":
             self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_SOL, 12))
         elif command == "SOL13_OPEN":
             self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_SOL, 13))
+
         elif command == "PBV1_CLOSE":
             self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_PBV, 1))
         elif command == "PBV2_CLOSE":
@@ -211,8 +299,35 @@ class StateMachine():
             self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_PBV, 7))
         elif command == "PBV8_CLOSE":
             self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_PBV, 8))
-        elif command == "PMP3_OFF":
-            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_PUMP_OFF, 3))
+        elif command == "PBV9_CLOSE":
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_PBV, 9))
+        elif command == "PBV10_CLOSE":
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_PBV, 10))
+        elif command == "PBV11_CLOSE":
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_PBV, 11))
+
+        elif command == "SOL1_CLOSE":
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_SOL, 1))
+        elif command == "SOL2_CLOSE":
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_SOL, 2))
+        elif command == "SOL3_CLOSE":
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_SOL, 3))
+        elif command == "SOL4_CLOSE":
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_SOL, 4))
+        elif command == "SOL5_CLOSE":
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_SOL, 5))
+        elif command == "SOL6_CLOSE":
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_SOL, 6))
+        elif command == "SOL7_CLOSE":
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_SOL, 7))
+        elif command == "SOL8_CLOSE":
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_SOL, 8))
+        elif command == "SOL9_CLOSE":
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_SOL, 9))
+        elif command == "SOL10_CLOSE":
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_SOL, 10))
+        elif command == "SOL11_CLOSE":
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_SOL, 11))
         elif command == "SOL12_CLOSE":
             self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_SOL, 12))
         elif command == "SOL13_CLOSE":
