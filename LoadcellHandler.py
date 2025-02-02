@@ -138,8 +138,6 @@ class LoadCell():
         self.current_cali_mass = 0
         self.state = self.State.CONVERT_MASS
 
-
-
 class LoadCellHandler():
     loadCells: Dict[str, LoadCell]
 

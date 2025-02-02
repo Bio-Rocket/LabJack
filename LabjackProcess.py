@@ -1,10 +1,15 @@
+from dataclasses import dataclass
 from typing import Any, List
 from br_threading.WorkQCommands import WorkQCmnd, WorkQCmnd_e
-from labjack.ljm import ljm
 import multiprocessing as mp
 from br_labjack.LabJackInterface import LabJack
 
 LAB_JACK_SCAN_RATE = 4 # Scan rate in Hz
+
+@dataclass
+class LjData():
+    lc_data: list
+    pt_data: list
 
 class _CallbackClass:
     def __init__(self, lji: LabJack, workq_list: List[mp.Queue]):
@@ -34,23 +39,23 @@ def t7_pro_callback(obj: _CallbackClass, stream_handle: Any):
     ff = obj.lji.read_stream()
     data_arr = ff[0]
 
-    data_dict = {}
+    lc_data = []
+    pt_data = []
 
-    data_dict["LC3"] = data_arr[0]
-    data_dict["LC4"] = data_arr[1]
-    data_dict["LC5"] = data_arr[2]
-    data_dict["LC6"] = data_arr[3]
+    lc_data.append(data_arr[0]) # LC3
+    lc_data.append(data_arr[1]) # LC4
+    lc_data.append(data_arr[2]) # LC5
+    lc_data.append(data_arr[3]) # LC6
 
-    data_dict["PT7"] = data_arr[4]
-    data_dict["PT8"] = data_arr[5]
-    data_dict["PT9"] = data_arr[6]
-    data_dict["PT10"] = data_arr[7]
-    data_dict["PT11"] = data_arr[8]
-    data_dict["PT12"] = data_arr[9]
-    data_dict["PT13"] = data_arr[10]
-    data_dict["PT14"] = data_arr[11]
+    pt_data.append(data_arr[4]) # PT6
+    pt_data.append(data_arr[5]) # PT7
+    pt_data.append(data_arr[6]) # PT8
+    pt_data.append(data_arr[7]) # PT9
+    pt_data.append(data_arr[8]) # PT10
+    pt_data.append(data_arr[9]) # PT11
+    pt_data.append(data_arr[10]) # PT12
 
-    cmnd = WorkQCmnd(WorkQCmnd_e.LJ_DATA, data_dict)
+    cmnd = WorkQCmnd(WorkQCmnd_e.LJ_DATA, LjData(lc_data, pt_data))
 
     for workq in obj.subscribed_workq_list:
         workq.put(cmnd)
@@ -69,10 +74,9 @@ def t7_pro_thread(t7_pro_workq: mp.Queue, db_workq: mp.Queue):
             storing sensor data in the database.
     """
 
-    a_scan_list_names = ["AIN0", "AIN1", "AIN2", "AIN3", "AIN4", "AIN5", "AIN6", "AIN7", "AIN8", "AIN9", "AIN10", "AIN11"]
+    a_scan_list_names = ["AIN0", "AIN1", "AIN2", "AIN3", "AIN4", "AIN5", "AIN6", "AIN7", "AIN8", "AIN9", "AIN10"]
     scan_rate = LAB_JACK_SCAN_RATE
     stream_resolution_index = 0
-    # a_scan_list = ljm.namesToAddresses(len(a_scan_list_names), a_scan_list_names)[0]
 
     try:
         lji = LabJack("ANY", "USB", "ANY")

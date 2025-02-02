@@ -7,7 +7,6 @@ from PlcHandler import plc_thread
 from LabjackProcess import t7_pro_thread
 from StateMachine import state_thread
 
-
 if __name__ == "__main__":
     db_workq = mp.Queue()
     plc_workq = mp.Queue()

@@ -10,7 +10,7 @@ class WorkQCmnd_e(Enum):
     DB_LC_COMMAND = auto() # Internal DB Command for the Load Cell Handler
     DB_STATE_COMMAND = auto() # Command for DB to send to the state machine
     DB_STATE_CHANGE = auto() # Change the system state in the DB
-    DB_HEART_BEAT = auto() # Heart beat
+    DB_HEARTBEAT = auto() # Heartbeat
 
     ## Labjack Data from LJ to the DB
     LJ_DATA = auto() # Log LabJack data to DB, expects dictionary [str: float]
@@ -19,7 +19,7 @@ class WorkQCmnd_e(Enum):
     PLC_REQUEST_DATA = auto() # Request data from the PLC (Internal PLC Command)
 
     ## PLC Data from PLC to the DB
-    PLC_DATA = auto() # Includes TC, PT, and Valve data in a bytes tuple
+    PLC_DATA = auto() # Includes TC, LC, PT, and Valve data in a PlcData object
 
     ## PLC Commands to adjust the valves, Pumps, Igniters, and Heater
     PLC_OPEN_PBV = auto() # Open the Pneumatic Ball Valve, expects the PBV number
@@ -27,6 +27,8 @@ class WorkQCmnd_e(Enum):
 
     PLC_OPEN_SOL = auto() # Open the Solenoid Valve, expects the Solenoid number
     PLC_CLOSE_SOL = auto() # Close the Solenoid Valve, expects the Solenoid number
+
+    #TODO: Might need Pump for PMP3
 
     PLC_IGN_ON = auto() # Turn on the igniter, expects the igniter number
     PLC_IGN_OFF = auto() # Turn off the igniter, expects the igniter number

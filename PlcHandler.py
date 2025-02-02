@@ -4,25 +4,39 @@ from socket import socket, AF_INET, SOCK_STREAM
 from typing import Tuple
 from br_threading.WorkQCommands import WorkQCmnd, WorkQCmnd_e
 from br_threading.TimerThread import TimerThread
+from dataclasses import dataclass
 
 # Constants ========================================================================================
 PLC_IP = "192.168.0.70"
 PLC_PORT = 69
 
-PLC_PBV_OFFSET = 9
-SOL_OFFSET = 6
-PLC_PUMP_OFFSET = 17
-PLC_IGN_OFFSET = 20
-PLC_HEATER_CMND = 23
-PLC_REQUEST = 1
-
 REQUEST_DELAY = (1.0/50.0) # in seconds
 
-PLC_TC_DATA_SIZE = 11 * 2 # 9 TCs 2 LCs and each are int16_t
-PLC_PT_DATA_SIZE = 8 * 2 # 8 PTs and each are int16_t
-PLC_VALVE_DATA_SIZE = 14 # 14 valves and each are uint8_t
+# PLC Commands and Offsets
+PLC_REQUEST = 1
+
+PLC_PBV_OFFSET = 9
+SOL_OFFSET = 20
+
+PLC_HEATER_CMND = 30
+PUMP3_CMND = 31
+
+PLC_IGN_OFFSET = 31
+
+# PLC data sizes
+PLC_TC_DATA_SIZE = 9 * 2 # 9 TCs 2 LCs and each are int16_t
+PLC_LC_DATA_SIZE = 3 * 2 # 3 LCs all int16_t
+PLC_PT_DATA_SIZE = 7 * 2 # 8 PTs and each are int16_t
+PLC_VALVE_DATA_SIZE = 24 # 14 valves and each are int8_t
 
 # Class Definitions ===============================================================================
+@dataclass
+class PlcData():
+    tc_data: bytes
+    lc_data: bytes
+    pt_data: bytes
+    valve_data: bytes
+
 class PlcHandler():
     def __init__(self, plc_workq: mp.Queue):
         PlcHandler.socket = socket(AF_INET, SOCK_STREAM)
@@ -48,10 +62,13 @@ class PlcHandler():
         tc_data = PlcHandler.socket.recv(PLC_TC_DATA_SIZE)
         if b'Unknown command' == tc_data:
             print("PLC - Unknown Command")
-            return None, None, None
+            return None
+
+        lc_data = PlcHandler.socket.recv(PLC_LC_DATA_SIZE)
         pt_data = PlcHandler.socket.recv(PLC_PT_DATA_SIZE)
         valve_data = PlcHandler.socket.recv(PLC_VALVE_DATA_SIZE)
-        return tc_data, pt_data, valve_data
+
+        return PlcData(tc_data, lc_data, pt_data, valve_data)
 
 # Procedures ======================================================================================
 
@@ -68,6 +85,10 @@ def process_workq_message(message: WorkQCmnd, db_workq: mp.Queue) -> bool:
     if message.command == WorkQCmnd_e.KILL_PROCESS:
         print("PLC - Received kill command")
         return False
+    elif message.command == WorkQCmnd_e.PLC_REQUEST_DATA:
+        plc_command = int.to_bytes(PLC_REQUEST, 1, "little") + int.to_bytes(0, 1, "little")
+        PlcHandler.send_command(plc_command)
+        db_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_DATA, PlcHandler.read_response()))
     elif message.command == WorkQCmnd_e.PLC_OPEN_PBV:
         relay_num = message.data + PLC_PBV_OFFSET # Relay number to open the PBV 1 = 10, 2 = 11...
         state = 1
@@ -78,18 +99,8 @@ def process_workq_message(message: WorkQCmnd, db_workq: mp.Queue) -> bool:
         state = 0
         plc_command = int.to_bytes(relay_num, 1, "little") + int.to_bytes(state, 1, "little")
         PlcHandler.send_command(plc_command)
-    elif message.command == WorkQCmnd_e.PLC_PUMP_ON:
-        pump_num = message.data + PLC_PUMP_OFFSET # Pump number to turn on 3 = 20
-        state = 1
-        plc_command = int.to_bytes(pump_num, 1, "little") + int.to_bytes(state, 1, "little")
-        PlcHandler.send_command(plc_command)
-    elif message.command == WorkQCmnd_e.PLC_PUMP_OFF:
-        pump_num = message.data + PLC_PUMP_OFFSET
-        state = 0
-        plc_command = int.to_bytes(pump_num, 1, "little") + int.to_bytes(state, 1, "little")
-        PlcHandler.send_command(plc_command)
     elif message.command == WorkQCmnd_e.PLC_OPEN_SOL:
-        sol_num = message.data + SOL_OFFSET # Solenoid 12 = case 18 (formerly pump 1), and 13 = case 19
+        sol_num = message.data + SOL_OFFSET # Solenoid 1 = case 21
         state = 1
         plc_command = int.to_bytes(sol_num, 1, "little") + int.to_bytes(state, 1, "little")
         PlcHandler.send_command(plc_command)
@@ -98,6 +109,15 @@ def process_workq_message(message: WorkQCmnd, db_workq: mp.Queue) -> bool:
         state = 0
         plc_command = int.to_bytes(sol_num, 1, "little") + int.to_bytes(state, 1, "little")
         PlcHandler.send_command(plc_command)
+    elif message.command == WorkQCmnd_e.PLC_HEATER_ON:
+        state = 1
+        plc_command = int.to_bytes(PLC_HEATER_CMND, 1, "little") + int.to_bytes(state, 1, "little")
+        PlcHandler.send_command(plc_command)
+    elif message.command == WorkQCmnd_e.PLC_HEATER_OFF:
+        state = 0
+        plc_command = int.to_bytes(PLC_HEATER_CMND, 1, "little") + int.to_bytes(state, 1, "little")
+        PlcHandler.send_command(plc_command)
+    #TODO: Might need to add pump (PMP3) offset already listed above
     elif message.command == WorkQCmnd_e.PLC_IGN_ON:
         ign_num = message.data + PLC_IGN_OFFSET
         state = 1
@@ -108,18 +128,6 @@ def process_workq_message(message: WorkQCmnd, db_workq: mp.Queue) -> bool:
         state = 0
         plc_command = int.to_bytes(ign_num, 1, "little") + int.to_bytes(state, 1, "little")
         PlcHandler.send_command(plc_command)
-    elif message.command == WorkQCmnd_e.PLC_HEATER_ON:
-        state = 1
-        plc_command = int.to_bytes(PLC_HEATER_CMND, 1, "little") + int.to_bytes(state, 1, "little")
-        PlcHandler.send_command(plc_command)
-    elif message.command == WorkQCmnd_e.PLC_HEATER_OFF:
-        state = 0
-        plc_command = int.to_bytes(PLC_HEATER_CMND, 1, "little") + int.to_bytes(state, 1, "little")
-        PlcHandler.send_command(plc_command)
-    elif message.command == WorkQCmnd_e.PLC_REQUEST_DATA:
-        plc_command = int.to_bytes(PLC_REQUEST, 1, "little") + int.to_bytes(0, 1, "little")
-        PlcHandler.send_command(plc_command)
-        db_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_DATA, PlcHandler.read_response()))
     return True
 
 def plc_thread(plc_workq: mp.Queue, db_workq: mp.Queue) -> None:
