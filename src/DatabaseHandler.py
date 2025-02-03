@@ -10,6 +10,8 @@ from LoadcellHandler import LoadCellHandler
 from br_threading.WorkQCommands import WorkQCmnd, WorkQCmnd_e
 from PlcHandler import PlcData
 from LabjackProcess import LAB_JACK_SCAN_RATE, LjData
+from dotenv import load_dotenv
+import os
 
 PB_URL = 'http://127.0.0.1:8090'
 # PB_URL = 'http://192.168.0.69:8090' # Database Pi IP
@@ -35,7 +37,18 @@ class DatabaseHandler():
         if not DatabaseHandler.verify_connection():
             return
 
-        DatabaseHandler.token = DatabaseHandler.admin_login("ethan.subasic@gmail.com", "1234567890") #TODO: add .env variables
+        # Load environment variables from .env file
+        load_dotenv()
+
+        # Get admin credentials from environment variables
+        admin_email = os.getenv("ADMIN_EMAIL")
+        admin_password = os.getenv("ADMIN_PASS")
+
+        if not admin_email or not admin_password:
+            print("DB - Admin credentials not found in environment variables.")
+            return
+
+        DatabaseHandler.token = DatabaseHandler.admin_login(admin_email, admin_password) #TODO: add .env variables
         if DatabaseHandler.token is None:
             print("DB - Failed to authenticate as admin.")
             return
