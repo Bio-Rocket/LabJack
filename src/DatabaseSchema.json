@@ -1,0 +1,301 @@
+{
+    "collections": [
+        {
+            "name": "Plc",
+            "schema": [
+                {
+                    "name": "TC1",
+                    "type": "number"
+                },
+                {
+                    "name": "TC2",
+                    "type": "number"
+                },
+                {
+                    "name": "TC3",
+                    "type": "number"
+                },
+                {
+                    "name": "TC4",
+                    "type": "number"
+                },
+                {
+                    "name": "TC5",
+                    "type": "number"
+                },
+                {
+                    "name": "TC6",
+                    "type": "number"
+                },
+                {
+                    "name": "TC7",
+                    "type": "number"
+                },
+                {
+                    "name": "TC8",
+                    "type": "number"
+                },
+                {
+                    "name": "TC9",
+                    "type": "number"
+                },
+                {
+                    "name": "LC1",
+                    "type": "number"
+                },
+                {
+                    "name": "LC2",
+                    "type": "number"
+                },
+                {
+                    "name": "LC7",
+                    "type": "number"
+                },
+                {
+                    "name": "PT1",
+                    "type": "number"
+                },
+                {
+                    "name": "PT2",
+                    "type": "number"
+                },
+                {
+                    "name": "PT3",
+                    "type": "number"
+                },
+                {
+                    "name": "PT4",
+                    "type": "number"
+                },
+                {
+                    "name": "PT5",
+                    "type": "number"
+                },
+                {
+                    "name": "PT13",
+                    "type": "number"
+                },
+                {
+                    "name": "PT14",
+                    "type": "number"
+                },
+                {
+                    "name": "PBV1",
+                    "type": "bool"
+                },
+                {
+                    "name": "PBV2",
+                    "type": "bool"
+                },
+                {
+                    "name": "PBV3",
+                    "type": "bool"
+                },
+                {
+                    "name": "PBV4",
+                    "type": "bool"
+                },
+                {
+                    "name": "PBV5",
+                    "type": "bool"
+                },
+                {
+                    "name": "PBV6",
+                    "type": "bool"
+                },
+                {
+                    "name": "PBV7",
+                    "type": "bool"
+                },
+                {
+                    "name": "PBV8",
+                    "type": "bool"
+                },
+                {
+                    "name": "PBV9",
+                    "type": "bool"
+                },
+                {
+                    "name": "PBV10",
+                    "type": "bool"
+                },
+                {
+                    "name": "PBV11",
+                    "type": "bool"
+                },
+                {
+                    "name": "SOL1",
+                    "type": "bool"
+                },
+                {
+                    "name": "SOL2",
+                    "type": "bool"
+                },
+                {
+                    "name": "SOL3",
+                    "type": "bool"
+                },
+                {
+                    "name": "SOL4",
+                    "type": "bool"
+                },
+                {
+                    "name": "SOL5",
+                    "type": "bool"
+                },
+                {
+                    "name": "SOL6",
+                    "type": "bool"
+                },
+                {
+                    "name": "SOL7",
+                    "type": "bool"
+                },
+                {
+                    "name": "SOL8",
+                    "type": "bool"
+                },
+                {
+                    "name": "SOL9",
+                    "type": "bool"
+                },
+                {
+                    "name": "HEATER",
+                    "type": "bool"
+                },
+                {
+                    "name": "PMP3",
+                    "type": "bool"
+                },
+                {
+                    "name": "IGN1",
+                    "type": "bool"
+                },
+                {
+                    "name": "IGN2",
+                    "type": "bool"
+                }
+            ]
+        },
+        {
+            "name": "LabJack",
+            "schema": [
+                {
+                    "name": "LC3",
+                    "type": "json"
+                },
+                {
+                    "name": "LC4",
+                    "type": "json"
+                },
+                {
+                    "name": "LC5",
+                    "type": "json"
+                },
+                {
+                    "name": "LC6",
+                    "type": "json"
+                },
+                {
+                    "name": "PT6",
+                    "type": "json"
+                },
+                {
+                    "name": "PT7",
+                    "type": "json"
+                },
+                {
+                    "name": "PT8",
+                    "type": "json"
+                },
+                {
+                    "name": "PT9",
+                    "type": "json"
+                },
+                {
+                    "name": "PT10",
+                    "type": "json"
+                },
+                {
+                    "name": "PT11",
+                    "type": "json"
+                },
+                {
+                    "name": "PT12",
+                    "type": "json"
+                }
+            ]
+        },
+        {
+            "name": "GroundSystemsCommand",
+            "schema": [
+                {
+                    "name": "command",
+                    "type": "text"
+                }
+            ]
+        },
+        {
+            "name": "HeartbeatMessage",
+            "schema": [
+                {
+                    "name": "message",
+                    "type": "text"
+                }
+            ]
+        },
+        {
+            "name": "LoadCellCalibration",
+            "schema": [
+                {
+                    "name": "loadcell",
+                    "type": "text"
+                },
+                {
+                    "name": "slope",
+                    "type": "number"
+                },
+                {
+                    "name": "intercept",
+                    "type": "number"
+                }
+            ]
+        },
+        {
+            "name": "LoadCellCommand",
+            "schema": [
+                {
+                    "name": "command",
+                    "type": "text"
+                },
+                {
+                    "name": "loadcell",
+                    "type": "text"
+                },
+                {
+                    "name": "value",
+                    "type": "number"
+                }
+            ]
+        },
+        {
+            "name": "StateCommand",
+            "schema": [
+                {
+                    "name": "command",
+                    "type": "text"
+                }
+            ]
+        },
+        {
+            "name": "SystemState",
+            "schema": [
+                {
+                    "name": "system_state",
+                    "type": "text"
+                }
+            ]
+        }
+    ]
+
+}

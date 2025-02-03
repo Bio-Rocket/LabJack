@@ -1,13 +1,20 @@
 # General imports =================================================================================
+import json
 import multiprocessing as mp
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Union
 from pocketbase import Client
 from pocketbase.services.realtime_service import MessageData
+import requests
 
 from LoadcellHandler import LoadCellHandler
 from br_threading.WorkQCommands import WorkQCmnd, WorkQCmnd_e
 from PlcHandler import PlcData
 from LabjackProcess import LAB_JACK_SCAN_RATE, LjData
+
+PB_URL = 'http://127.0.0.1:8090'
+# PB_URL = 'http://192.168.0.69:8090' # Database Pi IP
+
+EXPECTED_SCHEMA_JSON = "DatabaseSchema.json"
 
 LJ_PACKET_SIZE = LAB_JACK_SCAN_RATE # This makes it so the LJ packet in the DB will contain 1 second of LJ data
 
@@ -22,8 +29,18 @@ class DatabaseHandler():
         to be read by the front end.
         """
         DatabaseHandler.db_thread_workq = db_thread_workq
-        # DatabaseHandler.client = Client('http://192.168.0.69:8090') # Database Pi IP
-        DatabaseHandler.client = Client('http://127.0.0.1:8090') # Database Pi IP
+        DatabaseHandler.client = Client(PB_URL)
+        DatabaseHandler.token = None
+
+        if not DatabaseHandler.verify_connection():
+            return
+
+        DatabaseHandler.token = DatabaseHandler.admin_login("ethan.subasic@gmail.com", "1234567890") #TODO: add .env variables
+        if DatabaseHandler.token is None:
+            print("DB - Failed to authenticate as admin.")
+            return
+
+        DatabaseHandler.updated_collections()
 
         DatabaseHandler.client.collection('LoadCellCommands').subscribe(DatabaseHandler._handle_load_cell_command_callback)
         DatabaseHandler.client.collection('PlcCommands').subscribe(DatabaseHandler._handle_plc_command_callback)
@@ -32,6 +49,159 @@ class DatabaseHandler():
 
         DatabaseHandler.lj_data_packet: Dict[str, List] = []
         print("DB - thread started")
+
+    @staticmethod
+    def verify_connection() -> bool:
+        """
+        Verify the connection to the database.
+
+        Returns:
+            bool: True if the connection is successful, False otherwise.
+        """
+        try:
+            DatabaseHandler.client.health.check()
+            return True
+        except Exception as e:
+            print(f"DB - Failed to connect to the database: {e}")
+            return False
+
+    @staticmethod
+    def admin_login(email: str, password: str) -> Union[str, None]:
+        """
+        Authenticate as an admin to the database.
+
+        Args:
+            email (str): The email of the admin.
+            password (str): The password of the admin.
+
+        Returns:
+            str: The token if the login is successful, None otherwise.
+        """
+        # Clear Previous Auth
+        DatabaseHandler.client.auth_store.clear()
+
+        # Create a new admin token using an http request
+        admin_auth_url = PB_URL + "/api/admins/auth-with-password"
+        payload = {
+            "identity": email,
+            "password": password
+        }
+        headers = {"Content-Type": "application/json"}
+        response = requests.post(admin_auth_url, json=payload, headers=headers)
+
+        # Check if the login was successful
+        if response.status_code == 200:
+            data = response.json()
+            token = data['token']
+            DatabaseHandler.client.auth_store.save(token)
+            return token
+        else:
+            print(f"DB - Auth failed err{response.status_code}: {response.text}")
+            return None
+
+    @staticmethod
+    def create_collection(collection_name, schema):
+        new_schema = []
+        for field in schema:
+            new_schema.append({"name": field, "type": schema[field], "required": False, "options":  {"maxSize": 100000}})
+
+        collection_data = {
+            "name": collection_name,
+            "schema": new_schema,
+            "listRule": "", # Optional access rules
+            "viewRule": "",
+            "createRule": "",
+            "updateRule": "",
+            "deleteRule": "",
+            "options": {} # Optional collection-specific options
+        }
+
+        DatabaseHandler.client.collections.create(collection_data)
+
+    @staticmethod
+    def delete_collection(collection_name):
+        for record in DatabaseHandler.client.collection(collection_name).get_full_list():
+            DatabaseHandler.client.collection(collection_name).delete(record.id)
+
+        # Update the collection with the new schema.
+        collection_to_update = DatabaseHandler.client.collections.get_one(collection_name)
+
+        # Delete the existing collection
+        DatabaseHandler.client.collections.delete(collection_to_update.id)
+
+    @staticmethod
+    def updated_collections() -> bool:
+        if not DatabaseHandler.token:
+            print("DB - No auth token to update collections")
+            return False
+
+        # Get the current collections and their schemas from pocket base
+        # Pass the token in the Authorization header
+        headers = {"Authorization": f"Bearer {DatabaseHandler.token}"}
+        # Assuming client is set to a proper instance, request collections
+        collections_url = PB_URL + "/api/collections"
+        response = requests.get(collections_url, headers=headers)
+
+        if response.status_code != 200:
+            print(f"DB - Could not retrieve collection list, err{response.status_code}: {response.text}")
+            return False
+
+        current_schema = {}
+        expected_schema = {}
+
+        # Format the current schema for comparison to the expected schema
+        collections_data = response.json()
+        for collection in collections_data["items"]:
+            if collection["system"]: # Skip system collections
+                continue
+
+            current_collection_schema = {}
+
+            for field in collection["schema"]:
+                current_collection_schema[field["name"]] = field["type"]
+
+            current_schema[collection["name"]] = current_collection_schema
+
+        # Load the expected database schema from the json file
+        # and format to match current schema format for comparison.
+        try:
+            with open(EXPECTED_SCHEMA_JSON, "r") as file:
+                expected_data = json.load(file)
+
+                for collection in expected_data["collections"]:
+                    collection_name = collection["name"]
+                    collection_schema = collection["schema"]
+
+                    expected_collection_schema = {}
+                    for field in collection_schema:
+                        expected_collection_schema[field["name"]] = field["type"]
+
+                    expected_schema[collection_name] = expected_collection_schema
+        except Exception as e:
+            print(f"DB - Could not load expected schema: {e}")
+            return False
+
+        # Update and create collections as needed
+        for expected_collection in expected_schema:
+            # If no collection matches expected collection, create it
+            if expected_collection not in current_schema:
+                print(f"DB - Creating collection {expected_collection}")
+                DatabaseHandler.create_collection(expected_collection, expected_schema[expected_collection])
+                continue
+
+            if expected_schema[expected_collection] != current_schema[expected_collection]:
+                print(f"DB - Clearing and updating collection {expected_collection}")
+                # Drop the collection and recreate it with the new schema.
+                DatabaseHandler.delete_collection(expected_collection)
+                # Create the new schema by combining the default schema with the expected schema.
+                DatabaseHandler.create_collection(expected_collection, expected_schema[expected_collection])
+                continue
+
+        # Remove any collections that are not in the expected schema
+        for current_collection in current_schema:
+            if current_collection not in expected_schema:
+                print(f"DB - Removing deprecated collection {current_collection}")
+                DatabaseHandler.delete_collection(current_collection)
 
     @staticmethod
     def _handle_plc_command_callback(document: MessageData):
