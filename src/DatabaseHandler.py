@@ -48,7 +48,8 @@ class DatabaseHandler():
             print("DB - Admin credentials not found in environment variables.")
             return
 
-        DatabaseHandler.token = DatabaseHandler.admin_login(admin_email, admin_password) #TODO: add .env variables
+        auth_data = DatabaseHandler.client.collection("_superusers").auth_with_password(admin_email, admin_password)
+        DatabaseHandler.token = auth_data.token
         if DatabaseHandler.token is None:
             print("DB - Failed to authenticate as admin.")
             return
@@ -114,22 +115,50 @@ class DatabaseHandler():
 
     @staticmethod
     def create_collection(collection_name, schema):
-        new_schema = []
-        for field in schema:
-            new_schema.append({"name": field, "type": schema[field], "required": False, "options":  {"maxSize": 100000}})
+        try:
+            # Create a new collection first
+            collection_data = {
+                "name": collection_name,
+                "type": "base",  # Standard collection type
+                "schema": [],  # Will be updated after creation
+                "listRule": "",  # Public access
+                "viewRule": "",
+                "createRule": "",
+                "updateRule": "",
+                "deleteRule": "",
+                "options": {}
+            }
 
-        collection_data = {
-            "name": collection_name,
-            "schema": new_schema,
-            "listRule": "", # Optional access rules
-            "viewRule": "",
-            "createRule": "",
-            "updateRule": "",
-            "deleteRule": "",
-            "options": {} # Optional collection-specific options
-        }
+            # Create the collection (without schema first)
+            created_collection = DatabaseHandler.client.collections.create(collection_data)
 
-        DatabaseHandler.client.collections.create(collection_data)
+            # Build schema fields
+            new_schema = []
+            for field_name, field_type in schema.items():
+                field_data = {
+                    "name": field_name,
+                    "type": field_type,
+                    "required": False,
+                    "options": {}
+                }
+
+                # Apply type-specific options
+                if field_type == "text":
+                    field_data["options"] = {"maxSize": 100000}
+                elif field_type == "number":
+                    field_data["options"] = {"min": None, "max": None}
+                new_schema.append(field_data)
+
+            # Step 3: Update collection with schema (ensure full schema is provided)
+            update_data = {
+                "fields": new_schema  # Must include full schema
+            }
+            
+            updated_collection = DatabaseHandler.client.collections.update(created_collection.id, update_data)
+
+        except Exception as e:
+            print(f"Error creating collection: {e}")
+
 
     @staticmethod
     def delete_collection(collection_name):
@@ -170,7 +199,7 @@ class DatabaseHandler():
 
             current_collection_schema = {}
 
-            for field in collection["schema"]:
+            for field in collection["fields"]:
                 current_collection_schema[field["name"]] = field["type"]
 
             current_schema[collection["name"]] = current_collection_schema
