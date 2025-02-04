@@ -149,11 +149,15 @@ class DatabaseHandler():
                     field_data["options"] = {"min": None, "max": None}
                 new_schema.append(field_data)
 
+            # Include the created and updated timestamps
+            new_schema.append({'name': 'updated', 'onCreate': True, 'onUpdate': True, 'type': 'autodate'})
+            new_schema.append({'name': 'created', 'onCreate': True, 'onUpdate': False, 'type': 'autodate'})
+
             # Step 3: Update collection with schema (ensure full schema is provided)
             update_data = {
-                "fields": new_schema  # Must include full schema
+                "fields": new_schema
             }
-            
+
             updated_collection = DatabaseHandler.client.collections.update(created_collection.id, update_data)
 
         except Exception as e:
@@ -200,6 +204,8 @@ class DatabaseHandler():
             current_collection_schema = {}
 
             for field in collection["fields"]:
+                if field['system']: # Skip system collections
+                    continue
                 current_collection_schema[field["name"]] = field["type"]
 
             current_schema[collection["name"]] = current_collection_schema
@@ -217,6 +223,10 @@ class DatabaseHandler():
                     expected_collection_schema = {}
                     for field in collection_schema:
                         expected_collection_schema[field["name"]] = field["type"]
+
+                    # Include the created and updated fields for what is expected
+                    expected_collection_schema["created"] = "autodate"
+                    expected_collection_schema["updated"] = "autodate"
 
                     expected_schema[collection_name] = expected_collection_schema
         except Exception as e:
