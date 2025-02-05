@@ -1,8 +1,10 @@
 from dataclasses import dataclass
+import time
 from typing import Any, List
 from br_threading.WorkQCommands import WorkQCmnd, WorkQCmnd_e
 import multiprocessing as mp
 from br_labjack.LabJackInterface import LabJack
+from labjack.ljm import LJMError
 
 LAB_JACK_SCAN_RATE = 4 # Scan rate in Hz
 
@@ -60,6 +62,21 @@ def t7_pro_callback(obj: _CallbackClass, stream_handle: Any):
     for workq in obj.subscribed_workq_list:
         workq.put(cmnd)
 
+def connect_to_labjack():
+    """
+    Connect to the LabJack T7 Pro.
+
+    Returns:
+        res (bool): The result of the connection.
+        LabJack: The LabJack T7 Pro object.
+        err (str): The error message if the connection failed.
+    """
+    try:
+        lji = LabJack("ANY", "USB", "ANY")
+    except LJMError as e:
+        return False, None, str(e.errorString)
+    return True, lji, ""
+
 def t7_pro_thread(t7_pro_workq: mp.Queue, db_workq: mp.Queue):
     """
     Start the LabJack stream to stream sensor data to
@@ -77,16 +94,19 @@ def t7_pro_thread(t7_pro_workq: mp.Queue, db_workq: mp.Queue):
     a_scan_list_names = ["AIN0", "AIN1", "AIN2", "AIN3", "AIN4", "AIN5", "AIN6", "AIN7", "AIN8", "AIN9", "AIN10"]
     scan_rate = LAB_JACK_SCAN_RATE
     stream_resolution_index = 0
+    lji = None
 
-    try:
-        lji = LabJack("ANY", "USB", "ANY")
-    except Exception as e:
-        print(f"Error Connecting to LabJack - {e}")
-        return
+    # Connect to the LabJack T7 Pro
+    while lji is None:
+        res, lji, err = connect_to_labjack()
+        if not res:
+            print(f"LJ - Error connecting to LabJack, {err}, retrying...")
+            time.sleep(5)
 
     obj = _CallbackClass(lji, [db_workq,])
 
     lji.start_stream(a_scan_list_names, scan_rate, scans_per_read=1, callback=t7_pro_callback, obj = obj, stream_resolution_index= stream_resolution_index)
 
+    print("LJ - thread started")
     while 1:
         t7_pro_workq.get(block=True)

@@ -1,8 +1,10 @@
 # General imports =================================================================================
 import json
 import multiprocessing as mp
+import time
 from typing import Dict, List, Tuple, Union
 from pocketbase import Client
+from pocketbase.errors import ClientResponseError
 from pocketbase.services.realtime_service import MessageData
 import requests
 
@@ -34,8 +36,10 @@ class DatabaseHandler():
         DatabaseHandler.client = Client(PB_URL)
         DatabaseHandler.token = None
 
-        if not DatabaseHandler.verify_connection():
-            return
+        # Wait for the database to be available
+        while not DatabaseHandler.verify_connection():
+            print(f"DB - Failed to connect to the database @{PB_URL}, retrying...")
+            time.sleep(5)
 
         # Load environment variables from .env file
         load_dotenv()
@@ -56,9 +60,9 @@ class DatabaseHandler():
 
         DatabaseHandler.updated_collections()
 
-        DatabaseHandler.client.collection('LoadCellCommands').subscribe(DatabaseHandler._handle_load_cell_command_callback)
-        DatabaseHandler.client.collection('PlcCommands').subscribe(DatabaseHandler._handle_plc_command_callback)
-        DatabaseHandler.client.collection('StateCommands').subscribe(DatabaseHandler._handle_state_command_callback)
+        DatabaseHandler.client.collection('LoadCellCommand').subscribe(DatabaseHandler._handle_load_cell_command_callback)
+        DatabaseHandler.client.collection('PlcCommand').subscribe(DatabaseHandler._handle_plc_command_callback)
+        DatabaseHandler.client.collection('StateCommand').subscribe(DatabaseHandler._handle_state_command_callback)
         DatabaseHandler.client.collection('Heartbeat').subscribe(DatabaseHandler._handle_heartbeat_callback)
 
         DatabaseHandler.lj_data_packet: Dict[str, List] = []
@@ -75,8 +79,7 @@ class DatabaseHandler():
         try:
             DatabaseHandler.client.health.check()
             return True
-        except Exception as e:
-            print(f"DB - Failed to connect to the database: {e}")
+        except ClientResponseError as e:
             return False
 
     @staticmethod

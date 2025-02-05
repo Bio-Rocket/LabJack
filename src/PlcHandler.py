@@ -1,6 +1,7 @@
 # General imports =================================================================================
 import multiprocessing as mp
 from socket import socket, AF_INET, SOCK_STREAM
+import time
 from typing import Tuple
 from br_threading.WorkQCommands import WorkQCmnd, WorkQCmnd_e
 from br_threading.TimerThread import TimerThread
@@ -40,11 +41,29 @@ class PlcData():
 class PlcHandler():
     def __init__(self, plc_workq: mp.Queue):
         PlcHandler.socket = socket(AF_INET, SOCK_STREAM)
-        PlcHandler.socket.connect(
-            (PLC_IP, PLC_PORT)
-        )
+        PlcHandler.socket.settimeout(5)
+
+        while not PlcHandler.connect_plc():
+            if PlcHandler.socket:
+                PlcHandler.socket.close()
+            PlcHandler.socket = socket(AF_INET, SOCK_STREAM)
+            PlcHandler.socket.settimeout(5)
+
         PlcHandler.plc_workq = plc_workq
         print("PLC - thread started")
+
+    @staticmethod
+    def connect_plc() -> None:
+        """
+        Close the connection to the PLC.
+        """
+        try:
+            PlcHandler.socket.connect((PLC_IP, PLC_PORT))
+            return True
+        except Exception as e:
+            print(f"PLC - Error connecting to PLC, {e}, retrying...")
+            return False
+
 
     @staticmethod
     def send_command(command: bytes) -> None:
