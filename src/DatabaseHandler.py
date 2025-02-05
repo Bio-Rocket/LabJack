@@ -63,7 +63,6 @@ class DatabaseHandler():
         DatabaseHandler.client.collection('LoadCellCommand').subscribe(DatabaseHandler._handle_load_cell_command_callback)
         DatabaseHandler.client.collection('PlcCommand').subscribe(DatabaseHandler._handle_plc_command_callback)
         DatabaseHandler.client.collection('StateCommand').subscribe(DatabaseHandler._handle_state_command_callback)
-        DatabaseHandler.client.collection('Heartbeat').subscribe(DatabaseHandler._handle_heartbeat_callback)
 
         DatabaseHandler.lj_data_packet: Dict[str, List] = []
         print("DB - thread started")
@@ -298,18 +297,6 @@ class DatabaseHandler():
         DatabaseHandler.db_thread_workq.put(WorkQCmnd(WorkQCmnd_e.DB_STATE_COMMAND, (document.record.command)))
 
     @staticmethod
-    def _handle_heartbeat_callback(document: MessageData):
-        """
-        Whenever a new entry is created in the Heartbeat
-        collection, this function is called to handle the
-        command and forward it to the serial port.
-
-        Args:
-            document (MessageData): the change notification from the database.
-        """
-        DatabaseHandler.db_thread_workq.put(WorkQCmnd(WorkQCmnd_e.DB_HEARTBEAT, None))
-
-    @staticmethod
     def write_plc_data(plc_data: PlcData, lc_handler: LoadCellHandler) -> None:
         """
         Attempt to write incoming plc data to the database.
@@ -488,6 +475,22 @@ class DatabaseHandler():
             print(f"failed to create a system state")
 
     @staticmethod
+    def write_heartbeat(data: str) -> None:
+        """
+        Write the heartbeat to the database.
+
+        Args:
+            data (str): The heartbeat data to write to the database.
+        """
+        entry = {}
+        entry["message"] = data
+
+        try:
+            DatabaseHandler.client.collection("HeartbeatMessage").create(entry)
+        except Exception:
+            print(f"failed to create a heartbeat")
+
+    @staticmethod
     def get_loadcell_calibration(loadcell: str) -> Tuple[float, float]:
         """
         Get the load cell calibration from the database.
@@ -555,7 +558,7 @@ def process_workq_message(message: WorkQCmnd, state_workq: mp.Queue, lc_handler:
     elif message.command == WorkQCmnd_e.DB_STATE_CHANGE:
         DatabaseHandler.write_system_state(message.data)
     elif message.command == WorkQCmnd_e.DB_HEARTBEAT:
-        pass # TODO
+        DatabaseHandler.write_heartbeat(message.data)
     elif message.command == WorkQCmnd_e.PLC_DATA:
         DatabaseHandler.write_plc_data(message.data, lc_handler)
     elif message.command == WorkQCmnd_e.LJ_DATA:

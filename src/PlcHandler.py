@@ -1,10 +1,10 @@
 # General imports =================================================================================
 import multiprocessing as mp
 from socket import socket, AF_INET, SOCK_STREAM
+import threading
 import time
 from typing import Tuple
 from br_threading.WorkQCommands import WorkQCmnd, WorkQCmnd_e
-from br_threading.TimerThread import TimerThread
 from dataclasses import dataclass
 
 # Constants ========================================================================================
@@ -149,21 +149,28 @@ def process_workq_message(message: WorkQCmnd, db_workq: mp.Queue) -> bool:
         PlcHandler.send_command(plc_command)
     return True
 
-def plc_thread(plc_workq: mp.Queue, db_workq: mp.Queue) -> None:
-    request_data = lambda: plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_REQUEST_DATA, None))
+def request_data_background(plc_workq: mp.Queue):
+    """
+    Notify DB backend is Live
+    """
+    while True:
+        plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_REQUEST_DATA, None))
+        time.sleep(REQUEST_DELAY)
 
+
+def plc_thread(plc_workq: mp.Queue, db_workq: mp.Queue) -> None:
     try:
         PlcHandler(plc_workq)
-        timer_stop = mp.Event()
-        t = TimerThread(request_data, REQUEST_DELAY, timer_stop)
-        t.start()
-
     except Exception as e:
         print(f"PLC - Error: {e}")
         return
 
+    # Start the background task in a separate thread
+    background_thread = threading.Thread(target=request_data_background, args=(plc_workq,))
+    background_thread.daemon = True
+    background_thread.start()
+
     while 1:
         # If there is any workq messages, process them
         if not process_workq_message(plc_workq.get(block=True), db_workq):
-            timer_stop.set()
             return
