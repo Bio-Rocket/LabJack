@@ -25,7 +25,6 @@ def send_hb_to_db(db_workq: mp.Queue):
     """
     while True:
         db_workq.put(WorkQCmnd(WorkQCmnd_e.DB_HEARTBEAT, "BACKEND"))
-        print("sent heartbeat")
         time.sleep(BACKEND_HEARTBEAT_DELAY)
 
 def heartbeat_thread(hb_workq: mp.Queue, db_workq: mp.Queue):
@@ -38,6 +37,7 @@ def heartbeat_thread(hb_workq: mp.Queue, db_workq: mp.Queue):
     background_thread = threading.Thread(target=send_hb_to_db, args=(db_workq,))
     background_thread.daemon = True
     background_thread.start()
+    print("HB - thread started")
 
     while True:
         # If there is any workq messages, process them

@@ -6,6 +6,7 @@ from typing import Dict, List, Tuple, Union
 from pocketbase import Client
 from pocketbase.errors import ClientResponseError
 from pocketbase.services.realtime_service import MessageData
+from collections import defaultdict
 import requests
 
 from LoadcellHandler import LoadCellHandler
@@ -64,7 +65,7 @@ class DatabaseHandler():
         DatabaseHandler.client.collection('PlcCommand').subscribe(DatabaseHandler._handle_plc_command_callback)
         DatabaseHandler.client.collection('StateCommand').subscribe(DatabaseHandler._handle_state_command_callback)
 
-        DatabaseHandler.lj_data_packet: Dict[str, List] = []
+        DatabaseHandler.lj_data_packet: Dict[str, List] = defaultdict(list)
         print("DB - thread started")
 
     @staticmethod
@@ -410,15 +411,18 @@ class DatabaseHandler():
         single_entry["PT11"] = lj_data.pt_data[5]
         single_entry["PT12"] = lj_data.pt_data[6]
 
+        curr_list_len = 0
+
         # Add the data to the packet
         for key in single_entry:
             if len(DatabaseHandler.lj_data_packet[key]) == 0:
-                DatabaseHandler.lj_data_packet[key] = list().append(single_entry[key])
+                DatabaseHandler.lj_data_packet[key] = [single_entry[key],]
             else:
                 DatabaseHandler.lj_data_packet[key].append(single_entry[key])
+            curr_list_len = len(DatabaseHandler.lj_data_packet[key])
 
         # If the packet is full, write to the database
-        if len(DatabaseHandler.lj_data_packet.values()[0]) == LJ_PACKET_SIZE:
+        if curr_list_len == LJ_PACKET_SIZE:
             entry = {}
             entry["LC3"] = DatabaseHandler.lj_data_packet["LC3"]
             entry["LC4"] = DatabaseHandler.lj_data_packet["LC4"]
