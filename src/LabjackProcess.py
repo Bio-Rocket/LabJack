@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 import time
-from typing import Any, List
+from typing import Any, Callable, List
 from br_threading.WorkQCommands import WorkQCmnd, WorkQCmnd_e
 import multiprocessing as mp
 from br_labjack.LabJackInterface import LabJack
@@ -78,7 +78,11 @@ def connect_to_labjack():
         return False, None, str(e.errorString)
     return True, lji, ""
 
-def t7_pro_thread(t7_pro_workq: mp.Queue, db_workq: mp.Queue, a_scan_list: List[str] = DEFAULT_A_LIST_NAMES):
+def t7_pro_thread(
+        t7_pro_workq: mp.Queue,
+        db_workq: mp.Queue,
+        a_scan_list: List[str] = DEFAULT_A_LIST_NAMES,
+        labjack_stream_callback: Callable = t7_pro_callback):
     """
     Start the LabJack stream to stream sensor data to
     the database thread.
@@ -93,6 +97,11 @@ def t7_pro_thread(t7_pro_workq: mp.Queue, db_workq: mp.Queue, a_scan_list: List[
         a_scan_list (List[str]):
             The list of AIN channels to stream from the LabJack T7 Pro.
             Default is ["AIN0", "AIN1", "AIN2", "AIN3", "AIN4", "AIN5", "AIN6", "AIN7", "AIN8", "AIN9", "AIN10"].
+        labjack_stream_callback (function):
+            !! IF USING A CUSTOM a_scan_list, YOU MUST PROVIDE A CUSTOM CALLBACK FUNCTION.
+            The callback function for the LabJack T7 Pro,
+            for when the LabJack T7 Pro receives stream data.
+            Default is t7_pro_callback.
     """
 
     a_scan_list_names = a_scan_list
@@ -109,7 +118,7 @@ def t7_pro_thread(t7_pro_workq: mp.Queue, db_workq: mp.Queue, a_scan_list: List[
 
     obj = _CallbackClass(lji, [db_workq,])
 
-    lji.start_stream(a_scan_list_names, scan_rate, scans_per_read=1, callback=t7_pro_callback, obj = obj, stream_resolution_index= stream_resolution_index)
+    lji.start_stream(a_scan_list_names, scan_rate, scans_per_read=1, callback=labjack_stream_callback, obj = obj, stream_resolution_index= stream_resolution_index)
 
     print("LJ - thread started")
     while 1:
