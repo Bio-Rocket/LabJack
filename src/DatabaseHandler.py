@@ -17,8 +17,7 @@ from LabjackProcess import LAB_JACK_SCAN_RATE, LjData
 from dotenv import load_dotenv
 import os
 
-PB_URL = 'http://127.0.0.1:8090'
-# PB_URL = 'http://192.168.0.69:8090' # Database Pi IP
+PB_URL = 'http://192.168.0.69:8090' # Database Pi IP
 
 EXPECTED_SCHEMA_JSON = os.path.join(Path(__file__).parents[1], "DatabaseSchema.json")
 
@@ -88,40 +87,6 @@ class DatabaseHandler():
             return True
         except ClientResponseError as e:
             return False
-
-    @staticmethod
-    def admin_login(email: str, password: str) -> Union[str, None]:
-        """
-        Authenticate as an admin to the database.
-
-        Args:
-            email (str): The email of the admin.
-            password (str): The password of the admin.
-
-        Returns:
-            str: The token if the login is successful, None otherwise.
-        """
-        # Clear Previous Auth
-        DatabaseHandler.client.auth_store.clear()
-
-        # Create a new admin token using an http request
-        admin_auth_url = PB_URL + "/api/admins/auth-with-password"
-        payload = {
-            "identity": email,
-            "password": password
-        }
-        headers = {"Content-Type": "application/json"}
-        response = requests.post(admin_auth_url, json=payload, headers=headers)
-
-        # Check if the login was successful
-        if response.status_code == 200:
-            data = response.json()
-            token = data['token']
-            DatabaseHandler.client.auth_store.save(token)
-            return token
-        else:
-            print(f"DB - Auth failed err{response.status_code}: {response.text}")
-            return None
 
     @staticmethod
     def create_collection(collection_name: str, schema: Dict[str, str]) -> None:
