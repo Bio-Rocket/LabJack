@@ -17,7 +17,7 @@ from LabjackProcess import LAB_JACK_SCAN_RATE, LjData
 from dotenv import load_dotenv
 import os
 
-PB_URL = 'http://192.168.0.69:8090' # Database Pi IP
+PB_URL = 'http://127.0.0.1:8090' # Database Pi IP
 
 EXPECTED_SCHEMA_JSON = os.path.join(Path(__file__).parents[1], "DatabaseSchema.json")
 
@@ -70,6 +70,7 @@ class DatabaseHandler():
         DatabaseHandler.client.collection('LoadCellCommand').subscribe(DatabaseHandler._handle_load_cell_command_callback)
         DatabaseHandler.client.collection('PlcCommand').subscribe(DatabaseHandler._handle_plc_command_callback)
         DatabaseHandler.client.collection('StateCommand').subscribe(DatabaseHandler._handle_state_command_callback)
+        DatabaseHandler.client.collection('HeartbeatMessage').subscribe(DatabaseHandler._handle_heartbeat_callback)
 
         DatabaseHandler.lj_data_packet: Dict[str, List] = defaultdict(list)
         print("DB - thread started")
@@ -293,6 +294,21 @@ class DatabaseHandler():
             document (MessageData): the change notification from the database.
         """
         DatabaseHandler.db_thread_workq.put(WorkQCmnd(WorkQCmnd_e.DB_STATE_COMMAND, (document.record.command)))
+
+    @staticmethod
+    def _handle_heartbeat_callback(document: MessageData):
+        """
+        Whenever a new entry is created in the HeartbeatMessage
+        collection, this function is called to handle the
+        command and forward it to the state machine to verify
+        system state changes are valid
+
+        Args:
+            document (MessageData): the change notification from the database.
+        """
+
+        if document.record.message == "heartbeat": # This indicates a message from the front end
+            DatabaseHandler.db_thread_workq.put(WorkQCmnd(WorkQCmnd_e.FRONTEND_HEARTBEAT, None))
 
     @staticmethod
     def write_plc_data(plc_data: PlcData, lc_handler: LoadCellHandler) -> None:
@@ -534,7 +550,7 @@ def handle_lc_command(data: Tuple[str, str, float], lc_handler: LoadCellHandler)
         slope, intercept = lc_handler.get_calibration(loadcell)
         DatabaseHandler.write_lc_calibration(loadcell, slope, intercept)
 
-def process_workq_message(message: WorkQCmnd, state_workq: mp.Queue, lc_handler: LoadCellHandler) -> bool:
+def process_workq_message(message: WorkQCmnd, state_workq: mp.Queue, hb_workq: mp.Queue, lc_handler: LoadCellHandler) -> bool:
     """
     Process the message from the workq.
 
@@ -544,6 +560,8 @@ def process_workq_message(message: WorkQCmnd, state_workq: mp.Queue, lc_handler:
         state_workq (mp.Queue):
             The state handler workq, used to verify the valve state changes
             along with the system state changes.
+        hb_workq (mp.Queue):
+            The heartbeat handler workq, used to verify the heartbeat messages.
         lc_handler (LoadCellHandler):
             The load cell handler to handle the load cell commands.
     """
@@ -560,6 +578,8 @@ def process_workq_message(message: WorkQCmnd, state_workq: mp.Queue, lc_handler:
         DatabaseHandler.write_system_state(message.data)
     elif message.command == WorkQCmnd_e.DB_HEARTBEAT:
         DatabaseHandler.write_heartbeat(message.data)
+    elif message.command == WorkQCmnd_e.FRONTEND_HEARTBEAT:
+        hb_workq.put(WorkQCmnd(WorkQCmnd_e.FRONTEND_HEARTBEAT, None))
     elif message.command == WorkQCmnd_e.PLC_DATA:
         DatabaseHandler.write_plc_data(message.data, lc_handler)
     elif message.command == WorkQCmnd_e.LJ_DATA:
@@ -567,7 +587,7 @@ def process_workq_message(message: WorkQCmnd, state_workq: mp.Queue, lc_handler:
 
     return True
 
-def database_thread(db_workq: mp.Queue, state_workq: mp.Queue, data_base_format_file: str = EXPECTED_SCHEMA_JSON) -> None:
+def database_thread(db_workq: mp.Queue, state_workq: mp.Queue, hb_workq: mp.Queue, data_base_format_file: str = EXPECTED_SCHEMA_JSON) -> None:
     """
     The main loop of the database handler. It subscribes to the CommandMessage collection
     """
@@ -581,5 +601,5 @@ def database_thread(db_workq: mp.Queue, state_workq: mp.Queue, data_base_format_
 
     while 1:
         # If there is any workq messages, process them
-        if not process_workq_message(db_workq.get(block=True), state_workq, lc_handler):
+        if not process_workq_message(db_workq.get(block=True), state_workq, hb_workq, lc_handler):
             return

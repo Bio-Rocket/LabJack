@@ -11,6 +11,7 @@ class WorkQCmnd_e(Enum):
     DB_STATE_COMMAND = auto() # Command for DB to send to the state machine
     DB_STATE_CHANGE = auto() # Change the system state in the DB
     DB_HEARTBEAT = auto() # Heartbeat
+    FRONTEND_HEARTBEAT = auto() # Heartbeat from the frontend
 
     ## Labjack Data from LJ to the DB
     LJ_DATA = auto() # Log LabJack data to DB, expects dictionary [str: float]
