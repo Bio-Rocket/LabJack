@@ -1,30 +1,27 @@
 import multiprocessing as mp
-from ThreadManager import ThreadManager as tm
-from LabjackProcess import t8_thread
+from br_threading.ThreadManager import ThreadManager as tm
 import time
+
 from DatabaseHandler import database_thread
-
-def initialize_threads():
-    '''
-    Create threads for the backend
-    '''
-    thread_pool = {}
-    t8_workq = mp.Queue()
-    db_workq = mp.Queue()
-
-    # Initialize the threads
-    lj_t8_thread = mp.Process(target=t8_thread, args=(db_workq,))
-    db_thread = mp.Process(target=database_thread, args=('database', db_workq))
-    # Add the threads to the thread pool
-    thread_pool['T8'] = {'thread': lj_t8_thread, 'workq': t8_workq}
-    thread_pool['database'] = {'thread': db_thread, 'workq': db_workq}
-    tm.thread_pool = thread_pool
-    return
+from PlcHandler import plc_thread
+from LabjackProcess import t7_pro_thread
+from StateMachine import state_thread
+from HeartbeatHandler import heartbeat_thread
 
 if __name__ == "__main__":
-    tm()
-    initialize_threads()
+    db_workq = mp.Queue()
+    plc_workq = mp.Queue()
+    t7_pro_workq = mp.Queue()
+    state_workq = mp.Queue()
+    heartbeat_workq = mp.Queue()
+
+    # Initialize the threads
+    tm.create_thread(target=database_thread, args=(db_workq, state_workq, heartbeat_workq))
+    tm.create_thread(target=t7_pro_thread, args=(t7_pro_workq, db_workq))
+    tm.create_thread(target=plc_thread, args=(plc_workq, db_workq))
+    tm.create_thread(target=state_thread, args=(state_workq, plc_workq, db_workq))
+    tm.create_thread(target=heartbeat_thread, args=(heartbeat_workq, db_workq, state_workq))
+
     tm.start_threads()
     while 1:
         time.sleep(1)
-    #   tm.handle_thread_messages()
