@@ -7,6 +7,7 @@ from br_labjack.LabJackInterface import LabJack
 from labjack.ljm import LJMError
 
 LAB_JACK_SCAN_RATE = 4 # Scan rate in Hz
+DEFAULT_A_LIST_NAMES = ["AIN0", "AIN1", "AIN2", "AIN3", "AIN4", "AIN5", "AIN6", "AIN7", "AIN8", "AIN9", "AIN10"]
 
 @dataclass
 class LjData():
@@ -77,7 +78,7 @@ def connect_to_labjack():
         return False, None, str(e.errorString)
     return True, lji, ""
 
-def t7_pro_thread(t7_pro_workq: mp.Queue, db_workq: mp.Queue):
+def t7_pro_thread(t7_pro_workq: mp.Queue, db_workq: mp.Queue, a_scan_list: List[str] = DEFAULT_A_LIST_NAMES):
     """
     Start the LabJack stream to stream sensor data to
     the database thread.
@@ -89,9 +90,12 @@ def t7_pro_thread(t7_pro_workq: mp.Queue, db_workq: mp.Queue):
         db_workq (mp.Queue):
             The work queue for the database thread. Used for
             storing sensor data in the database.
+        a_scan_list (List[str]):
+            The list of AIN channels to stream from the LabJack T7 Pro.
+            Default is ["AIN0", "AIN1", "AIN2", "AIN3", "AIN4", "AIN5", "AIN6", "AIN7", "AIN8", "AIN9", "AIN10"].
     """
 
-    a_scan_list_names = ["AIN0", "AIN1", "AIN2", "AIN3", "AIN4", "AIN5", "AIN6", "AIN7", "AIN8", "AIN9", "AIN10"]
+    a_scan_list_names = a_scan_list
     scan_rate = LAB_JACK_SCAN_RATE
     stream_resolution_index = 0
     lji = None

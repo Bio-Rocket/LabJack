@@ -1,6 +1,7 @@
 # General imports =================================================================================
 import json
 import multiprocessing as mp
+from pathlib import Path
 import time
 from typing import Dict, List, Tuple, Union
 from pocketbase import Client
@@ -19,19 +20,25 @@ import os
 PB_URL = 'http://127.0.0.1:8090'
 # PB_URL = 'http://192.168.0.69:8090' # Database Pi IP
 
-EXPECTED_SCHEMA_JSON = "DatabaseSchema.json"
+EXPECTED_SCHEMA_JSON = os.path.join(Path(__file__).parents[1], "DatabaseSchema.json")
 
 LJ_PACKET_SIZE = LAB_JACK_SCAN_RATE # This makes it so the LJ packet in the DB will contain 1 second of LJ data
 
 # Class Definitions ===============================================================================
 class DatabaseHandler():
-    def __init__(self, db_thread_workq: mp.Queue):
+    def __init__(self, db_thread_workq: mp.Queue, data_base_format_file: str) -> None:
         """
         Thread to handle the pocketbase database communication.
         The Thread is subscribed to the CommandMessage
         collection to wait for commands created in the front end.
         The handler can also send telemetry data to the database
         to be read by the front end.
+
+        Args:
+            db_thread_workq (mp.Queue):
+                The workq for the database thread.
+            data_base_format_file (str):
+                The file containing the expected schema for the database.
         """
         DatabaseHandler.db_thread_workq = db_thread_workq
         DatabaseHandler.client = Client(PB_URL)
@@ -59,7 +66,7 @@ class DatabaseHandler():
             print("DB - Failed to authenticate as admin.")
             return
 
-        DatabaseHandler.updated_collections()
+        DatabaseHandler.updated_collections(data_base_format_file)
 
         DatabaseHandler.client.collection('LoadCellCommand').subscribe(DatabaseHandler._handle_load_cell_command_callback)
         DatabaseHandler.client.collection('PlcCommand').subscribe(DatabaseHandler._handle_plc_command_callback)
@@ -117,7 +124,15 @@ class DatabaseHandler():
             return None
 
     @staticmethod
-    def create_collection(collection_name, schema):
+    def create_collection(collection_name: str, schema: Dict[str, str]) -> None:
+        """
+        Create a new collection in the database.
+
+        Args:
+            collection_name (str): The name of the collection to create.
+            schema (Dict[str, str]): The schema of the collection to create.
+        """
+
         try:
             # Create a new collection first
             collection_data = {
@@ -168,7 +183,15 @@ class DatabaseHandler():
 
 
     @staticmethod
-    def delete_collection(collection_name):
+    def delete_collection(collection_name: str) -> None:
+        """
+        Delete a collection from the database.
+
+        Args:
+            collection_name (str): The name of the collection to delete.
+        """
+
+        # Clear the collection first
         for record in DatabaseHandler.client.collection(collection_name).get_full_list():
             DatabaseHandler.client.collection(collection_name).delete(record.id)
 
@@ -179,7 +202,16 @@ class DatabaseHandler():
         DatabaseHandler.client.collections.delete(collection_to_update.id)
 
     @staticmethod
-    def updated_collections() -> bool:
+    def updated_collections(format_file: str) -> bool:
+        """
+        Update the collections in the database to match the expected schema.
+
+        Args:
+            format_file (str): The file containing the expected schema for the database.
+
+        Returns:
+            bool: True if the collections are updated, False otherwise.
+        """
         if not DatabaseHandler.token:
             print("DB - No auth token to update collections")
             return False
@@ -216,7 +248,7 @@ class DatabaseHandler():
         # Load the expected database schema from the json file
         # and format to match current schema format for comparison.
         try:
-            with open(EXPECTED_SCHEMA_JSON, "r") as file:
+            with open(format_file, "r") as file:
                 expected_data = json.load(file)
 
                 for collection in expected_data["collections"]:
@@ -570,12 +602,12 @@ def process_workq_message(message: WorkQCmnd, state_workq: mp.Queue, lc_handler:
 
     return True
 
-def database_thread(db_workq: mp.Queue, state_workq: mp.Queue) -> None:
+def database_thread(db_workq: mp.Queue, state_workq: mp.Queue, data_base_format_file: str = EXPECTED_SCHEMA_JSON) -> None:
     """
     The main loop of the database handler. It subscribes to the CommandMessage collection
     """
 
-    DatabaseHandler(db_workq)
+    DatabaseHandler(db_workq, data_base_format_file)
 
     lc_handler = LoadCellHandler()
     for lc in ["LC1", "LC2", "LC3", "LC4", "LC5", "LC6", "LC7"]:
