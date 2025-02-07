@@ -11,7 +11,7 @@ from br_threading.WorkQCommands import WorkQCmnd, WorkQCmnd_e
 
 VOLTAGE_MODIFIER = 2
 
-class SuperBj_DatabaseHandler(DatabaseHandler):
+class PtPu_DatabaseHandler(DatabaseHandler):
 
     @staticmethod
     def write_lj_data(lj_data: LjData) -> None:
@@ -73,7 +73,7 @@ def process_workq_message(message: WorkQCmnd) -> bool:
         print("DB - Received kill command")
         return False
     elif message.command == WorkQCmnd_e.LJ_DATA:
-        SuperBj_DatabaseHandler.write_lj_data(message.data)
+        PtPu_DatabaseHandler.write_lj_data(message.data)
 
     return True
 
@@ -82,7 +82,7 @@ def database_thread(db_workq: mp.Queue, data_base_format_file: str) -> None:
     The main loop of the database handler. It subscribes to the CommandMessage collection
     """
 
-    SuperBj_DatabaseHandler(db_workq, data_base_format_file)
+    PtPu_DatabaseHandler(db_workq, data_base_format_file)
 
     while 1:
         # If there is any workq messages, process them
