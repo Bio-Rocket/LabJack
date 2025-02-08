@@ -1,0 +1,22 @@
+{
+    "collections": [
+        {
+            "name": "LabJack",
+            "schema": [
+                {
+                    "name": "PT1",
+                    "type": "json"
+                },
+                {
+                    "name": "raw_voltage_PT1",
+                    "type": "json"
+                },
+                {
+                    "name": "PU1",
+                    "type": "json"
+                }
+            ]
+        }
+    ]
+
+}

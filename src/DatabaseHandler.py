@@ -3,7 +3,7 @@ import json
 import multiprocessing as mp
 from pathlib import Path
 import time
-from typing import Dict, List, Tuple, Union
+from typing import Dict, List, Tuple
 from pocketbase import Client
 from pocketbase.errors import ClientResponseError
 from pocketbase.services.realtime_service import MessageData
@@ -13,7 +13,7 @@ import requests
 from LoadcellHandler import LoadCellHandler
 from br_threading.WorkQCommands import WorkQCmnd, WorkQCmnd_e
 from PlcHandler import PlcData
-from LabjackProcess import LjData
+from LabjackProcess import GET_SCANS_PER_READ, LjData
 from dotenv import load_dotenv
 import os
 
@@ -405,54 +405,18 @@ class DatabaseHandler():
             lc_handler (LoadCellHandler):
                 The load cell handler to handle the load cell mass conversions.
         """
-
-        single_entry = {}
-
-        # Convert the load cell voltages to masses
-        single_entry["LC3"] = lc_handler.consume_incoming_voltage("LC3", lj_data.lc_data[0])
-        single_entry["LC4"] = lc_handler.consume_incoming_voltage("LC4", lj_data.lc_data[1])
-        single_entry["LC5"] = lc_handler.consume_incoming_voltage("LC5", lj_data.lc_data[2])
-        single_entry["LC6"] = lc_handler.consume_incoming_voltage("LC6", lj_data.lc_data[3])
-
-        single_entry["PT6"] = lj_data.pt_data[0]
-        single_entry["PT7"] = lj_data.pt_data[1]
-        single_entry["PT8"] = lj_data.pt_data[2]
-        single_entry["PT9"] = lj_data.pt_data[3]
-        single_entry["PT10"] = lj_data.pt_data[4]
-        single_entry["PT11"] = lj_data.pt_data[5]
-        single_entry["PT12"] = lj_data.pt_data[6]
-
-        curr_list_len = 0
-
-        # Add the data to the packet
-        for key in single_entry:
-            if len(DatabaseHandler.lj_data_packet[key]) == 0:
-                DatabaseHandler.lj_data_packet[key] = [single_entry[key],]
-            else:
-                DatabaseHandler.lj_data_packet[key].append(single_entry[key])
-            curr_list_len = len(DatabaseHandler.lj_data_packet[key])
-
-        # If the packet is full, write to the database
-        if curr_list_len == lj_data.scan_rate:
-            entry = {}
-            entry["LC3"] = DatabaseHandler.lj_data_packet["LC3"]
-            entry["LC4"] = DatabaseHandler.lj_data_packet["LC4"]
-            entry["LC5"] = DatabaseHandler.lj_data_packet["LC5"]
-            entry["LC6"] = DatabaseHandler.lj_data_packet["LC6"]
-
-            entry["PT6"] = DatabaseHandler.lj_data_packet["PT6"]
-            entry["PT7"] = DatabaseHandler.lj_data_packet["PT7"]
-            entry["PT8"] = DatabaseHandler.lj_data_packet["PT8"]
-            entry["PT9"] = DatabaseHandler.lj_data_packet["PT9"]
-            entry["PT10"] = DatabaseHandler.lj_data_packet["PT10"]
-            entry["PT11"] = DatabaseHandler.lj_data_packet["PT11"]
-            entry["PT12"] = DatabaseHandler.lj_data_packet["PT12"]
-
-            try:
-                DatabaseHandler.client.collection("LabJack").create(entry)
-            except Exception as e:
-                print(f"failed to create a lj_data entry {e}")
-            DatabaseHandler.lj_data_packet.clear()
+        for i in range(GET_SCANS_PER_READ(lj_data.scan_rate)):
+            for key in lj_data.lc_data:
+                # Convert the load cell voltages to masses
+                DatabaseHandler.lj_data_packet[key].append(lc_handler.consume_incoming_voltage(key, lj_data.lc_data[key].pop(0)))
+            for key in lj_data.pt_data:
+                DatabaseHandler.lj_data_packet[key].append(lj_data.pt_data[key].pop(0))
+            if len(DatabaseHandler.lj_data_packet[key]) == lj_data.scan_rate:
+                try:
+                    DatabaseHandler.client.collection("LabJack").create(DatabaseHandler.lj_data_packet)
+                except Exception as e:
+                    print(f"failed to create a lj_data entry {e}")
+                DatabaseHandler.lj_data_packet.clear()
 
     @staticmethod
     def write_lc_calibration(loadcell: str, slope: float, intercept: float) -> None:

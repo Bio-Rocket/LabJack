@@ -1,6 +1,7 @@
+from collections import defaultdict
 from dataclasses import dataclass
 import time
-from typing import Any, Callable, List
+from typing import Any, Callable, Dict, List
 from br_threading.WorkQCommands import WorkQCmnd, WorkQCmnd_e
 import multiprocessing as mp
 from br_labjack.LabJackInterface import LabJack
@@ -8,12 +9,13 @@ from labjack.ljm import LJMError
 
 LAB_JACK_SCAN_RATE = 4 # Scan rate in Hz
 DEFAULT_A_LIST_NAMES = ["AIN0", "AIN1", "AIN2", "AIN3", "AIN4", "AIN5", "AIN6", "AIN7", "AIN8", "AIN9", "AIN10"]
+GET_SCANS_PER_READ = lambda x: int(x/2)
 
 @dataclass
 class LjData():
     scan_rate: int
-    lc_data: list
-    pt_data: list
+    lc_data: Dict[str, list]
+    pt_data: Dict[str, list]
 
 class _CallbackClass:
     def __init__(self, lji: LabJack, workq_list: List[mp.Queue], scan_rate: int):
@@ -44,24 +46,26 @@ def t7_pro_callback(obj: _CallbackClass, stream_handle: Any):
         stream_handle (Any): The stream handle for the LabJack T7 Pro.
     """
     ff = obj.lji.read_stream()
-    data_arr = ff[0]
 
     scan_rate = obj.scan_rate
-    lc_data = []
-    pt_data = []
+    lc_data = defaultdict(list)
+    pt_data = defaultdict(list)
 
-    lc_data.append(data_arr[0]) # LC3
-    lc_data.append(data_arr[1]) # LC4
-    lc_data.append(data_arr[2]) # LC5
-    lc_data.append(data_arr[3]) # LC6
+    for i in range(GET_SCANS_PER_READ(scan_rate)):
+        data_arr = ff[0][i: i + 11] # for the 11 channels
 
-    pt_data.append(data_arr[4]) # PT6
-    pt_data.append(data_arr[5]) # PT7
-    pt_data.append(data_arr[6]) # PT8
-    pt_data.append(data_arr[7]) # PT9
-    pt_data.append(data_arr[8]) # PT10
-    pt_data.append(data_arr[9]) # PT11
-    pt_data.append(data_arr[10]) # PT12
+        lc_data["LC3"].append(data_arr[0]) # LC3
+        lc_data["LC4"].append(data_arr[1]) # LC4
+        lc_data["LC5"].append(data_arr[2]) # LC5
+        lc_data["LC6"].append(data_arr[3]) # LC6
+
+        pt_data["PT6"].append(data_arr[4]) # PT6
+        pt_data["PT7"].append(data_arr[5]) # PT7
+        pt_data["PT8"].append(data_arr[6]) # PT8
+        pt_data["PT9"].append(data_arr[7]) # PT9
+        pt_data["PT10"].append(data_arr[8]) # PT10
+        pt_data["PT11"].append(data_arr[9]) # PT11
+        pt_data["PT12"].append(data_arr[10]) # PT12
 
     cmnd = WorkQCmnd(WorkQCmnd_e.LJ_DATA, LjData(scan_rate, lc_data, pt_data))
 
@@ -126,7 +130,7 @@ def t7_pro_thread(
 
     obj = _CallbackClass(lji, [db_workq,], scan_rate)
 
-    lji.start_stream(a_scan_list_names, scan_rate, scans_per_read=1, callback=labjack_stream_callback, obj = obj, stream_resolution_index= stream_resolution_index)
+    lji.start_stream(a_scan_list_names, scan_rate, scans_per_read=GET_SCANS_PER_READ(scan_rate), callback=labjack_stream_callback, obj = obj, stream_resolution_index= stream_resolution_index)
 
     print("LJ - thread started")
     while 1:
