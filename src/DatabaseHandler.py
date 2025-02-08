@@ -13,15 +13,13 @@ import requests
 from LoadcellHandler import LoadCellHandler
 from br_threading.WorkQCommands import WorkQCmnd, WorkQCmnd_e
 from PlcHandler import PlcData
-from LabjackProcess import LAB_JACK_SCAN_RATE, LjData
+from LabjackProcess import LjData
 from dotenv import load_dotenv
 import os
 
 PB_URL = 'http://192.168.0.69:8090' # Database Pi IP
 
 EXPECTED_SCHEMA_JSON = os.path.join(Path(__file__).parents[1], "DatabaseSchema.json")
-
-LJ_PACKET_SIZE = LAB_JACK_SCAN_RATE # This makes it so the LJ packet in the DB will contain 1 second of LJ data
 
 # Class Definitions ===============================================================================
 class DatabaseHandler():
@@ -397,7 +395,7 @@ class DatabaseHandler():
         Attempt to write incoming labjack data to the database.
 
         Batch Write Feature:
-        If there is a LJ_PACKET_SIZE specified, the DB handler will
+        Based on LjData scan rate, the DB handler will
         collect that many pieces of data and write to the DB once the
         full package is complete, this allows for faster DB writes.
 
@@ -435,7 +433,7 @@ class DatabaseHandler():
             curr_list_len = len(DatabaseHandler.lj_data_packet[key])
 
         # If the packet is full, write to the database
-        if curr_list_len == LJ_PACKET_SIZE:
+        if curr_list_len == lj_data.scan_rate:
             entry = {}
             entry["LC3"] = DatabaseHandler.lj_data_packet["LC3"]
             entry["LC4"] = DatabaseHandler.lj_data_packet["LC4"]

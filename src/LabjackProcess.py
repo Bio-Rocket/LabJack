@@ -11,11 +11,12 @@ DEFAULT_A_LIST_NAMES = ["AIN0", "AIN1", "AIN2", "AIN3", "AIN4", "AIN5", "AIN6", 
 
 @dataclass
 class LjData():
+    scan_rate: int
     lc_data: list
     pt_data: list
 
 class _CallbackClass:
-    def __init__(self, lji: LabJack, workq_list: List[mp.Queue]):
+    def __init__(self, lji: LabJack, workq_list: List[mp.Queue], scan_rate: int):
         """
         The callback class for the LabJack T7 Pro,
         including the labjack object to read from the stream and
@@ -26,9 +27,12 @@ class _CallbackClass:
                 The labjack object to read from the stream
             workq_list (List[mp.Queue]):
                 The list of threads that are subscribed to the labjack data
+            scan_rate (int):
+                The scan rate in Hz
         """
         self.lji = lji
         self.subscribed_workq_list = workq_list
+        self.scan_rate = scan_rate
 
 def t7_pro_callback(obj: _CallbackClass, stream_handle: Any):
     """
@@ -42,6 +46,7 @@ def t7_pro_callback(obj: _CallbackClass, stream_handle: Any):
     ff = obj.lji.read_stream()
     data_arr = ff[0]
 
+    scan_rate = obj.scan_rate
     lc_data = []
     pt_data = []
 
@@ -58,7 +63,7 @@ def t7_pro_callback(obj: _CallbackClass, stream_handle: Any):
     pt_data.append(data_arr[9]) # PT11
     pt_data.append(data_arr[10]) # PT12
 
-    cmnd = WorkQCmnd(WorkQCmnd_e.LJ_DATA, LjData(lc_data, pt_data))
+    cmnd = WorkQCmnd(WorkQCmnd_e.LJ_DATA, LjData(scan_rate, lc_data, pt_data))
 
     for workq in obj.subscribed_workq_list:
         workq.put(cmnd)
@@ -81,6 +86,7 @@ def connect_to_labjack():
 def t7_pro_thread(
         t7_pro_workq: mp.Queue,
         db_workq: mp.Queue,
+        scan_frequency: int = LAB_JACK_SCAN_RATE,
         a_scan_list: List[str] = DEFAULT_A_LIST_NAMES,
         labjack_stream_callback: Callable = t7_pro_callback):
     """
@@ -94,6 +100,8 @@ def t7_pro_thread(
         db_workq (mp.Queue):
             The work queue for the database thread. Used for
             storing sensor data in the database.
+        scan_frequency (int):
+            The scan frequency in Hz. Default is 4 Hz.
         a_scan_list (List[str]):
             The list of AIN channels to stream from the LabJack T7 Pro.
             Default is ["AIN0", "AIN1", "AIN2", "AIN3", "AIN4", "AIN5", "AIN6", "AIN7", "AIN8", "AIN9", "AIN10"].
@@ -105,7 +113,7 @@ def t7_pro_thread(
     """
 
     a_scan_list_names = a_scan_list
-    scan_rate = LAB_JACK_SCAN_RATE
+    scan_rate = scan_frequency
     stream_resolution_index = 0
     lji = None
 
@@ -116,7 +124,7 @@ def t7_pro_thread(
             print(f"LJ - Error connecting to LabJack, {err}, retrying...")
             time.sleep(5)
 
-    obj = _CallbackClass(lji, [db_workq,])
+    obj = _CallbackClass(lji, [db_workq,], scan_rate)
 
     lji.start_stream(a_scan_list_names, scan_rate, scans_per_read=1, callback=labjack_stream_callback, obj = obj, stream_resolution_index= stream_resolution_index)
 
