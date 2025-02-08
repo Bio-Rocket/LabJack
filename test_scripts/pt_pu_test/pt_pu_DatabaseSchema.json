@@ -8,11 +8,11 @@
                     "type": "json"
                 },
                 {
-                    "name": "raw_voltage",
+                    "name": "raw_voltage_PT1",
                     "type": "json"
                 },
                 {
-                    "name": "corrected_voltage",
+                    "name": "PU1",
                     "type": "json"
                 }
             ]

@@ -5,11 +5,12 @@ import sys
 
 sys.path.append(path.join(Path(__file__).parents[2].as_posix(), "src/"))
 
-from DatabaseHandler import LJ_PACKET_SIZE, DatabaseHandler
+from DatabaseHandler import DatabaseHandler
 from LabjackProcess import LjData
 from br_threading.WorkQCommands import WorkQCmnd, WorkQCmnd_e
 
-VOLTAGE_MODIFIER = 2
+PRESSURE_MODIFIER = lambda x: 571.77 * x - 362.5
+PU_VOLTAGE_MODIFIER = 870
 
 class PtPu_DatabaseHandler(DatabaseHandler):
 
@@ -33,9 +34,9 @@ class PtPu_DatabaseHandler(DatabaseHandler):
         single_entry = {}
 
         # Convert the load cell voltages to masses
-        single_entry["PT1"] = lj_data.pt_data[0]
-        single_entry["raw_voltage"] = lj_data.pt_data[1]
-        single_entry["corrected_voltage"] = lj_data.pt_data[1] * VOLTAGE_MODIFIER
+        single_entry["PT1"] = PRESSURE_MODIFIER(lj_data.pt_data[0])
+        single_entry["raw_voltage_PT1"] = lj_data.pt_data[0]
+        single_entry["PU1"] = lj_data.pt_data[1] * PU_VOLTAGE_MODIFIER
 
         curr_list_len = 0
 
@@ -48,11 +49,11 @@ class PtPu_DatabaseHandler(DatabaseHandler):
             curr_list_len = len(DatabaseHandler.lj_data_packet[key])
 
         # If the packet is full, write to the database
-        if curr_list_len == LJ_PACKET_SIZE:
+        if curr_list_len == lj_data.scan_rate:
             entry = {}
             entry["PT1"] = DatabaseHandler.lj_data_packet["PT1"]
-            entry["raw_voltage"] = DatabaseHandler.lj_data_packet["raw_voltage"]
-            entry["corrected_voltage"] = DatabaseHandler.lj_data_packet["corrected_voltage"]
+            entry["raw_voltage_PT1"] = DatabaseHandler.lj_data_packet["raw_voltage_PT1"]
+            entry["PU1"] = DatabaseHandler.lj_data_packet["PU1"]
 
             try:
                 DatabaseHandler.client.collection("LabJack").create(entry)

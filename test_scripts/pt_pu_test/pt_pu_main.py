@@ -14,6 +14,7 @@ from br_threading.ThreadManager import ThreadManager as tm
 from LabjackProcess import _CallbackClass, LjData, t7_pro_thread
 
 TEST_DATABASE_SCHEMA = path.join(Path(__file__).parent, "pt_pu_DatabaseSchema.json")
+PT_PU_LJ_FREQ = 500 # Hz
 
 def pt_pu_lj_callback(obj: _CallbackClass, stream_handle: Any):
     """
@@ -34,7 +35,7 @@ def pt_pu_lj_callback(obj: _CallbackClass, stream_handle: Any):
     pt_data.append(data_arr[0]) # PT1
     pt_data.append(data_arr[1]) # raw_voltage
 
-    cmnd = WorkQCmnd(WorkQCmnd_e.LJ_DATA, LjData([], pt_data))
+    cmnd = WorkQCmnd(WorkQCmnd_e.LJ_DATA, LjData(obj.scan_rate, [], pt_data))
 
     for workq in obj.subscribed_workq_list:
         workq.put(cmnd)
@@ -49,7 +50,7 @@ if __name__ == "__main__":
 
     # Initialize the threads
     tm.create_thread(target=database_thread, args=(db_workq, TEST_DATABASE_SCHEMA))
-    tm.create_thread(target=t7_pro_thread, args=(t7_pro_workq, db_workq, labjack_scan_names, pt_pu_lj_callback))
+    tm.create_thread(target=t7_pro_thread, args=(t7_pro_workq, db_workq, PT_PU_LJ_FREQ, labjack_scan_names, pt_pu_lj_callback))
 
     tm.start_threads()
     while 1:
