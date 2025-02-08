@@ -62,7 +62,7 @@ def main(file_path):
                 previous_time = set_of_records.created
                 milliseconds_offset = 0
 
-            for i in range(len(set_of_records.raw_voltage)):
+            for i in range(len(set_of_records.pt1)):
 
                 milliseconds_offset += 1000/len(set_of_records.pt1)
 

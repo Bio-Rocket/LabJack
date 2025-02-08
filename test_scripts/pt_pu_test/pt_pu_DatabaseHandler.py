@@ -6,7 +6,7 @@ import sys
 sys.path.append(path.join(Path(__file__).parents[2].as_posix(), "src/"))
 
 from DatabaseHandler import DatabaseHandler
-from LabjackProcess import LjData
+from LabjackProcess import GET_SCANS_PER_READ, LjData
 from br_threading.WorkQCommands import WorkQCmnd, WorkQCmnd_e
 
 PRESSURE_MODIFIER = lambda x: 571.77 * x - 362.5
@@ -31,35 +31,20 @@ class PtPu_DatabaseHandler(DatabaseHandler):
                 The load cell handler to handle the load cell mass conversions.
         """
 
-        single_entry = {}
-
-        # Convert the load cell voltages to masses
-        single_entry["PT1"] = PRESSURE_MODIFIER(lj_data.pt_data[0])
-        single_entry["raw_voltage_PT1"] = lj_data.pt_data[0]
-        single_entry["PU1"] = lj_data.pt_data[1] * PU_VOLTAGE_MODIFIER
-
-        curr_list_len = 0
-
-        # Add the data to the packet
-        for key in single_entry:
-            if len(DatabaseHandler.lj_data_packet[key]) == 0:
-                DatabaseHandler.lj_data_packet[key] = [single_entry[key],]
-            else:
-                DatabaseHandler.lj_data_packet[key].append(single_entry[key])
-            curr_list_len = len(DatabaseHandler.lj_data_packet[key])
-
-        # If the packet is full, write to the database
-        if curr_list_len == lj_data.scan_rate:
-            entry = {}
-            entry["PT1"] = DatabaseHandler.lj_data_packet["PT1"]
-            entry["raw_voltage_PT1"] = DatabaseHandler.lj_data_packet["raw_voltage_PT1"]
-            entry["PU1"] = DatabaseHandler.lj_data_packet["PU1"]
-
-            try:
-                DatabaseHandler.client.collection("LabJack").create(entry)
-            except Exception as e:
-                print(f"failed to create a lj_data entry {e}")
-            DatabaseHandler.lj_data_packet.clear()
+        for i in range(GET_SCANS_PER_READ(lj_data.scan_rate)):
+            for key in lj_data.pt_data:
+                if key == "PT1":
+                    pt1_raw = lj_data.pt_data[key].pop(0)
+                    DatabaseHandler.lj_data_packet["raw_voltage_PT1"].append(pt1_raw)
+                    DatabaseHandler.lj_data_packet[key].append(PRESSURE_MODIFIER(pt1_raw))
+                else:
+                    DatabaseHandler.lj_data_packet[key].append(lj_data.pt_data[key].pop(0))
+            if len(DatabaseHandler.lj_data_packet[key]) == lj_data.scan_rate:
+                try:
+                    DatabaseHandler.client.collection("LabJack").create(DatabaseHandler.lj_data_packet)
+                except Exception as e:
+                    print(f"failed to create a lj_data entry {e}")
+                DatabaseHandler.lj_data_packet.clear()
 
 
 def process_workq_message(message: WorkQCmnd) -> bool:

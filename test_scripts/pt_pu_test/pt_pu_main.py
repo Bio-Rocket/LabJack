@@ -1,3 +1,4 @@
+from collections import defaultdict
 import multiprocessing as mp
 from pathlib import Path
 import sys
@@ -11,7 +12,7 @@ sys.path.append(path.join(Path(__file__).parents[2].as_posix(), "src/"))
 from br_threading.WorkQCommands import WorkQCmnd, WorkQCmnd_e
 from pt_pu_DatabaseHandler import database_thread
 from br_threading.ThreadManager import ThreadManager as tm
-from LabjackProcess import _CallbackClass, LjData, t7_pro_thread
+from LabjackProcess import GET_SCANS_PER_READ, _CallbackClass, LjData, t7_pro_thread
 
 TEST_DATABASE_SCHEMA = path.join(Path(__file__).parent, "pt_pu_DatabaseSchema.json")
 PT_PU_LJ_FREQ = 500 # Hz
@@ -30,12 +31,14 @@ def pt_pu_lj_callback(obj: _CallbackClass, stream_handle: Any):
     ff = obj.lji.read_stream()
     data_arr = ff[0]
 
-    pt_data = []
+    scan_rate = obj.scan_rate
+    pt_data = defaultdict(list)
 
-    pt_data.append(data_arr[0]) # PT1
-    pt_data.append(data_arr[1]) # raw_voltage
+    for i in range(GET_SCANS_PER_READ(scan_rate)):
+        pt_data["PT1"].append(data_arr[0]) # PT1 raw voltage
+        pt_data["PU1"].append(data_arr[1]) # PU1
 
-    cmnd = WorkQCmnd(WorkQCmnd_e.LJ_DATA, LjData(obj.scan_rate, [], pt_data))
+    cmnd = WorkQCmnd(WorkQCmnd_e.LJ_DATA, LjData(obj.scan_rate, {}, pt_data))
 
     for workq in obj.subscribed_workq_list:
         workq.put(cmnd)
