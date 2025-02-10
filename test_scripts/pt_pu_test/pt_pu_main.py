@@ -29,12 +29,13 @@ def pt_pu_lj_callback(obj: _CallbackClass, stream_handle: Any):
         stream_handle (Any): The stream handle for the LabJack T7 Pro.
     """
     ff = obj.lji.read_stream()
-    data_arr = ff[0]
 
     scan_rate = obj.scan_rate
     pt_data = defaultdict(list)
 
     for i in range(GET_SCANS_PER_READ(scan_rate)):
+        data_arr = ff[0][i: i + 2] # for the 2 channels
+
         pt_data["PT1"].append(data_arr[0]) # PT1 raw voltage
         pt_data["PU1"].append(data_arr[1]) # PU1
 

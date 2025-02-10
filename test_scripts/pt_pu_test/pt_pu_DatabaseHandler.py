@@ -38,7 +38,7 @@ class PtPu_DatabaseHandler(DatabaseHandler):
                     DatabaseHandler.lj_data_packet["raw_voltage_PT1"].append(pt1_raw)
                     DatabaseHandler.lj_data_packet[key].append(PRESSURE_MODIFIER(pt1_raw))
                 else:
-                    DatabaseHandler.lj_data_packet[key].append(lj_data.pt_data[key].pop(0))
+                    DatabaseHandler.lj_data_packet[key].append(lj_data.pt_data[key].pop(0) * PU_VOLTAGE_MODIFIER)
             if len(DatabaseHandler.lj_data_packet[key]) == lj_data.scan_rate:
                 try:
                     DatabaseHandler.client.collection("LabJack").create(DatabaseHandler.lj_data_packet)
