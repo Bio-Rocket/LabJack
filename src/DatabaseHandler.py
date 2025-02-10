@@ -66,7 +66,7 @@ class DatabaseHandler():
         DatabaseHandler.updated_collections(data_base_format_file)
 
         DatabaseHandler.client.collection('LoadCellCommand').subscribe(DatabaseHandler._handle_load_cell_command_callback)
-        DatabaseHandler.client.collection('PlcCommand').subscribe(DatabaseHandler._handle_plc_command_callback)
+        DatabaseHandler.client.collection('GroundSystemsCommand').subscribe(DatabaseHandler._handle_ground_systems_command_callback)
         DatabaseHandler.client.collection('StateCommand').subscribe(DatabaseHandler._handle_state_command_callback)
         DatabaseHandler.client.collection('HeartbeatMessage').subscribe(DatabaseHandler._handle_heartbeat_callback)
 
@@ -255,7 +255,7 @@ class DatabaseHandler():
                 DatabaseHandler.delete_collection(current_collection)
 
     @staticmethod
-    def _handle_plc_command_callback(document: MessageData):
+    def _handle_ground_systems_command_callback(document: MessageData):
         """
         Whenever a new entry is created in the PlcCommands
         collection, this function is called to handle the
@@ -266,7 +266,7 @@ class DatabaseHandler():
             document (MessageData): the change notification from the database.
         """
         print(f"DB - PLC Command: {document.record.command}")
-        DatabaseHandler.db_thread_workq.put(WorkQCmnd(WorkQCmnd_e.DB_PLC_COMMAND, document.record.command))
+        DatabaseHandler.db_thread_workq.put(WorkQCmnd(WorkQCmnd_e.DB_GS_COMMAND, document.record.command))
 
     @staticmethod
     def _handle_load_cell_command_callback(document: MessageData):
@@ -378,13 +378,13 @@ class DatabaseHandler():
 
         entry["HEATER"] = valve_data[20]
 
-        entry["PMP3"] = valve_data[21] #TODO: Currently not used Pump (PMP3)
+        entry["PMP3"] = valve_data[21]
 
         entry["IGN1"] = valve_data[22]
         entry["IGN2"] = valve_data[23]
 
         try:
-            DatabaseHandler.client.collection("PLC").create(entry)
+            DatabaseHandler.client.collection("Plc").create(entry)
         except Exception as e:
             print(f"failed to create a plc_data entry {e}")
 
@@ -530,7 +530,7 @@ def process_workq_message(message: WorkQCmnd, state_workq: mp.Queue, hb_workq: m
     if message.command == WorkQCmnd_e.KILL_PROCESS:
         print("DB - Received kill command")
         return False
-    elif message.command == WorkQCmnd_e.DB_PLC_COMMAND:
+    elif message.command == WorkQCmnd_e.DB_GS_COMMAND:
         state_workq.put(WorkQCmnd(WorkQCmnd_e.STATE_HANDLE_VALVE_COMMAND, message.data))
     elif message.command == WorkQCmnd_e.DB_LC_COMMAND:
         handle_lc_command(message.data, lc_handler)

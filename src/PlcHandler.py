@@ -136,7 +136,14 @@ def process_workq_message(message: WorkQCmnd, db_workq: mp.Queue) -> bool:
         state = 0
         plc_command = int.to_bytes(PLC_HEATER_CMND, 1, "little") + int.to_bytes(state, 1, "little")
         PlcHandler.send_command(plc_command)
-    #TODO: Might need to add pump (PMP3) offset already listed above
+    elif message.command == WorkQCmnd_e.PLC_PUMP_3_ON:
+        state = 1
+        plc_command = int.to_bytes(PUMP3_CMND, 1, "little") + int.to_bytes(state, 1, "little")
+        PlcHandler.send_command(plc_command)
+    elif message.command == WorkQCmnd_e.PLC_PUMP_3_OFF:
+        state = 0
+        plc_command = int.to_bytes(PUMP3_CMND, 1, "little") + int.to_bytes(state, 1, "little")
+        PlcHandler.send_command(plc_command)
     elif message.command == WorkQCmnd_e.PLC_IGN_ON:
         ign_num = message.data + PLC_IGN_OFFSET
         state = 1

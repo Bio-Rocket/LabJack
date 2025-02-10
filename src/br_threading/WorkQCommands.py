@@ -6,7 +6,7 @@ class WorkQCmnd_e(Enum):
     KILL_PROCESS = 0 # Kill the process
 
     ## Internal DB Commands
-    DB_PLC_COMMAND = auto() # Command from the database
+    DB_GS_COMMAND = auto() # Command from the database
     DB_LC_COMMAND = auto() # Internal DB Command for the Load Cell Handler
     DB_STATE_COMMAND = auto() # Command for DB to send to the state machine
     DB_STATE_CHANGE = auto() # Change the system state in the DB
@@ -29,7 +29,8 @@ class WorkQCmnd_e(Enum):
     PLC_OPEN_SOL = auto() # Open the Solenoid Valve, expects the Solenoid number
     PLC_CLOSE_SOL = auto() # Close the Solenoid Valve, expects the Solenoid number
 
-    #TODO: Might need Pump for PMP3
+    PLC_PUMP_3_ON = auto() # Turn on Pump 3
+    PLC_PUMP_3_OFF = auto() # Turn off Pump 3
 
     PLC_IGN_ON = auto() # Turn on the igniter, expects the igniter number
     PLC_IGN_OFF = auto() # Turn off the igniter, expects the igniter number
