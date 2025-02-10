@@ -2,7 +2,6 @@
 import json
 import multiprocessing as mp
 from pathlib import Path
-import time
 from typing import Dict, List, Tuple
 from pocketbase import Client
 from pocketbase.errors import ClientResponseError
@@ -38,13 +37,12 @@ class DatabaseHandler():
                 The file containing the expected schema for the database.
         """
         DatabaseHandler.db_thread_workq = db_thread_workq
-        DatabaseHandler.client = Client(PB_URL)
+        DatabaseHandler.client = Client(PB_URL, timeout=5)
         DatabaseHandler.token = None
 
         # Wait for the database to be available
         while not DatabaseHandler.verify_connection():
             print(f"DB - Failed to connect to the database @{PB_URL}, retrying...")
-            time.sleep(5)
 
         # Load environment variables from .env file
         load_dotenv()
