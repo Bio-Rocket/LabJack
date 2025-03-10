@@ -7,8 +7,8 @@ from dotenv import load_dotenv
 from pocketbase import Client
 from pocketbase.errors import ClientResponseError
 
-PB_URL = 'http://127.0.0.1:8090'
-# PB_URL = 'http://192.168.0.69:8090' # Database Pi IP
+# PB_URL = 'http://127.0.0.1:8090'
+PB_URL = 'http://192.168.0.69:8090' # Database Pi IP
 
 
 def connect_to_db() -> Client:
