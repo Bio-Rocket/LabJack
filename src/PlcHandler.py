@@ -1,6 +1,7 @@
 # General imports =================================================================================
 import multiprocessing as mp
 from socket import socket, AF_INET, SOCK_STREAM
+import struct
 import threading
 import time
 from typing import Tuple
@@ -11,7 +12,8 @@ from dataclasses import dataclass
 PLC_IP = "192.168.0.70"
 PLC_PORT = 69
 
-REQUEST_DELAY = (1.0/50.0) # in seconds
+REQUEST_DELAY = (1.0/4.0) # in seconds
+PT_COEFFICIENT = 1000
 
 # PLC Commands and Offsets
 PLC_REQUEST = 1
@@ -33,10 +35,11 @@ PLC_VALVE_DATA_SIZE = 24 # 14 valves and each are int8_t
 # Class Definitions ===============================================================================
 @dataclass
 class PlcData():
-    tc_data: bytes
-    lc_data: bytes
-    pt_data: bytes
-    valve_data: bytes
+    tc_data: list
+    lc_data: list
+    pt_data: list
+    valve_data: list
+    scan_rate: float = REQUEST_DELAY
 
 class PlcHandler():
     def __init__(self, plc_workq: mp.Queue):
@@ -78,14 +81,15 @@ class PlcHandler():
 
     @staticmethod
     def read_response() -> Tuple[bytes]:
-        tc_data = PlcHandler.socket.recv(PLC_TC_DATA_SIZE)
+        tc_data = list(struct.unpack('<' + 'h' * (PLC_TC_DATA_SIZE //2),  PlcHandler.socket.recv(PLC_TC_DATA_SIZE)))
         if b'Unknown command' == tc_data:
             print("PLC - Unknown Command")
             return None
 
-        lc_data = PlcHandler.socket.recv(PLC_LC_DATA_SIZE)
-        pt_data = PlcHandler.socket.recv(PLC_PT_DATA_SIZE)
-        valve_data = PlcHandler.socket.recv(PLC_VALVE_DATA_SIZE)
+        lc_data = list(struct.unpack('<' + 'h' * (PLC_LC_DATA_SIZE //2),  PlcHandler.socket.recv(PLC_LC_DATA_SIZE)))
+        pt_data = list(struct.unpack('<' + 'h' * (PLC_PT_DATA_SIZE //2),  PlcHandler.socket.recv(PLC_PT_DATA_SIZE)))
+        pt_data = [x / PT_COEFFICIENT for x in pt_data]
+        valve_data = list(PlcHandler.socket.recv(PLC_VALVE_DATA_SIZE))
 
         return PlcData(tc_data, lc_data, pt_data, valve_data)
 

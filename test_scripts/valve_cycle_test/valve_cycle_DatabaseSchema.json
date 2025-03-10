@@ -1,0 +1,39 @@
+{
+    "collections": [
+        {
+            "name": "Plc",
+            "schema": [
+                {
+                    "name": "PBV1",
+                    "type": "json"
+                },
+                {
+                    "name": "PBV2",
+                    "type": "json"
+                },
+                {
+                    "name": "PT1",
+                    "type": "json"
+                },
+                {
+                    "name": "PT2",
+                    "type": "json"
+                },
+                {
+                    "name": "PT3",
+                    "type": "json"
+                }
+            ]
+        },
+        {
+            "name": "SystemState",
+            "schema": [
+                {
+                    "name": "system_state",
+                    "type": "text"
+                }
+            ]
+        }
+    ]
+
+}
