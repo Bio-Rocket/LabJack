@@ -31,7 +31,6 @@ if __name__ == "__main__":
     db_workq = mp.Queue()
     plc_workq = mp.Queue()
     state_workq = mp.Queue()
-    t7_pro_workq = mp.Queue()
 
     # Initialize the threads
     tm.create_thread(target=database_thread, args=(db_workq, state_workq, TEST_DATABASE_SCHEMA))
