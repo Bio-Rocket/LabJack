@@ -91,8 +91,6 @@ class PlcHandler():
         pt_data = [x / PT_COEFFICIENT for x in pt_data]
         valve_data = list(PlcHandler.socket.recv(PLC_VALVE_DATA_SIZE))
 
-
-
         return PlcData(tc_data, lc_data, pt_data, valve_data)
 
 # Procedures ======================================================================================

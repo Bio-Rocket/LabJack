@@ -39,6 +39,11 @@ class ValveCycle_DatabaseHandler(DatabaseHandler):
         DatabaseHandler.plc_data_packet["PBV2"].append(valve_data[1])
 
         if len(DatabaseHandler.plc_data_packet["PT1"]) == int(1/plc_data.scan_rate):
+            print("PLC data:")
+            print("PT1:",DatabaseHandler.plc_data_packet["PT1"][int(1/plc_data.scan_rate-1)])
+            print("PT2:",DatabaseHandler.plc_data_packet["PT2"][int(1/plc_data.scan_rate-1)])
+            print("PT3:",DatabaseHandler.plc_data_packet["PT3"][int(1/plc_data.scan_rate-1)])
+
             try:
                 DatabaseHandler.client.collection("Plc").create(DatabaseHandler.plc_data_packet)
             except Exception as e:

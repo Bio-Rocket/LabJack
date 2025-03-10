@@ -37,14 +37,13 @@ if __name__ == "__main__":
     tm.create_thread(target=state_thread, args=(state_workq, plc_workq, db_workq))
 
     tm.start_threads()
-    while 1:
-        for i in range(NUMBER_OF_CYCLES):
-            state_workq.put(WorkQCmnd(WorkQCmnd_e.STATE_HANDLE_VALVE_COMMAND, "PBV1_CLOSE"))
-            state_workq.put(WorkQCmnd(WorkQCmnd_e.STATE_HANDLE_VALVE_COMMAND, "PBV2_OPEN"))
-            time.sleep(TIME_BETWEEN_CYCLES)
+    for i in range(NUMBER_OF_CYCLES):
+        state_workq.put(WorkQCmnd(WorkQCmnd_e.STATE_HANDLE_VALVE_COMMAND, "PBV1_CLOSE"))
+        state_workq.put(WorkQCmnd(WorkQCmnd_e.STATE_HANDLE_VALVE_COMMAND, "PBV2_OPEN"))
+        time.sleep(TIME_BETWEEN_CYCLES)
 
-            state_workq.put(WorkQCmnd(WorkQCmnd_e.STATE_HANDLE_VALVE_COMMAND, "PBV1_OPEN"))
-            state_workq.put(WorkQCmnd(WorkQCmnd_e.STATE_HANDLE_VALVE_COMMAND, "PBV2_CLOSE"))
-            time.sleep(TIME_BETWEEN_CYCLES)
+        state_workq.put(WorkQCmnd(WorkQCmnd_e.STATE_HANDLE_VALVE_COMMAND, "PBV1_OPEN"))
+        state_workq.put(WorkQCmnd(WorkQCmnd_e.STATE_HANDLE_VALVE_COMMAND, "PBV2_CLOSE"))
+        time.sleep(TIME_BETWEEN_CYCLES)
 
 
