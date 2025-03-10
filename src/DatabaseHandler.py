@@ -69,6 +69,7 @@ class DatabaseHandler():
         DatabaseHandler.client.collection('HeartbeatMessage').subscribe(DatabaseHandler._handle_heartbeat_callback)
 
         DatabaseHandler.lj_data_packet: Dict[str, List] = defaultdict(list)
+        DatabaseHandler.plc_data_packet: Dict[str, List] = defaultdict(list)
         print("DB - thread started")
 
     @staticmethod
@@ -324,67 +325,69 @@ class DatabaseHandler():
             print("DB - plc_data not read correctly")
             return
 
-        entry = {}
+        tc_data = plc_data.tc_data
+        lc_data = plc_data.lc_data
+        pt_data = plc_data.pt_data
+        valve_data = plc_data.valve_data
 
-        tc_data = list(plc_data.tc_data)
-        entry["TC1"] = tc_data[0]
-        entry["TC2"] = tc_data[1]
-        entry["TC3"] = tc_data[2]
-        entry["TC4"] = tc_data[3]
-        entry["TC5"] = tc_data[4]
-        entry["TC6"] = tc_data[5]
-        entry["TC7"] = tc_data[6]
-        entry["TC8"] = tc_data[7]
-        entry["TC9"] = tc_data[8]
+        DatabaseHandler.plc_data_packet["TC1"].append(tc_data[0])
+        DatabaseHandler.plc_data_packet["TC2"].append(tc_data[1])
+        DatabaseHandler.plc_data_packet["TC3"].append(tc_data[2])
+        DatabaseHandler.plc_data_packet["TC4"].append(tc_data[3])
+        DatabaseHandler.plc_data_packet["TC5"].append(tc_data[4])
+        DatabaseHandler.plc_data_packet["TC6"].append(tc_data[5])
+        DatabaseHandler.plc_data_packet["TC7"].append(tc_data[6])
+        DatabaseHandler.plc_data_packet["TC8"].append(tc_data[7])
+        DatabaseHandler.plc_data_packet["TC9"].append(tc_data[8])
 
-        lc_data = list(plc_data.lc_data)
-        entry["LC1"] = lc_handler.consume_incoming_voltage("LC1", lc_data[0])
-        entry["LC2"] = lc_handler.consume_incoming_voltage("LC2", lc_data[1])
-        entry["LC7"] = lc_handler.consume_incoming_voltage("LC7", lc_data[2])
+        DatabaseHandler.plc_data_packet["LC1"].append(lc_handler.consume_incoming_voltage("LC1", lc_data[0]))
+        DatabaseHandler.plc_data_packet["LC2"].append(lc_handler.consume_incoming_voltage("LC2", lc_data[1]))
+        DatabaseHandler.plc_data_packet["LC7"].append(lc_handler.consume_incoming_voltage("LC7", lc_data[2]))
 
-        pt_data = list(plc_data.pt_data)
-        entry["PT1"] = pt_data[0]
-        entry["PT2"] = pt_data[1]
-        entry["PT3"] = pt_data[2]
-        entry["PT4"] = pt_data[3]
-        entry["PT5"] = pt_data[4]
-        entry["PT13"] = pt_data[5]
-        entry["PT14"] = pt_data[6]
+        DatabaseHandler.plc_data_packet["PT1"].append(pt_data[0])
+        DatabaseHandler.plc_data_packet["PT2"].append(pt_data[1])
+        DatabaseHandler.plc_data_packet["PT3"].append(pt_data[2])
+        DatabaseHandler.plc_data_packet["PT4"].append(pt_data[3])
+        DatabaseHandler.plc_data_packet["PT5"].append(pt_data[4])
+        DatabaseHandler.plc_data_packet["PT13"].append(pt_data[5])
+        DatabaseHandler.plc_data_packet["PT14"].append(pt_data[6])
 
-        valve_data = list(plc_data.valve_data)
-        entry["PBV1"] = valve_data[0]
-        entry["PBV2"] = valve_data[1]
-        entry["PBV3"] = valve_data[2]
-        entry["PBV4"] = valve_data[3]
-        entry["PBV5"] = valve_data[4]
-        entry["PBV6"] = valve_data[5]
-        entry["PBV7"] = valve_data[6]
-        entry["PBV8"] = valve_data[7]
-        entry["PBV9"] = valve_data[8]
-        entry["PBV10"] = valve_data[9]
-        entry["PBV11"] = valve_data[10]
+        DatabaseHandler.plc_data_packet["PBV1"].append(valve_data[0])
+        DatabaseHandler.plc_data_packet["PBV2"].append(valve_data[1])
+        DatabaseHandler.plc_data_packet["PBV3"].append(valve_data[2])
+        DatabaseHandler.plc_data_packet["PBV4"].append(valve_data[3])
+        DatabaseHandler.plc_data_packet["PBV5"].append(valve_data[4])
+        DatabaseHandler.plc_data_packet["PBV6"].append(valve_data[5])
+        DatabaseHandler.plc_data_packet["PBV7"].append(valve_data[6])
+        DatabaseHandler.plc_data_packet["PBV8"].append(valve_data[7])
+        DatabaseHandler.plc_data_packet["PBV9"].append(valve_data[8])
+        DatabaseHandler.plc_data_packet["PBV10"].append(valve_data[9])
+        DatabaseHandler.plc_data_packet["PBV11"].append(valve_data[10])
 
-        entry["SOL1"] = valve_data[11]
-        entry["SOL2"] = valve_data[12]
-        entry["SOL3"] = valve_data[13]
-        entry["SOL4"] = valve_data[14]
-        entry["SOL5"] = valve_data[15]
-        entry["SOL6"] = valve_data[16]
-        entry["SOL7"] = valve_data[17]
-        entry["SOL8"] = valve_data[18]
-        entry["SOL9"] = valve_data[19]
+        DatabaseHandler.plc_data_packet["SOL1"].append(valve_data[11])
+        DatabaseHandler.plc_data_packet["SOL2"].append(valve_data[12])
+        DatabaseHandler.plc_data_packet["SOL3"].append(valve_data[13])
+        DatabaseHandler.plc_data_packet["SOL4"].append(valve_data[14])
+        DatabaseHandler.plc_data_packet["SOL5"].append(valve_data[15])
+        DatabaseHandler.plc_data_packet["SOL6"].append(valve_data[16])
+        DatabaseHandler.plc_data_packet["SOL7"].append(valve_data[17])
+        DatabaseHandler.plc_data_packet["SOL8"].append(valve_data[18])
+        DatabaseHandler.plc_data_packet["SOL9"].append(valve_data[19])
 
-        entry["HEATER"] = valve_data[20]
+        DatabaseHandler.plc_data_packet["HEATER"].append(valve_data[20])
 
-        entry["PMP3"] = valve_data[21]
+        DatabaseHandler.plc_data_packet["PMP3"].append(valve_data[21])
 
-        entry["IGN1"] = valve_data[22]
-        entry["IGN2"] = valve_data[23]
+        DatabaseHandler.plc_data_packet["IGN1"].append(valve_data[22])
+        DatabaseHandler.plc_data_packet["IGN2"].append(valve_data[23])
 
-        try:
-            DatabaseHandler.client.collection("Plc").create(entry)
-        except Exception as e:
-            print(f"failed to create a plc_data entry {e}")
+        if len(DatabaseHandler.plc_data_packet["TC1"]) == int(1/plc_data.scan_rate):
+            try:
+                DatabaseHandler.client.collection("Plc").create(DatabaseHandler.plc_data_packet)
+            except Exception as e:
+                print(f"failed to create a plc_data entry {e}")
+
+            DatabaseHandler.plc_data_packet.clear()
 
 
     @staticmethod

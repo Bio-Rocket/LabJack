@@ -8,7 +8,6 @@ sys.path.append(path.join(Path(__file__).parents[2].as_posix(), "src/"))
 from DatabaseHandler import DatabaseHandler
 
 from PlcHandler import PlcData
-from LabjackProcess import GET_SCANS_PER_READ, LjData
 from br_threading.WorkQCommands import WorkQCmnd, WorkQCmnd_e
 
 class ValveCycle_DatabaseHandler(DatabaseHandler):
@@ -24,50 +23,28 @@ class ValveCycle_DatabaseHandler(DatabaseHandler):
                 containing the TC data, the second position containing the PT data,
                 and the third position containing the valve data.
         """
+
         if plc_data is None:
             print("DB - plc_data not read correctly")
             return
 
-        entry = {}
+        pt_data = plc_data.pt_data
+        valve_data = plc_data.valve_data
 
-        valve_data = list(plc_data.valve_data)
+        DatabaseHandler.plc_data_packet["PT1"].append(pt_data[0]*580)
+        DatabaseHandler.plc_data_packet["PT2"].append(pt_data[1]*580)
+        DatabaseHandler.plc_data_packet["PT3"].append(pt_data[2]*145)
 
-        # The only valves important during this test are outputs
-        # 7 and 8 on relay 3, which are linked to the heater and pump 3
-        entry["HEATER"] = valve_data[20] # Heater / Relay 3 / Output 7
-        entry["PMP3"] = valve_data[21]  # Pump 3 / Relay 3 / Output 8
+        DatabaseHandler.plc_data_packet["PBV1"].append(valve_data[0])
+        DatabaseHandler.plc_data_packet["PBV2"].append(valve_data[1])
 
-        try:
-            DatabaseHandler.client.collection("Plc").create(entry)
-        except Exception as e:
-            print(f"failed to create a plc_data entry {e}")
+        if len(DatabaseHandler.plc_data_packet["PT1"]) == int(1/plc_data.scan_rate):
+            try:
+                DatabaseHandler.client.collection("Plc").create(DatabaseHandler.plc_data_packet)
+            except Exception as e:
+                print(f"failed to create a plc_data entry {e}")
 
-
-    @staticmethod
-    def write_lj_data(lj_data: LjData) -> None:
-        """
-        Attempt to write incoming labjack data to the database.
-
-        Batch Write Feature:
-        If there is a LJ_PACKET_SIZE specified, the DB handler will
-        collect that many pieces of data and write to the DB once the
-        full package is complete, this allows for faster DB writes.
-
-        Args:
-            lj_data (tuple): The labjack data, with the first position
-                containing the list of data
-        """
-
-        for i in range(GET_SCANS_PER_READ(lj_data.scan_rate)):
-            for key in lj_data.pt_data:
-                DatabaseHandler.lj_data_packet[key].append(lj_data.pt_data[key].pop(0))
-            if len(DatabaseHandler.lj_data_packet[key]) == lj_data.scan_rate:
-                try:
-                    DatabaseHandler.client.collection("LabJack").create(DatabaseHandler.lj_data_packet)
-                except Exception as e:
-                    print(f"failed to create a lj_data entry {e}")
-                DatabaseHandler.lj_data_packet.clear()
-
+            DatabaseHandler.plc_data_packet.clear()
 
 def process_workq_message(message: WorkQCmnd , state_workq: mp.Queue) -> bool:
     """
@@ -88,9 +65,6 @@ def process_workq_message(message: WorkQCmnd , state_workq: mp.Queue) -> bool:
         ValveCycle_DatabaseHandler.write_plc_data(message.data)
     elif message.command == WorkQCmnd_e.DB_STATE_CHANGE:
         DatabaseHandler.write_system_state(message.data)
-    elif message.command == WorkQCmnd_e.LJ_DATA:
-        ValveCycle_DatabaseHandler.write_lj_data(message.data)
-
 
     return True
 

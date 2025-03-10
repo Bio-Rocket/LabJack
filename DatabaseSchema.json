@@ -5,175 +5,175 @@
             "schema": [
                 {
                     "name": "TC1",
-                    "type": "number"
+                    "type": "json"
                 },
                 {
                     "name": "TC2",
-                    "type": "number"
+                    "type": "json"
                 },
                 {
                     "name": "TC3",
-                    "type": "number"
+                    "type": "json"
                 },
                 {
                     "name": "TC4",
-                    "type": "number"
+                    "type": "json"
                 },
                 {
                     "name": "TC5",
-                    "type": "number"
+                    "type": "json"
                 },
                 {
                     "name": "TC6",
-                    "type": "number"
+                    "type": "json"
                 },
                 {
                     "name": "TC7",
-                    "type": "number"
+                    "type": "json"
                 },
                 {
                     "name": "TC8",
-                    "type": "number"
+                    "type": "json"
                 },
                 {
                     "name": "TC9",
-                    "type": "number"
+                    "type": "json"
                 },
                 {
                     "name": "LC1",
-                    "type": "number"
+                    "type": "json"
                 },
                 {
                     "name": "LC2",
-                    "type": "number"
+                    "type": "json"
                 },
                 {
                     "name": "LC7",
-                    "type": "number"
+                    "type": "json"
                 },
                 {
                     "name": "PT1",
-                    "type": "number"
+                    "type": "json"
                 },
                 {
                     "name": "PT2",
-                    "type": "number"
+                    "type": "json"
                 },
                 {
                     "name": "PT3",
-                    "type": "number"
+                    "type": "json"
                 },
                 {
                     "name": "PT4",
-                    "type": "number"
+                    "type": "json"
                 },
                 {
                     "name": "PT5",
-                    "type": "number"
+                    "type": "json"
                 },
                 {
                     "name": "PT13",
-                    "type": "number"
+                    "type": "json"
                 },
                 {
                     "name": "PT14",
-                    "type": "number"
+                    "type": "json"
                 },
                 {
                     "name": "PBV1",
-                    "type": "bool"
+                    "type": "json"
                 },
                 {
                     "name": "PBV2",
-                    "type": "bool"
+                    "type": "json"
                 },
                 {
                     "name": "PBV3",
-                    "type": "bool"
+                    "type": "json"
                 },
                 {
                     "name": "PBV4",
-                    "type": "bool"
+                    "type": "json"
                 },
                 {
                     "name": "PBV5",
-                    "type": "bool"
+                    "type": "json"
                 },
                 {
                     "name": "PBV6",
-                    "type": "bool"
+                    "type": "json"
                 },
                 {
                     "name": "PBV7",
-                    "type": "bool"
+                    "type": "json"
                 },
                 {
                     "name": "PBV8",
-                    "type": "bool"
+                    "type": "json"
                 },
                 {
                     "name": "PBV9",
-                    "type": "bool"
+                    "type": "json"
                 },
                 {
                     "name": "PBV10",
-                    "type": "bool"
+                    "type": "json"
                 },
                 {
                     "name": "PBV11",
-                    "type": "bool"
+                    "type": "json"
                 },
                 {
                     "name": "SOL1",
-                    "type": "bool"
+                    "type": "json"
                 },
                 {
                     "name": "SOL2",
-                    "type": "bool"
+                    "type": "json"
                 },
                 {
                     "name": "SOL3",
-                    "type": "bool"
+                    "type": "json"
                 },
                 {
                     "name": "SOL4",
-                    "type": "bool"
+                    "type": "json"
                 },
                 {
                     "name": "SOL5",
-                    "type": "bool"
+                    "type": "json"
                 },
                 {
                     "name": "SOL6",
-                    "type": "bool"
+                    "type": "json"
                 },
                 {
                     "name": "SOL7",
-                    "type": "bool"
+                    "type": "json"
                 },
                 {
                     "name": "SOL8",
-                    "type": "bool"
+                    "type": "json"
                 },
                 {
                     "name": "SOL9",
-                    "type": "bool"
+                    "type": "json"
                 },
                 {
                     "name": "HEATER",
-                    "type": "bool"
+                    "type": "json"
                 },
                 {
                     "name": "PMP3",
-                    "type": "bool"
+                    "type": "json"
                 },
                 {
                     "name": "IGN1",
-                    "type": "bool"
+                    "type": "json"
                 },
                 {
                     "name": "IGN2",
-                    "type": "bool"
+                    "type": "json"
                 }
             ]
         },
