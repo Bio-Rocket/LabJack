@@ -53,7 +53,7 @@ def main(file_path):
 
 
     with open(csv_data_file, 'w') as f:
-        f.write("time, PT1, raw_voltage_PT1, PU1\n")
+        f.write("time,PT1,raw_voltage_PT1,PU1\n")
 
         previous_time = datetime.datetime.now()
         for set_of_records in all_records:
@@ -72,7 +72,7 @@ def main(file_path):
 
                 time_of_record = set_of_records.created + datetime.timedelta(milliseconds=milliseconds_offset)
 
-                f.write(f"{time_of_record}, {pt}, {rv}, {pu}\n")
+                f.write(f"{time_of_record},{pt},{rv},{pu}\n")
 
     print("Data stored in file:", csv_data_file)
 
