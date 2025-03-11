@@ -38,6 +38,12 @@ if __name__ == "__main__":
     tm.create_thread(target=state_thread, args=(state_workq, plc_workq, db_workq))
 
     tm.start_threads()
+
+    if num_cycles < 1:
+        while 1:
+            time.sleep(1)
+        sys.exit(0)
+
     for i in range(num_cycles):
         state_workq.put(WorkQCmnd(WorkQCmnd_e.STATE_HANDLE_VALVE_COMMAND, "PBV1_CLOSE"))
         state_workq.put(WorkQCmnd(WorkQCmnd_e.STATE_HANDLE_VALVE_COMMAND, "PBV2_OPEN"))
