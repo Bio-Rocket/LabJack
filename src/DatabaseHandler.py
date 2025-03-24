@@ -330,15 +330,15 @@ class DatabaseHandler():
         pt_data = plc_data.pt_data
         valve_data = plc_data.valve_data
 
-        DatabaseHandler.plc_data_packet["TC1"].append(tc_data[0])
-        DatabaseHandler.plc_data_packet["TC2"].append(tc_data[1])
-        DatabaseHandler.plc_data_packet["TC3"].append(tc_data[2])
-        DatabaseHandler.plc_data_packet["TC4"].append(tc_data[3])
-        DatabaseHandler.plc_data_packet["TC5"].append(tc_data[4])
-        DatabaseHandler.plc_data_packet["TC6"].append(tc_data[5])
-        DatabaseHandler.plc_data_packet["TC7"].append(tc_data[6])
-        DatabaseHandler.plc_data_packet["TC8"].append(tc_data[7])
-        DatabaseHandler.plc_data_packet["TC9"].append(tc_data[8])
+        DatabaseHandler.plc_data_packet["TC1"].append(tc_data[0]/100)
+        DatabaseHandler.plc_data_packet["TC2"].append(tc_data[1]/100)
+        DatabaseHandler.plc_data_packet["TC3"].append(tc_data[2]/100)
+        DatabaseHandler.plc_data_packet["TC4"].append(tc_data[3]/100)
+        DatabaseHandler.plc_data_packet["TC5"].append(tc_data[4]/100)
+        DatabaseHandler.plc_data_packet["TC6"].append(tc_data[5]/100)
+        DatabaseHandler.plc_data_packet["TC7"].append(tc_data[6]/100)
+        DatabaseHandler.plc_data_packet["TC8"].append(tc_data[7]/100)
+        DatabaseHandler.plc_data_packet["TC9"].append(tc_data[8]/100)
 
         DatabaseHandler.plc_data_packet["LC1"].append(lc_handler.consume_incoming_voltage("LC1", lc_data[0]))
         DatabaseHandler.plc_data_packet["LC2"].append(lc_handler.consume_incoming_voltage("LC2", lc_data[1]))
