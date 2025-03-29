@@ -15,8 +15,6 @@ class SystemStates(Enum):
     POST_FIRE = auto()
     ABORT = auto()
 
-LED_TIMEOUT = 20
-
 class StateMachine():
     def __init__(self, state_workq: mp.Queue, plc_workq: mp.Queue, database_workq: mp.Queue):
         self.state_workq = state_workq
@@ -213,7 +211,7 @@ class StateMachine():
             self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_SOL, 13))
             self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_SOL, 14))
 
-    def handle_valve_change(self, command: str, resume_led_notif: threading.Event) -> None:
+    def handle_valve_change(self, command: str, play_led_notif: threading.Event, ) -> None:
         """
         Check the valve change command from the database and send the work queue command
         that should be sent to the plc if it is a valid command.
@@ -225,7 +223,14 @@ class StateMachine():
         print(f"SM - Handle Valve Change: {command}")
 
         if command in ["HEATER_ON", "HEATER_OFF", "SOL9_CLOSE", "SOL9_OPEN", "PUMP3_OFF", "PUMP3_ON"]:
-            resume_led_notif.clear()
+            play_led_notif.clear()
+        elif command == "SOL1_CLOSE":
+            play_led_notif.clear()
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_SOL, 9))
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_HEATER_ON, None))
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_PUMP_3_ON, None))
+        elif command == "SOL1_OPEN":
+            play_led_notif.set()
 
         # First handle the commands that do not require a certain state to occur
         if command == "IGN1_ON":
@@ -450,11 +455,12 @@ def auto_led_pattern(play_notif: threading.Event, plc_workq: mp.Queue) -> None:
     led_auto_play_state = 0
 
     while True:
-        play_notif.wait(timeout=LED_TIMEOUT)
-        play_notif.set()
+        if not play_notif.wait(timeout=0.5):
+            continue
 
         change_led_pattern(led_auto_play_state, plc_workq)
         led_auto_play_state = (led_auto_play_state + 1) % 14
+        time.sleep(2)
 
 
 def state_thread(state_workq: mp.Queue, plc_workq: mp.Queue, database_workq: mp.Queue):
@@ -470,8 +476,8 @@ def state_thread(state_workq: mp.Queue, plc_workq: mp.Queue, database_workq: mp.
     state_machine = StateMachine(state_workq, plc_workq, database_workq)
     print("SM - thread started")
 
-    resume_led_notif = threading.Event()
-    auto_led_thread = threading.Thread(target=auto_led_pattern, args=(resume_led_notif, plc_workq))
+    play_led_notif = threading.Event()
+    auto_led_thread = threading.Thread(target=auto_led_pattern, args=(play_led_notif, plc_workq))
     auto_led_thread.daemon = True
     auto_led_thread.start()
 
@@ -488,4 +494,4 @@ def state_thread(state_workq: mp.Queue, plc_workq: mp.Queue, database_workq: mp.
         elif message.command == WorkQCmnd_e.STATE_HANDLE_VALVE_COMMAND:
             # Process the command from the database
             # determine if the command is valid
-            state_machine.handle_valve_change(message.data, resume_led_notif)
+            state_machine.handle_valve_change(message.data, play_led_notif)
