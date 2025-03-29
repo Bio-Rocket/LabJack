@@ -7,6 +7,7 @@ from PlcHandler import plc_thread
 from LabjackProcess import t7_pro_thread
 from StateMachine import state_thread
 from HeartbeatHandler import heartbeat_thread
+from br_threading.WorkQCommands import WorkQCmnd, WorkQCmnd_e
 
 if __name__ == "__main__":
     db_workq = mp.Queue()
