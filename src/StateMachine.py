@@ -215,7 +215,7 @@ class StateMachine():
         self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_HEATER_ON, None))
         self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_PUMP_3_ON, None))
 
-    def handle_valve_change(self, command: str, play_led_notif: threading.Event, ) -> None:
+    def handle_valve_change(self, command: str, play_led_notif: threading.Event, seizer_mode: threading.Event) -> None:
         """
         Check the valve change command from the database and send the work queue command
         that should be sent to the plc if it is a valid command.
@@ -226,14 +226,22 @@ class StateMachine():
         """
         print(f"SM - Handle Valve Change: {command}")
 
-        if command in ["HEATER_ON", "HEATER_OFF", "PBV8_OPEN", "PBV8_CLOSE", "PUMP3_OFF", "PUMP3_ON", "SOL9_OPEN", "SOL9_CLOSE", "PBV10_OPEN", "PBV10_CLOSE"]:
+        if command in ["HEATER_ON", "HEATER_OFF", "PBV8_OPEN", "PBV8_CLOSE", "PUMP3_OFF", "PUMP3_ON", "SOL9_OPEN", "SOL9_CLOSE", "PBV10_OPEN", "PBV10_CLOSE", "PBV11_CLOSE"]:
             play_led_notif.clear()
+            seizer_mode.clear()
         elif command == "SOL1_CLOSE":
             play_led_notif.clear()
+            seizer_mode.clear()
             self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_SOL, 9))
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_PBV, 8))
             self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_HEATER_ON, None))
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_PBV, 10))
             self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_PUMP_3_ON, None))
         elif command == "SOL1_OPEN":
+            play_led_notif.set()
+            seizer_mode.clear()
+        elif command == "PBV11_OPEN":
+            seizer_mode.set()
             play_led_notif.set()
 
         # First handle the commands that do not require a certain state to occur
@@ -403,52 +411,63 @@ class StateMachine():
 
 
 def change_led_pattern(led_state: int, plc_workq: mp.Queue) -> None:
+
     if led_state == 0:
         plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_SOL, 9))
+        plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_PBV, 8))
         plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_HEATER_ON, None))
         plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_PUMP_3_ON, None))
+        plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_PBV, 10))
     elif led_state == 1:
         plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_SOL, 9))
+        plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_PBV, 8))
         plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_HEATER_ON, None))
         plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_PUMP_3_ON, None))
+        plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_PBV, 10))
     elif led_state == 2:
         plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_SOL, 9))
+        plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_PBV, 8))
         plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_HEATER_OFF, None))
         plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_PUMP_3_ON, None))
+        plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_PBV, 10))
     elif led_state == 3:
         plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_SOL, 9))
+        plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_PBV, 8))
         plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_HEATER_ON, None))
         plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_PUMP_3_OFF, None))
+        plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_PBV, 10))
     elif led_state == 4:
         plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_SOL, 9))
+        plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_PBV, 8))
         plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_HEATER_ON, None))
         plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_PUMP_3_OFF, None))
+        plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_PBV, 10))
     elif led_state == 5:
         plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_SOL, 9))
+        plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_PBV, 8))
         plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_HEATER_OFF, None))
         plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_PUMP_3_ON, None))
+        plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_PBV, 10))
     elif led_state == 6:
         plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_SOL, 9))
+        plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_PBV, 8))
         plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_HEATER_OFF, None))
         plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_PUMP_3_OFF, None))
+        plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_PBV, 10))
     elif led_state == 7:
         plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_SOL, 9))
+        plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_PBV, 8))
         plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_HEATER_ON, None))
         plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_PUMP_3_ON, None))
+        plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_PBV, 10))
     elif led_state == 8:
-        plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_SOL, 9))
-        plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_HEATER_OFF, None))
-        plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_PUMP_3_OFF, None))
-    elif led_state == 9:
         plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_SOL, 9))
+        plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_PBV, 8))
         plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_HEATER_ON, None))
         plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_PUMP_3_ON, None))
-    elif led_state == 10:
-        plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_SOL, 9))
-        plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_HEATER_ON, None))
-        plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_PUMP_3_ON, None))
+        plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_PBV, 10))
 
-def auto_led_pattern(play_notif: threading.Event, plc_workq: mp.Queue) -> None:
+def auto_led_pattern(play_notif: threading.Event, seizer_mode: threading.Event, plc_workq: mp.Queue) -> None:
     """
     Wait for the frontend to send a heartbeat.
     """
@@ -459,8 +478,9 @@ def auto_led_pattern(play_notif: threading.Event, plc_workq: mp.Queue) -> None:
             continue
 
         change_led_pattern(led_auto_play_state, plc_workq)
-        led_auto_play_state = (led_auto_play_state + 1) % 12
-        time.sleep(0.75)
+        led_auto_play_state = (led_auto_play_state + 1) % 9
+        if not seizer_mode.is_set():
+            time.sleep(0.75)
 
 def state_thread(state_workq: mp.Queue, plc_workq: mp.Queue, database_workq: mp.Queue):
     """
@@ -476,7 +496,8 @@ def state_thread(state_workq: mp.Queue, plc_workq: mp.Queue, database_workq: mp.
     print("SM - thread started")
 
     play_led_notif = threading.Event()
-    auto_led_thread = threading.Thread(target=auto_led_pattern, args=(play_led_notif, plc_workq))
+    seizer_mode = threading.Event()
+    auto_led_thread = threading.Thread(target=auto_led_pattern, args=(play_led_notif, seizer_mode, plc_workq))
     auto_led_thread.daemon = True
     auto_led_thread.start()
 
@@ -493,4 +514,4 @@ def state_thread(state_workq: mp.Queue, plc_workq: mp.Queue, database_workq: mp.
         elif message.command == WorkQCmnd_e.STATE_HANDLE_VALVE_COMMAND:
             # Process the command from the database
             # determine if the command is valid
-            state_machine.handle_valve_change(message.data, play_led_notif)
+            state_machine.handle_valve_change(message.data, play_led_notif, seizer_mode)
