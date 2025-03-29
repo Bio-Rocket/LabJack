@@ -486,12 +486,13 @@ def auto_led_pattern(play_notif: threading.Event, seizer_mode: threading.Event, 
             time.sleep(0.75)
         else:
             seizer_counter += 1
-            if seizer_counter == 250:
+            if seizer_counter == 1000:
                 seizer_counter = 0
                 seizer_mode.clear()
                 play_notif.clear()
                 change_led_pattern(0, plc_workq)
-            time.sleep(0.01)
+                plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_PBV, 11))
+            time.sleep(0.001)
 
 
 def state_thread(state_workq: mp.Queue, plc_workq: mp.Queue, database_workq: mp.Queue):
