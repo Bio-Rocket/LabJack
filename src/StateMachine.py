@@ -467,11 +467,14 @@ def change_led_pattern(led_state: int, plc_workq: mp.Queue) -> None:
         plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_PUMP_3_ON, None))
         plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_PBV, 10))
 
+
+
 def auto_led_pattern(play_notif: threading.Event, seizer_mode: threading.Event, plc_workq: mp.Queue) -> None:
     """
     Wait for the frontend to send a heartbeat.
     """
     led_auto_play_state = 0
+    seizer_counter = 0
 
     while True:
         if not play_notif.wait(timeout=0.5):
@@ -481,6 +484,15 @@ def auto_led_pattern(play_notif: threading.Event, seizer_mode: threading.Event, 
         led_auto_play_state = (led_auto_play_state + 1) % 9
         if not seizer_mode.is_set():
             time.sleep(0.75)
+        else:
+            seizer_counter += 1
+            if seizer_counter == 250:
+                seizer_counter = 0
+                seizer_mode.clear()
+                play_notif.clear()
+                change_led_pattern(0, plc_workq)
+            time.sleep(0.01)
+
 
 def state_thread(state_workq: mp.Queue, plc_workq: mp.Queue, database_workq: mp.Queue):
     """
