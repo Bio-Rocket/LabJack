@@ -1,0 +1,38 @@
+@startuml
+scale 500 width
+[*] --> ABORT
+ABORT --> TEST : GOTO_TEST
+ABORT --> FILL : GOTO_FILL
+
+TEST --> ABORT : GOTO_ABORT
+
+FILL --> ARM : \n GOTO_ARM
+FILL --> ABORT : GOTO_ABORT
+
+ARM --> FIRE : GOTO_FIRE
+ARM --> FILL : GOTO_FIRE
+ARM --> ABORT : GOTO_FIRE
+
+FIRE --> ABORT : GOTO_ABORT
+FIRE --> DESCENT : FIRE COMPLETE
+DESCENT --> RECOVERY : GOTO_FILL \n\n
+
+ABORT: Regular radio TX rate (5Hz sample rate)
+ABORT: No internal logging
+
+FILL: Regular radio TX rate (5Hz sample rate)
+FILL: Clear internal memory
+
+ARM: Prepare rapid logging to internal flash
+ARM: Regular radio TX rate (5Hz sample rate)
+
+FIRE: Rapid Logging to internal memory begins (1000Hz sample rate)
+FIRE: Regular radio TX rate (5Hz sample rate)
+
+DESCENT: Slow Logging to interal memory (100Hz sample rate)
+DESCENT: Regular radio TX rate (5Hz sample rate)
+
+RECOVERY: Dissable internal memory logging
+RECOVERY: Minimumal radio TX rate, GPS packets only (sample/30s)
+
+@enduml

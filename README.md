@@ -24,7 +24,7 @@
 
 4. This repo is also intended to be ran with the database repo so ensure the database is running see README.md from <https://github.com/Bio-Rocket/Database>
 
-- ENSURE YOU HAVE THE 0.25.0 VERSION OF THE POCKETBASE EXECUTABLE DOWNLOADED
+- ENSURE YOU HAVE THE 0.28 VERSION (OR COMPATIBLE VERSION) OF THE POCKETBASE EXECUTABLE DOWNLOADED
 
 ## Running main.py
 
