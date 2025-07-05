@@ -7,7 +7,7 @@ import multiprocessing as mp
 from br_labjack.LabJackInterface import LabJack
 from labjack.ljm import LJMError
 
-LAB_JACK_SCAN_RATE = 1000 # Scan rate in Hz
+LAB_JACK_SCAN_RATE = 4 # Scan rate in Hz
 DEFAULT_A_LIST_NAMES = ["AIN3", "AIN4", "AIN5", "AIN6", "AIN7", "AIN8", "AIN9", "AIN10", "AIN11", "AIN12", "AIN13"]
 GET_SCANS_PER_READ = lambda x: int(x/2)
 
@@ -52,7 +52,7 @@ def t7_pro_callback(obj: _CallbackClass, stream_handle: Any):
     pt_data = defaultdict(list)
 
     for i in range(GET_SCANS_PER_READ(scan_rate)):
-        data_arr = ff[0][i: i + 11] # for the 11 channels
+        data_arr = ff[0][i: i + len(DEFAULT_A_LIST_NAMES)] # for the 11 channels
 
         pt_data["PT12"].append(data_arr[0]) # AIN3
         pt_data["PT11"].append(data_arr[1]) # AIN4
@@ -131,7 +131,7 @@ def t7_pro_thread(
 
     obj = _CallbackClass(lji, [db_workq,], scan_rate)
 
-    lji.start_stream(a_scan_list_names, scan_rate, scans_per_read=GET_SCANS_PER_READ(scan_rate), callback=labjack_stream_callback, obj = obj, stream_resolution_index= stream_resolution_index)
+    lji.start_stream(a_scan_list_names, scan_rate, scans_per_read=GET_SCANS_PER_READ(scan_rate), callback=labjack_stream_callback, obj=obj, stream_resolution_index=stream_resolution_index)
 
     print("LJ - thread started")
     while 1:

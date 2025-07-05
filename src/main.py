@@ -20,6 +20,8 @@ if __name__ == "__main__":
     #TODO: this will need updated for embedded mode
     StateTruth.init_state_truth(shared_state)
 
+    #TODO SHOULD GET STATE FROM DB IF IT EXISTS
+
     db_workq = mp.Queue()
     plc_workq = mp.Queue()
     t7_pro_workq = mp.Queue()
