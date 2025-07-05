@@ -160,7 +160,7 @@ def process_workq_message(message: WorkQCmnd, db_workq: mp.Queue) -> bool:
         plc_command = int.to_bytes(ign_num, 1, "little") + int.to_bytes(state, 1, "little")
         PlcHandler.send_command(plc_command)
 
-    print(f"Command sending to PLC: {plc_command}")
+    print(f"Command {message.command} (data:{message.data}) sending to PLC: {list(plc_command)}")
     return True
 
 def request_data_background(plc_workq: mp.Queue):
