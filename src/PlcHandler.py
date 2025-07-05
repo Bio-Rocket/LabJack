@@ -9,7 +9,7 @@ from br_threading.WorkQCommands import WorkQCmnd, WorkQCmnd_e
 from dataclasses import dataclass
 
 # Constants ========================================================================================
-PLC_IP = "192.168.0.70"
+PLC_IP = "192.168.8.70"
 PLC_PORT = 69
 
 REQUEST_DELAY = (1.0/4.0) # in seconds
