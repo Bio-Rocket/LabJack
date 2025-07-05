@@ -21,7 +21,7 @@ PB_URL = 'http://192.168.8.68:8090' # Database Pi IP
 
 EXPECTED_SCHEMA_JSON = os.path.join(Path(__file__).parents[1], "DatabaseSchema.json")
 
-PLC_DESIRED_DATABASE_LOG_RATE = 4 # per second
+PLC_DESIRED_DATABASE_LOG_RATE = 8 # per second
 
 # Class Definitions ===============================================================================
 class DatabaseHandler():
