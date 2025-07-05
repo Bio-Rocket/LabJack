@@ -348,13 +348,11 @@ class DatabaseHandler():
         DatabaseHandler.plc_data_packet["LC2"].append(lc_handler.consume_incoming_voltage("LC2", lc_data[1]))
         DatabaseHandler.plc_data_packet["LC7"].append(lc_handler.consume_incoming_voltage("LC7", lc_data[2]))
 
-        DatabaseHandler.plc_data_packet["PT1"].append(pt_data[0])
-        DatabaseHandler.plc_data_packet["PT2"].append(pt_data[1])
-        DatabaseHandler.plc_data_packet["PT3"].append(pt_data[2])
-        DatabaseHandler.plc_data_packet["PT4"].append(pt_data[3])
-        DatabaseHandler.plc_data_packet["PT5"].append(pt_data[4])
-        DatabaseHandler.plc_data_packet["PT13"].append(pt_data[5])
-        DatabaseHandler.plc_data_packet["PT14"].append(pt_data[6])
+        DatabaseHandler.plc_data_packet["PT1"].append(pt_data[0]*14.5)
+        DatabaseHandler.plc_data_packet["PT2"].append(pt_data[1]*580)
+        DatabaseHandler.plc_data_packet["PT3"].append(pt_data[2]*580)
+        DatabaseHandler.plc_data_packet["PT4"].append(pt_data[3]*145)
+        DatabaseHandler.plc_data_packet["PT5"].append(pt_data[4]*145)
 
         DatabaseHandler.plc_data_packet["PBV1"].append(valve_data[0])
         DatabaseHandler.plc_data_packet["PBV2"].append(valve_data[1])
