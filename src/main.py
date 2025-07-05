@@ -3,7 +3,6 @@ from StateTruth import StateTruth, SystemStates
 from br_threading.ThreadManager import ThreadManager as tm
 import time
 
-
 from DatabaseHandler import database_thread
 from PlcHandler import plc_thread
 from LabjackProcess import t7_pro_thread
