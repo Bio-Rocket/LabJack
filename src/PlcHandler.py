@@ -81,16 +81,30 @@ class PlcHandler():
     @staticmethod
     def read_response() -> Tuple[bytes]:
 
-        tc_data = list(struct.unpack('<' + 'h' * (PLC_TC_DATA_SIZE //2),  PlcHandler.socket.recv(PLC_TC_DATA_SIZE)))
+        tc_raw = PlcHandler.socket.recv(PLC_TC_DATA_SIZE)
+        lc_raw = PlcHandler.socket.recv(PLC_LC_DATA_SIZE)
+        pt_raw = PlcHandler.socket.recv(PLC_PT_DATA_SIZE)
+        valve_raw = PlcHandler.socket.recv(PLC_VALVE_DATA_SIZE)
+
+        if(
+            len(tc_raw) < PLC_TC_DATA_SIZE or
+            len(lc_raw) < PLC_LC_DATA_SIZE or
+            len(pt_raw) < PLC_PT_DATA_SIZE or
+            len(valve_raw) < PLC_VALVE_DATA_SIZE
+        ):
+            print("PLC - Error reading response, received incomplete data")
+            return None
+
+        tc_data = list(struct.unpack('<' + 'h' * (PLC_TC_DATA_SIZE //2),  tc_raw))
 
         if b'Unknown command' == tc_data:
             print("PLC - Unknown Command")
             return None
 
-        lc_data = list(struct.unpack('<' + 'h' * (PLC_LC_DATA_SIZE //2),  PlcHandler.socket.recv(PLC_LC_DATA_SIZE)))
-        pt_data = list(struct.unpack('<' + 'h' * (PLC_PT_DATA_SIZE //2),  PlcHandler.socket.recv(PLC_PT_DATA_SIZE)))
+        lc_data = list(struct.unpack('<' + 'h' * (PLC_LC_DATA_SIZE //2),  lc_raw))
+        pt_data = list(struct.unpack('<' + 'h' * (PLC_PT_DATA_SIZE //2),  pt_raw))
         pt_data = [x / PT_COEFFICIENT for x in pt_data]
-        valve_data = list(PlcHandler.socket.recv(PLC_VALVE_DATA_SIZE))
+        valve_data = list(valve_raw)
 
         return PlcData(tc_data, lc_data, pt_data, valve_data)
 
