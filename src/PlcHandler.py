@@ -80,11 +80,15 @@ class PlcHandler():
 
     @staticmethod
     def read_response() -> Tuple[bytes]:
-        tc_data = list(struct.unpack('<' + 'h' * (PLC_TC_DATA_SIZE //2),  PlcHandler.socket.recv(PLC_TC_DATA_SIZE)))
-        if b'Unknown command' == tc_data:
+
+        test_data = list(struct.unpack('<' + 'h' * (15 //2),  PlcHandler.socket.recv(16)))
+        print(f"ETHAN {test_data}")
+
+        if b'Unknown command' == test_data:
             print("PLC - Unknown Command")
             return None
 
+        tc_data = list(struct.unpack('<' + 'h' * (PLC_TC_DATA_SIZE //2),  PlcHandler.socket.recv(PLC_TC_DATA_SIZE)))
         lc_data = list(struct.unpack('<' + 'h' * (PLC_LC_DATA_SIZE //2),  PlcHandler.socket.recv(PLC_LC_DATA_SIZE)))
         pt_data = list(struct.unpack('<' + 'h' * (PLC_PT_DATA_SIZE //2),  PlcHandler.socket.recv(PLC_PT_DATA_SIZE)))
         pt_data = [x / PT_COEFFICIENT for x in pt_data]
