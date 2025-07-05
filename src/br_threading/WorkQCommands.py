@@ -22,7 +22,7 @@ class WorkQCmnd_e(Enum):
     ## PLC Data from PLC to the DB
     PLC_DATA = auto() # Includes TC, LC, PT, and Valve data in a PlcData object
 
-    ## PLC Commands to adjust the valves, Pumps, Igniters, and Heater
+    ## PLC Commands to adjust the valves, SOL, Igniters
     PLC_OPEN_PBV = auto() # Open the Pneumatic Ball Valve, expects the PBV number
     PLC_CLOSE_PBV = auto() # Close the Pneumatic Ball Valve, expects a PBV number
 

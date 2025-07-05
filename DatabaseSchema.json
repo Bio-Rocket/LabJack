@@ -144,30 +144,6 @@
                     "type": "json"
                 },
                 {
-                    "name": "SOL6",
-                    "type": "json"
-                },
-                {
-                    "name": "SOL7",
-                    "type": "json"
-                },
-                {
-                    "name": "SOL8",
-                    "type": "json"
-                },
-                {
-                    "name": "SOL9",
-                    "type": "json"
-                },
-                {
-                    "name": "HEATER",
-                    "type": "json"
-                },
-                {
-                    "name": "PMP3",
-                    "type": "json"
-                },
-                {
                     "name": "IGN1",
                     "type": "json"
                 },

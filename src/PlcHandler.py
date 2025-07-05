@@ -4,7 +4,7 @@ from socket import socket, AF_INET, SOCK_STREAM
 import struct
 import threading
 import time
-from typing import Tuple
+from typing import Tuple, Union
 from br_threading.WorkQCommands import WorkQCmnd, WorkQCmnd_e
 from dataclasses import dataclass
 
@@ -21,15 +21,13 @@ PLC_REQUEST = 1
 PLC_PBV_OFFSET = 9
 SOL_OFFSET = 20
 
-PLC_HEATER_CMND = 30
-
-PLC_IGN_OFFSET = 31
+PLC_IGN_OFFSET = 25
 
 # PLC data sizes
 PLC_TC_DATA_SIZE = 9 * 2 # 9 TCs 2 LCs and each are int16_t
 PLC_LC_DATA_SIZE = 3 * 2 # 3 LCs all int16_t
 PLC_PT_DATA_SIZE = 7 * 2 # 8 PTs and each are int16_t
-PLC_VALVE_DATA_SIZE = 24 # 14 valves and each are int8_t
+PLC_VALVE_DATA_SIZE = 18 # 18 valves and each are int8_t
 
 # Class Definitions ===============================================================================
 @dataclass
@@ -55,9 +53,12 @@ class PlcHandler():
         print("PLC - thread started")
 
     @staticmethod
-    def connect_plc() -> None:
+    def connect_plc() -> bool:
         """
         Close the connection to the PLC.
+
+        Returns:
+            bool: True if the connection was successful, False otherwise.
         """
         try:
             PlcHandler.socket.connect((PLC_IP, PLC_PORT))
@@ -79,13 +80,20 @@ class PlcHandler():
         PlcHandler.socket.send(command)
 
     @staticmethod
-    def read_response() -> Tuple[bytes]:
+    def read_response() -> Union[PlcData, None]:
+        """
+        Read the response from the PLC.
+
+        Returns:
+            Union[PlcData, None]: The PLC data if the response is valid, otherwise None.
+        """
 
         tc_raw = PlcHandler.socket.recv(PLC_TC_DATA_SIZE)
         lc_raw = PlcHandler.socket.recv(PLC_LC_DATA_SIZE)
         pt_raw = PlcHandler.socket.recv(PLC_PT_DATA_SIZE)
         valve_raw = PlcHandler.socket.recv(PLC_VALVE_DATA_SIZE)
 
+        # Check if the received data is of the expected size
         if(
             len(tc_raw) < PLC_TC_DATA_SIZE or
             len(lc_raw) < PLC_LC_DATA_SIZE or
@@ -160,7 +168,6 @@ def process_workq_message(message: WorkQCmnd, db_workq: mp.Queue) -> bool:
         plc_command = int.to_bytes(ign_num, 1, "little") + int.to_bytes(state, 1, "little")
         PlcHandler.send_command(plc_command)
 
-    print(f"Command {message.command} (data:{message.data}) sending to PLC: {list(plc_command)}")
     return True
 
 def request_data_background(plc_workq: mp.Queue):

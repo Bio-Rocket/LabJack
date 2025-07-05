@@ -371,17 +371,9 @@ class DatabaseHandler():
         DatabaseHandler.plc_data_packet["SOL3"].append(valve_data[13])
         DatabaseHandler.plc_data_packet["SOL4"].append(valve_data[14])
         DatabaseHandler.plc_data_packet["SOL5"].append(valve_data[15])
-        DatabaseHandler.plc_data_packet["SOL6"].append(valve_data[16])
-        DatabaseHandler.plc_data_packet["SOL7"].append(valve_data[17])
-        DatabaseHandler.plc_data_packet["SOL8"].append(valve_data[18])
-        DatabaseHandler.plc_data_packet["SOL9"].append(valve_data[19])
 
-        DatabaseHandler.plc_data_packet["HEATER"].append(valve_data[20])
-
-        DatabaseHandler.plc_data_packet["PMP3"].append(valve_data[21])
-
-        DatabaseHandler.plc_data_packet["IGN1"].append(valve_data[22])
-        DatabaseHandler.plc_data_packet["IGN2"].append(valve_data[23])
+        DatabaseHandler.plc_data_packet["IGN1"].append(valve_data[16])
+        DatabaseHandler.plc_data_packet["IGN2"].append(valve_data[17])
 
         if len(DatabaseHandler.plc_data_packet["TC1"]) == int(1/plc_data.scan_rate):
             try:
