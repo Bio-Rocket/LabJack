@@ -17,7 +17,7 @@ from LabjackProcess import GET_SCANS_PER_READ, LjData
 from dotenv import load_dotenv
 import os
 
-PB_URL = 'http://192.168.0.69:809' # Database Pi IP
+PB_URL = 'http://192.168.8.68:8090' # Database Pi IP
 
 EXPECTED_SCHEMA_JSON = os.path.join(Path(__file__).parents[1], "DatabaseSchema.json")
 
