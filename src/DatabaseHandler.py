@@ -21,6 +21,8 @@ PB_URL = 'http://192.168.8.68:8090' # Database Pi IP
 
 EXPECTED_SCHEMA_JSON = os.path.join(Path(__file__).parents[1], "DatabaseSchema.json")
 
+PLC_DESIRED_DATABASE_LOG_RATE = 4 # per second
+
 # Class Definitions ===============================================================================
 class DatabaseHandler():
     def __init__(self, db_thread_workq: mp.Queue, data_base_format_file: str) -> None:
@@ -375,7 +377,7 @@ class DatabaseHandler():
         DatabaseHandler.plc_data_packet["IGN1"].append(valve_data[16])
         DatabaseHandler.plc_data_packet["IGN2"].append(valve_data[17])
 
-        if len(DatabaseHandler.plc_data_packet["TC1"]) == int(1/plc_data.scan_rate):
+        if len(DatabaseHandler.plc_data_packet["TC1"]) == max(1, int(1/plc_data.scan_rate)/PLC_DESIRED_DATABASE_LOG_RATE):
             try:
                 DatabaseHandler.client.collection("Plc").create(DatabaseHandler.plc_data_packet)
             except Exception as e:
