@@ -7,7 +7,7 @@ import multiprocessing as mp
 from br_labjack.LabJackInterface import LabJack
 from labjack.ljm import LJMError
 
-LAB_JACK_SCAN_RATE = 4 # Scan rate in Hz
+LAB_JACK_SCAN_RATE = 1 # Scan rate in Hz
 DEFAULT_A_LIST_NAMES = ["AIN3", "AIN4", "AIN5", "AIN6", "AIN7", "AIN8", "AIN9", "AIN10", "AIN11", "AIN12", "AIN13"]
 GET_SCANS_PER_READ = lambda x: int(x/2)
 
