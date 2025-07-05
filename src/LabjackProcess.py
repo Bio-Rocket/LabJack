@@ -7,9 +7,9 @@ import multiprocessing as mp
 from br_labjack.LabJackInterface import LabJack
 from labjack.ljm import LJMError
 
-LAB_JACK_SCAN_RATE = 1 # Scan rate in Hz
+LAB_JACK_SCAN_RATE = 1000 # Scan rate in Hz
 DEFAULT_A_LIST_NAMES = ["AIN3", "AIN4", "AIN5", "AIN6", "AIN7", "AIN8", "AIN9", "AIN10", "AIN11", "AIN12", "AIN13"]
-GET_SCANS_PER_READ = lambda x: int(x/2)
+GET_SCANS_PER_READ = lambda x: int(x/2) if int(x/2) != 0 else 1
 
 @dataclass
 class LjData():
@@ -52,7 +52,8 @@ def t7_pro_callback(obj: _CallbackClass, stream_handle: Any):
     pt_data = defaultdict(list)
 
     for i in range(GET_SCANS_PER_READ(scan_rate)):
-        data_arr = ff[0][i: i + len(DEFAULT_A_LIST_NAMES)] # for the 11 channels
+        start_index = i * len(DEFAULT_A_LIST_NAMES)
+        data_arr = ff[0][start_index: start_index + len(DEFAULT_A_LIST_NAMES)] # for the 11 channels
 
         pt_data["PT12"].append(data_arr[0]) # AIN3
         pt_data["PT11"].append(data_arr[1]) # AIN4
@@ -66,7 +67,6 @@ def t7_pro_callback(obj: _CallbackClass, stream_handle: Any):
         lc_data["LC5"].append(data_arr[8]) # AIN11
         lc_data["LC4"].append(data_arr[9]) # AIN12
         lc_data["LC3"].append(data_arr[10]) # AIN13
-
 
     cmnd = WorkQCmnd(WorkQCmnd_e.LJ_DATA, LjData(scan_rate, lc_data, pt_data))
 
