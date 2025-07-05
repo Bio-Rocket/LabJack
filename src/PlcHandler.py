@@ -81,7 +81,7 @@ class PlcHandler():
     @staticmethod
     def read_response() -> Tuple[bytes]:
 
-        test_data = list(struct.unpack(PlcHandler.socket.recv(15)))
+        test_data = list(PlcHandler.socket.recv(15))
         print(f"ETHAN {test_data}")
 
         if b'Unknown command' == test_data:
