@@ -2,6 +2,7 @@
 import json
 import multiprocessing as mp
 from pathlib import Path
+import time
 from typing import Dict, List, Tuple
 from pocketbase import Client
 from pocketbase.errors import ClientResponseError
@@ -16,7 +17,7 @@ from LabjackProcess import GET_SCANS_PER_READ, LjData
 from dotenv import load_dotenv
 import os
 
-PB_URL = 'http://192.168.0.69:8090' # Database Pi IP
+PB_URL = 'http://192.168.0.69:809' # Database Pi IP
 
 EXPECTED_SCHEMA_JSON = os.path.join(Path(__file__).parents[1], "DatabaseSchema.json")
 
@@ -42,7 +43,8 @@ class DatabaseHandler():
 
         # Wait for the database to be available
         while not DatabaseHandler.verify_connection():
-            print(f"DB - Failed to connect to the database @{PB_URL}, retrying...")
+            print(f"DB - Failed to connect to the database @{PB_URL}, retrying in 5s...")
+            time.sleep(5)
 
         # Load environment variables from .env file
         load_dotenv()

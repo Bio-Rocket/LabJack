@@ -22,7 +22,6 @@ PLC_PBV_OFFSET = 9
 SOL_OFFSET = 20
 
 PLC_HEATER_CMND = 30
-PUMP3_CMND = 31
 
 PLC_IGN_OFFSET = 31
 
@@ -131,22 +130,6 @@ def process_workq_message(message: WorkQCmnd, db_workq: mp.Queue) -> bool:
         sol_num = message.data + SOL_OFFSET
         state = 0
         plc_command = int.to_bytes(sol_num, 1, "little") + int.to_bytes(state, 1, "little")
-        PlcHandler.send_command(plc_command)
-    elif message.command == WorkQCmnd_e.PLC_HEATER_ON:
-        state = 1
-        plc_command = int.to_bytes(PLC_HEATER_CMND, 1, "little") + int.to_bytes(state, 1, "little")
-        PlcHandler.send_command(plc_command)
-    elif message.command == WorkQCmnd_e.PLC_HEATER_OFF:
-        state = 0
-        plc_command = int.to_bytes(PLC_HEATER_CMND, 1, "little") + int.to_bytes(state, 1, "little")
-        PlcHandler.send_command(plc_command)
-    elif message.command == WorkQCmnd_e.PLC_PUMP_3_ON:
-        state = 1
-        plc_command = int.to_bytes(PUMP3_CMND, 1, "little") + int.to_bytes(state, 1, "little")
-        PlcHandler.send_command(plc_command)
-    elif message.command == WorkQCmnd_e.PLC_PUMP_3_OFF:
-        state = 0
-        plc_command = int.to_bytes(PUMP3_CMND, 1, "little") + int.to_bytes(state, 1, "little")
         PlcHandler.send_command(plc_command)
     elif message.command == WorkQCmnd_e.PLC_IGN_ON:
         ign_num = message.data + PLC_IGN_OFFSET

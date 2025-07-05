@@ -29,13 +29,8 @@ class WorkQCmnd_e(Enum):
     PLC_OPEN_SOL = auto() # Open the Solenoid Valve, expects the Solenoid number
     PLC_CLOSE_SOL = auto() # Close the Solenoid Valve, expects the Solenoid number
 
-    PLC_PUMP_3_ON = auto() # Turn on Pump 3
-    PLC_PUMP_3_OFF = auto() # Turn off Pump 3
-
     PLC_IGN_ON = auto() # Turn on the igniter, expects the igniter number
     PLC_IGN_OFF = auto() # Turn off the igniter, expects the igniter number
-    PLC_HEATER_ON = auto() # Turn on the heater
-    PLC_HEATER_OFF = auto() # Turn off the heater
 
     ## State Machine Commands
     STATE_HANDLE_VALVE_COMMAND = auto() # Handle a valve command from the database then send to PLC if valid

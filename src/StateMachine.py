@@ -1,34 +1,35 @@
 import multiprocessing as mp
-from enum import Enum, auto
 
+from StateTruth import StateTruth, SystemStates
 from br_threading.WorkQCommands import WorkQCmnd, WorkQCmnd_e
-
-class SystemStates(Enum):
-    UNKNOWN = -1
-    PRE_FIRE = 0
-    TEST = auto()
-    FILL = auto()
-    IGNITION = auto()
-    FIRE = auto()
-    POST_FIRE = auto()
-    ABORT = auto()
 
 class StateMachine():
     def __init__(self, state_workq: mp.Queue, plc_workq: mp.Queue, database_workq: mp.Queue):
+        """
+        Initialize the state machine with the work queues.
+        Args:
+            state_workq (mp.Queue):
+                The work queue for the state machine, primarily for
+                a state change request.
+            plc_workq (mp.Queue):
+                The work queue for the PLC commands.
+            database_workq (mp.Queue):
+                The work queue for the database commands.
+        """
         self.state_workq = state_workq
         self.plc_workq = plc_workq
         self.db_workq = database_workq
-        self.current_state = SystemStates.TEST
         self.manual_override = False
-        self.db_workq.put(WorkQCmnd(WorkQCmnd_e.DB_STATE_CHANGE, self.current_state.name))
-        self.set_default_state_positions()
+
+        current_state = StateTruth.get_state()
+        self.db_workq.put(WorkQCmnd(WorkQCmnd_e.DB_STATE_CHANGE, current_state.name))
+
+        self.set_valve_for_state(current_state)
 
     @staticmethod
     def state_transition_cmnd_to_state(state_cmnd: str) -> SystemStates:
         sys_state = None
-        if state_cmnd == "GOTO_PREFIRE":
-            sys_state = SystemStates.PRE_FIRE
-        elif state_cmnd == "GOTO_TEST":
+        if state_cmnd == "GOTO_TEST":
             sys_state = SystemStates.TEST
         elif state_cmnd == "GOTO_FILL":
             sys_state = SystemStates.FILL
@@ -44,51 +45,15 @@ class StateMachine():
             sys_state = SystemStates.UNKNOWN
         return sys_state
 
-    @staticmethod
-    def is_valid_transition(last_state: SystemStates, next_state: SystemStates) -> bool:
+    def set_valve_for_state(self, state: SystemStates) -> None:
         """
-        Check if the transition to the new state is valid.
+        Set the default state positions for the valves and pumps based on the current state.
 
         Args:
-            new_state (SystemStates):
-                The new state to transition to.
+            state (SystemStates):
+                The current state of the system that the valves need to be changed to.
         """
-        if next_state == SystemStates.UNKNOWN:
-            return False
-
-        if last_state == SystemStates.PRE_FIRE:
-            if next_state == SystemStates.TEST or next_state == SystemStates.FILL:
-                return True
-
-        elif last_state == SystemStates.TEST:
-            if next_state == SystemStates.PRE_FIRE:
-                return True
-
-        elif last_state == SystemStates.FILL:
-            if next_state == SystemStates.PRE_FIRE or next_state == SystemStates.IGNITION or next_state == SystemStates.ABORT:
-                return True
-
-        elif last_state == SystemStates.IGNITION:
-            if next_state == SystemStates.FILL or next_state == SystemStates.FIRE or next_state == SystemStates.ABORT:
-                return True
-
-        elif last_state == SystemStates.FIRE:
-            if next_state == SystemStates.POST_FIRE or next_state == SystemStates.ABORT:
-                return True
-
-        elif last_state == SystemStates.POST_FIRE:
-            if next_state == SystemStates.ABORT:
-                return True
-
-        elif last_state == SystemStates.ABORT:
-            if next_state == SystemStates.PRE_FIRE:
-                return True
-
-        else:
-            return False
-
-    def set_default_state_positions(self):
-        if self.current_state == SystemStates.PRE_FIRE:
+        if state == SystemStates.ABORT:
             self.manual_override = False
             self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_PBV, 1))
             self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_PBV, 2))
@@ -101,8 +66,6 @@ class StateMachine():
             self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_PBV, 9))
             self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_PBV, 10))
             self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_PBV, 11))
-
-            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_PUMP_3_OFF, None))
 
             self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_SOL, 1))
             self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_SOL, 2))
@@ -119,13 +82,13 @@ class StateMachine():
             self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_SOL, 13))
             self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_SOL, 14))
 
-        if self.current_state == SystemStates.TEST:
+        if state == SystemStates.TEST:
             self.manual_override = True
-            # All valves can be in any position by default (Note this will just be the previous state (Pre-Fire))
-        if self.current_state == SystemStates.FILL:
+
+        if state == SystemStates.FILL:
             self.manual_override = True
-            # Note this will just be the previous state (Pre-Fire) bit with manual override
-        if self.current_state == SystemStates.IGNITION:
+
+        if state == SystemStates.IGNITION:
             self.manual_override = False
             self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_PBV, 1))
             self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_PBV, 2))
@@ -138,8 +101,6 @@ class StateMachine():
             self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_PBV, 9))
             self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_PBV, 10))
             self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_PBV, 11))
-
-            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_PUMP_3_ON, None))
 
             self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_SOL, 1))
             self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_SOL, 2))
@@ -156,7 +117,7 @@ class StateMachine():
             self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_SOL, 13))
             self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_SOL, 14))
 
-        if self.current_state == SystemStates.FIRE:
+        if state == SystemStates.FIRE:
             self.manual_override = False
             self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_PBV, 6))
             self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_PBV, 7))
@@ -167,7 +128,7 @@ class StateMachine():
             self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_SOL, 13))
             self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_SOL, 14))
 
-        if self.current_state == SystemStates.POST_FIRE:
+        if state == SystemStates.POST_FIRE:
             self.manual_override = True
             self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_PBV, 6))
             self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_PBV, 7))
@@ -175,37 +136,6 @@ class StateMachine():
             self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_PBV, 10))
             self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_PBV, 11))
 
-            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_SOL, 13))
-            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_SOL, 14))
-
-        if self.current_state == SystemStates.ABORT:
-            self.manual_override = False
-            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_PBV, 1))
-            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_PBV, 2))
-            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_PBV, 3))
-            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_PBV, 4))
-            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_PBV, 5))
-            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_PBV, 6))
-            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_PBV, 7))
-            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_PBV, 8))
-            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_PBV, 9))
-            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_PBV, 10))
-            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_PBV, 11))
-
-            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_PUMP_3_OFF, None))
-
-            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_SOL, 1))
-            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_SOL, 2))
-            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_SOL, 3))
-            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_SOL, 4))
-            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_SOL, 5))
-            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_SOL, 6))
-            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_SOL, 7))
-            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_SOL, 8))
-            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_SOL, 9))
-            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_SOL, 10))
-            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_SOL, 11))
-            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_SOL, 12))
             self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_SOL, 13))
             self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_SOL, 14))
 
@@ -229,10 +159,6 @@ class StateMachine():
             self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_IGN_ON, 2))
         elif command == "IGN2_OFF":
             self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_IGN_OFF, 2))
-        elif command == "HEATER_ON":
-            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_HEATER_ON, None))
-        elif command == "HEATER_OFF":
-            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_HEATER_OFF, None))
 
         # Check if manual override is enabled
         if not self.manual_override:
@@ -339,11 +265,6 @@ class StateMachine():
         elif command == "SOL13_CLOSE":
             self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_SOL, 13))
 
-        elif command == "PUMP3_ON":
-            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_PUMP_3_ON, None))
-        elif command == "PUMP3_OFF":
-            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_PUMP_3_OFF, None))
-
     def attempt_transition(self, new_state_cmd: str) -> bool:
         """
         Attempt to transition to a new state.
@@ -358,19 +279,25 @@ class StateMachine():
             print(f"SM - Invalid transition command: {new_state_cmd}")
             return False
 
-        if next_state == self.current_state:
+        current_state = StateTruth.get_state()
+
+        if next_state == current_state:
             print(f"SM - Already in state: {next_state}")
-            self.db_workq.put(WorkQCmnd(WorkQCmnd_e.DB_STATE_CHANGE, self.current_state.name))
+            self.db_workq.put(WorkQCmnd(WorkQCmnd_e.DB_STATE_CHANGE, current_state.name))
             return True
 
-        if StateMachine.is_valid_transition(self.current_state, next_state):
-            self.current_state = next_state
-            self.set_default_state_positions()
-            self.db_workq.put(WorkQCmnd(WorkQCmnd_e.DB_STATE_CHANGE, self.current_state.name))
-            print(f"SM - In state: {next_state}")
+        if StateTruth.change_state(next_state):
+            current_state = StateTruth.get_state()
+            if next_state != current_state:
+                print(f"SM - State change failed: {current_state} to {next_state}")
+                return False
+
+            self.set_valve_for_state(current_state)
+            self.db_workq.put(WorkQCmnd(WorkQCmnd_e.DB_STATE_CHANGE, current_state.name))
+            print(f"SM - In state: {current_state}")
             return True
         else:
-            print(f"SM - Invalid transition command: from {self.current_state} to {next_state}")
+            print(f"SM - Invalid transition command: from {current_state} to {next_state}")
             return False
 
 def state_thread(state_workq: mp.Queue, plc_workq: mp.Queue, database_workq: mp.Queue):
