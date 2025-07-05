@@ -127,36 +127,36 @@ def process_workq_message(message: WorkQCmnd, db_workq: mp.Queue) -> bool:
         plc_command = int.to_bytes(PLC_REQUEST, 1, "little") + int.to_bytes(0, 1, "little")
         PlcHandler.send_command(plc_command)
         db_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_DATA, PlcHandler.read_response()))
-    elif message.command == WorkQCmnd_e.PLC_OPEN_PBV:
-        relay_num = message.data + PLC_PBV_OFFSET # Relay number to open the PBV 1 = 10, 2 = 11...
-        state = 1
-        plc_command = int.to_bytes(relay_num, 1, "little") + int.to_bytes(state, 1, "little")
-        PlcHandler.send_command(plc_command)
-    elif message.command == WorkQCmnd_e.PLC_CLOSE_PBV:
-        relay_num = message.data + PLC_PBV_OFFSET # Relay number to close the PBV 1 = 10, 2 = 11...
-        state = 0
-        plc_command = int.to_bytes(relay_num, 1, "little") + int.to_bytes(state, 1, "little")
-        PlcHandler.send_command(plc_command)
-    elif message.command == WorkQCmnd_e.PLC_OPEN_SOL:
-        sol_num = message.data + SOL_OFFSET # Solenoid 1 = case 21
-        state = 1
-        plc_command = int.to_bytes(sol_num, 1, "little") + int.to_bytes(state, 1, "little")
-        PlcHandler.send_command(plc_command)
-    elif message.command == WorkQCmnd_e.PLC_CLOSE_SOL:
-        sol_num = message.data + SOL_OFFSET
-        state = 0
-        plc_command = int.to_bytes(sol_num, 1, "little") + int.to_bytes(state, 1, "little")
-        PlcHandler.send_command(plc_command)
-    elif message.command == WorkQCmnd_e.PLC_IGN_ON:
-        ign_num = message.data + PLC_IGN_OFFSET
-        state = 1
-        plc_command = int.to_bytes(ign_num, 1, "little") + int.to_bytes(state, 1, "little")
-        PlcHandler.send_command(plc_command)
-    elif message.command == WorkQCmnd_e.PLC_IGN_OFF:
-        ign_num = message.data + PLC_IGN_OFFSET
-        state = 0
-        plc_command = int.to_bytes(ign_num, 1, "little") + int.to_bytes(state, 1, "little")
-        PlcHandler.send_command(plc_command)
+    # elif message.command == WorkQCmnd_e.PLC_OPEN_PBV:
+    #     relay_num = message.data + PLC_PBV_OFFSET # Relay number to open the PBV 1 = 10, 2 = 11...
+    #     state = 1
+    #     plc_command = int.to_bytes(relay_num, 1, "little") + int.to_bytes(state, 1, "little")
+    #     PlcHandler.send_command(plc_command)
+    # elif message.command == WorkQCmnd_e.PLC_CLOSE_PBV:
+    #     relay_num = message.data + PLC_PBV_OFFSET # Relay number to close the PBV 1 = 10, 2 = 11...
+    #     state = 0
+    #     plc_command = int.to_bytes(relay_num, 1, "little") + int.to_bytes(state, 1, "little")
+    #     PlcHandler.send_command(plc_command)
+    # elif message.command == WorkQCmnd_e.PLC_OPEN_SOL:
+    #     sol_num = message.data + SOL_OFFSET # Solenoid 1 = case 21
+    #     state = 1
+    #     plc_command = int.to_bytes(sol_num, 1, "little") + int.to_bytes(state, 1, "little")
+    #     PlcHandler.send_command(plc_command)
+    # elif message.command == WorkQCmnd_e.PLC_CLOSE_SOL:
+    #     sol_num = message.data + SOL_OFFSET
+    #     state = 0
+    #     plc_command = int.to_bytes(sol_num, 1, "little") + int.to_bytes(state, 1, "little")
+    #     PlcHandler.send_command(plc_command)
+    # elif message.command == WorkQCmnd_e.PLC_IGN_ON:
+    #     ign_num = message.data + PLC_IGN_OFFSET
+    #     state = 1
+    #     plc_command = int.to_bytes(ign_num, 1, "little") + int.to_bytes(state, 1, "little")
+    #     PlcHandler.send_command(plc_command)
+    # elif message.command == WorkQCmnd_e.PLC_IGN_OFF:
+    #     ign_num = message.data + PLC_IGN_OFFSET
+    #     state = 0
+    #     plc_command = int.to_bytes(ign_num, 1, "little") + int.to_bytes(state, 1, "little")
+    #     PlcHandler.send_command(plc_command)
     return True
 
 def request_data_background(plc_workq: mp.Queue):
