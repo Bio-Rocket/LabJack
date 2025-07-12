@@ -27,8 +27,6 @@ class PtPu_DatabaseHandler(DatabaseHandler):
         Args:
             lj_data (tuple): The labjack data, with the first position
                 containing the list of data
-            lc_handler (LoadCellHandler):
-                The load cell handler to handle the load cell mass conversions.
         """
 
         for i in range(GET_SCANS_PER_READ(lj_data.scan_rate)):

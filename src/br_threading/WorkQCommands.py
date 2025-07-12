@@ -7,7 +7,6 @@ class WorkQCmnd_e(Enum):
 
     ## Internal DB Commands
     DB_GS_COMMAND = auto() # Command from the database
-    DB_LC_COMMAND = auto() # Internal DB Command for the Load Cell Handler
     DB_STATE_COMMAND = auto() # Command for DB to send to the state machine
     DB_STATE_CHANGE = auto() # Change the system state in the DB
     DB_HEARTBEAT = auto() # Heartbeat

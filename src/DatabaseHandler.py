@@ -67,7 +67,6 @@ class DatabaseHandler():
 
         DatabaseHandler.updated_collections(data_base_format_file)
 
-        DatabaseHandler.client.collection('LoadCellCommand').subscribe(DatabaseHandler._handle_load_cell_command_callback)
         DatabaseHandler.client.collection('GroundSystemsCommand').subscribe(DatabaseHandler._handle_ground_systems_command_callback)
         DatabaseHandler.client.collection('StateCommand').subscribe(DatabaseHandler._handle_state_command_callback)
         DatabaseHandler.client.collection('HeartbeatMessage').subscribe(DatabaseHandler._handle_heartbeat_callback)
@@ -268,20 +267,13 @@ class DatabaseHandler():
         Args:
             document (MessageData): the change notification from the database.
         """
-        print(f"DB - PLC Command: {document.record.command}")
-        DatabaseHandler.db_thread_workq.put(WorkQCmnd(WorkQCmnd_e.DB_GS_COMMAND, document.record.command))
-
-    @staticmethod
-    def _handle_load_cell_command_callback(document: MessageData):
-        """
-        Whenever a new entry is created in the LoadCellCommands
-        collection, this function is called to handle the
-        command and forward it to the load cell handler.
-
-        Args:
-            document (MessageData): the change notification from the database.
-        """
-        DatabaseHandler.db_thread_workq.put(WorkQCmnd(WorkQCmnd_e.DB_LC_COMMAND, (document.record.command, document.record.loadcell, document.record.value)))
+        print(f"DB - PLC Command: {document.record.command}") # type: ignore
+        DatabaseHandler.db_thread_workq.put(
+            WorkQCmnd(
+                WorkQCmnd_e.DB_GS_COMMAND,
+                document.record.command # type: ignore
+            )
+        )
 
     @staticmethod
     def _handle_state_command_callback(document: MessageData):
@@ -294,7 +286,13 @@ class DatabaseHandler():
         Args:
             document (MessageData): the change notification from the database.
         """
-        DatabaseHandler.db_thread_workq.put(WorkQCmnd(WorkQCmnd_e.DB_STATE_COMMAND, (document.record.command)))
+        print(f"DB - State Command: {document.record.command}") # type: ignore
+        DatabaseHandler.db_thread_workq.put(
+            WorkQCmnd(
+                WorkQCmnd_e.DB_STATE_COMMAND,
+                (document.record.command) # type: ignore
+            )
+        )
 
     @staticmethod
     def _handle_heartbeat_callback(document: MessageData):
@@ -308,7 +306,8 @@ class DatabaseHandler():
             document (MessageData): the change notification from the database.
         """
 
-        if document.record.message == "heartbeat": # This indicates a message from the front end
+        # This indicates a message from the front end
+        if document.record.message == "heartbeat": # type: ignore
             DatabaseHandler.db_thread_workq.put(WorkQCmnd(WorkQCmnd_e.FRONTEND_HEARTBEAT, None))
 
     @staticmethod
@@ -344,9 +343,9 @@ class DatabaseHandler():
         DatabaseHandler.plc_data_packet["TC8"].append(tc_data[7]/100)
         DatabaseHandler.plc_data_packet["TC9"].append(tc_data[8]/100)
 
-        DatabaseHandler.plc_data_packet["LC1"].append(lc_handler.consume_incoming_voltage("LC1", lc_data[0]))
-        DatabaseHandler.plc_data_packet["LC2"].append(lc_handler.consume_incoming_voltage("LC2", lc_data[1]))
-        DatabaseHandler.plc_data_packet["LC7"].append(lc_handler.consume_incoming_voltage("LC7", lc_data[2]))
+        DatabaseHandler.plc_data_packet["LC1"].append(lc_handler.convert_raw_voltage("LC1", lc_data[0]))
+        DatabaseHandler.plc_data_packet["LC2"].append(lc_handler.convert_raw_voltage("LC2", lc_data[1]))
+        DatabaseHandler.plc_data_packet["LC7"].append(lc_handler.convert_raw_voltage("LC7", lc_data[2]))
 
         DatabaseHandler.plc_data_packet["PT1"].append(pt_data[0])
         DatabaseHandler.plc_data_packet["PT2"].append(pt_data[1])
@@ -405,7 +404,7 @@ class DatabaseHandler():
         for i in range(GET_SCANS_PER_READ(lj_data.scan_rate)):
             for key in lj_data.lc_data:
                 # Convert the load cell voltages to masses
-                DatabaseHandler.lj_data_packet[key].append(lc_handler.consume_incoming_voltage(key, lj_data.lc_data[key].pop(0)))
+                DatabaseHandler.lj_data_packet[key].append(lc_handler.convert_raw_voltage(key, lj_data.lc_data[key].pop(0)))
             for key in lj_data.pt_data:
                 DatabaseHandler.lj_data_packet[key].append(lj_data.pt_data[key].pop(0))
             if len(DatabaseHandler.lj_data_packet[key]) == lj_data.scan_rate:
@@ -414,25 +413,6 @@ class DatabaseHandler():
                 except Exception as e:
                     print(f"failed to create a lj_data entry {e}")
                 DatabaseHandler.lj_data_packet.clear()
-
-    @staticmethod
-    def write_lc_calibration(loadcell: str, slope: float, intercept: float) -> None:
-        """
-        Write the load cell calibration to the database.
-
-        Args:
-            data (Tuple[str, LoadCellHandler]):
-                The load cell calibration data.
-        """
-        entry = {}
-        entry["loadcell"] = loadcell
-        entry["slope"] = slope
-        entry["intercept"] = intercept
-
-        try:
-            DatabaseHandler.client.collection("LoadCellCalibration").create(entry)
-        except Exception as e:
-            print(f"failed to create a load cell calibration")
 
     @staticmethod
     def write_system_state(state: str) -> None:
@@ -466,48 +446,7 @@ class DatabaseHandler():
         except Exception:
             print(f"failed to create a heartbeat")
 
-    @staticmethod
-    def get_loadcell_calibration(loadcell: str) -> Tuple[float, float]:
-        """
-        Get the load cell calibration from the database.
-
-        Args:
-            loadcell (str): The load cell to get the calibration for.
-
-        Returns:
-            Tuple[float, float]: The slope and intercept of the load cell calibration.
-        """
-        try:
-            calibration = DatabaseHandler.client.collection("LoadCellCalibration").find_one({"loadcell": loadcell})
-            return calibration["slope"], calibration["intercept"]
-        except Exception as e:
-            print(f"No calibration for {loadcell} -  {e}")
-            return 1, 0
-
 # Procedures ======================================================================================
-
-def handle_lc_command(data: Tuple[str, str, float], lc_handler: LoadCellHandler) -> None:
-    """
-    Handle the load cell command from the database.
-
-    Args:
-        data (Tuple[str, str, float]):
-            command, load cell, value.
-        lc_handler (LoadCellHandler):
-            The load cell handler to handle the load cell commands.
-    """
-    command, loadcell, value = data
-
-    if command == "TARE":
-        lc_handler.tare_load_cell(loadcell)
-    elif command == "CANCEL":
-        lc_handler.cancel_calibration(loadcell)
-    elif command == "CALIBRATE":
-        lc_handler.add_calibration_mass(loadcell, value)
-    elif command == "FINISH":
-        lc_handler.add_calibration_mass(loadcell, value, final_mass=True)
-        slope, intercept = lc_handler.get_calibration(loadcell)
-        DatabaseHandler.write_lc_calibration(loadcell, slope, intercept)
 
 def process_workq_message(message: WorkQCmnd, state_workq: mp.Queue, hb_workq: mp.Queue, lc_handler: LoadCellHandler) -> bool:
     """
@@ -529,8 +468,6 @@ def process_workq_message(message: WorkQCmnd, state_workq: mp.Queue, hb_workq: m
         return False
     elif message.command == WorkQCmnd_e.DB_GS_COMMAND:
         state_workq.put(WorkQCmnd(WorkQCmnd_e.STATE_HANDLE_VALVE_COMMAND, message.data))
-    elif message.command == WorkQCmnd_e.DB_LC_COMMAND:
-        handle_lc_command(message.data, lc_handler)
     elif message.command == WorkQCmnd_e.DB_STATE_COMMAND:
         state_workq.put(WorkQCmnd(WorkQCmnd_e.STATE_TRANSITION, message.data))
     elif message.command == WorkQCmnd_e.DB_STATE_CHANGE:
@@ -554,9 +491,6 @@ def database_thread(db_workq: mp.Queue, state_workq: mp.Queue, hb_workq: mp.Queu
     DatabaseHandler(db_workq, data_base_format_file)
 
     lc_handler = LoadCellHandler()
-    for lc in ["LC1", "LC2", "LC3", "LC4", "LC5", "LC6", "LC7"]:
-        lc_slope, lc_intercept = DatabaseHandler.get_loadcell_calibration(lc)
-        lc_handler.add_load_cell(lc, lc_slope, lc_intercept)
 
     while 1:
         # If there is any workq messages, process them

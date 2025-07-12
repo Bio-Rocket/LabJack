@@ -213,40 +213,6 @@
             ]
         },
         {
-            "name": "LoadCellCalibration",
-            "schema": [
-                {
-                    "name": "loadcell",
-                    "type": "text"
-                },
-                {
-                    "name": "slope",
-                    "type": "number"
-                },
-                {
-                    "name": "intercept",
-                    "type": "number"
-                }
-            ]
-        },
-        {
-            "name": "LoadCellCommand",
-            "schema": [
-                {
-                    "name": "command",
-                    "type": "text"
-                },
-                {
-                    "name": "loadcell",
-                    "type": "text"
-                },
-                {
-                    "name": "value",
-                    "type": "number"
-                }
-            ]
-        },
-        {
             "name": "StateCommand",
             "schema": [
                 {
