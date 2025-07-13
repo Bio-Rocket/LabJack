@@ -120,7 +120,7 @@ class LabJack:
 
     def stop_stream(self):
         ljm.eStreamStop(self.handle)
-        print(f"\nStream stopped at time: {time.time()}")
+        # print(f"\nStream stopped at time: {time.time()}")
 
     def print_info(self):
         info = self.info

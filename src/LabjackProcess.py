@@ -119,7 +119,7 @@ def t7_pro_thread(
 
     a_scan_list_names = a_scan_list
     scan_rate = scan_frequency
-    stream_resolution_index = 0
+    stream_resolution_index = 4
     lji = None
 
     # Connect to the LabJack T7 Pro
@@ -131,7 +131,14 @@ def t7_pro_thread(
 
     obj = _CallbackClass(lji, [db_workq,], scan_rate)
 
-    lji.start_stream(a_scan_list_names, scan_rate, scans_per_read=GET_SCANS_PER_READ(scan_rate), callback=labjack_stream_callback, obj=obj, stream_resolution_index=stream_resolution_index)
+    lji.start_stream(
+        a_scan_list_names,
+        scan_rate,
+        scans_per_read=GET_SCANS_PER_READ(scan_rate),
+        callback=labjack_stream_callback,
+        obj=obj,
+        stream_resolution_index=stream_resolution_index)
+
 
     print("LJ - thread started")
     while 1:

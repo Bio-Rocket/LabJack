@@ -4,7 +4,7 @@ from socket import socket, AF_INET, SOCK_STREAM
 import struct
 import threading
 import time
-from typing import Tuple, Union
+from typing import Union
 from br_threading.WorkQCommands import WorkQCmnd, WorkQCmnd_e
 from dataclasses import dataclass
 
@@ -12,7 +12,7 @@ from dataclasses import dataclass
 PLC_IP = "192.168.8.70"
 PLC_PORT = 69
 
-REQUEST_DELAY = (1.0/8.0) # in seconds
+REQUEST_DELAY = (1.0/10.0) # in seconds
 PT_COEFFICIENT = 1000
 
 # PLC Commands and Offsets
