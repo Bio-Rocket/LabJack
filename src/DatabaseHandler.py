@@ -375,7 +375,7 @@ class DatabaseHandler():
         DatabaseHandler.plc_data_packet["IGN1"].append(valve_data[16])
         DatabaseHandler.plc_data_packet["IGN2"].append(valve_data[17])
 
-        if len(DatabaseHandler.plc_data_packet["TC1"]) == max(1, int(1/plc_data.scan_rate/4)):
+        if len(DatabaseHandler.plc_data_packet["TC1"]) == max(1, int(1/plc_data.scan_rate/8)):
             try:
                 DatabaseHandler.client.collection("Plc").create(DatabaseHandler.plc_data_packet)
             except Exception as e:

@@ -12,7 +12,7 @@ from dataclasses import dataclass
 PLC_IP = "192.168.8.70"
 PLC_PORT = 69
 
-REQUEST_DELAY = (1.0/10.0) # in seconds
+REQUEST_DELAY = (1.0/15.0) # in seconds
 PT_COEFFICIENT = 1000
 
 # PLC Commands and Offsets
