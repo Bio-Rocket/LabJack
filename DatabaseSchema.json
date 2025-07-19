@@ -191,6 +191,14 @@
                 {
                     "name": "PT12",
                     "type": "json"
+                },
+                {
+                    "name": "PT13",
+                    "type": "json"
+                },
+                {
+                    "name": "PT14",
+                    "type": "json"
                 }
             ]
         },

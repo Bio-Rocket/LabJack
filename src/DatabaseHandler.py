@@ -351,8 +351,6 @@ class DatabaseHandler():
         DatabaseHandler.plc_data_packet["PT3"].append(pt_data[2])
         DatabaseHandler.plc_data_packet["PT4"].append(pt_data[3])
         DatabaseHandler.plc_data_packet["PT5"].append(pt_data[4])
-        DatabaseHandler.plc_data_packet["PT13"].append(pt_data[5])
-        DatabaseHandler.plc_data_packet["PT14"].append(pt_data[6])
 
         DatabaseHandler.plc_data_packet["PBV1"].append(valve_data[0])
         DatabaseHandler.plc_data_packet["PBV2"].append(valve_data[1])
