@@ -26,7 +26,7 @@ PLC_IGN_OFFSET = 25
 # PLC data sizes
 PLC_TC_DATA_SIZE = 9 * 2 # 9 TCs 2 LCs and each are int16_t
 PLC_LC_DATA_SIZE = 3 * 2 # 3 LCs all int16_t
-PLC_PT_DATA_SIZE = 7 * 2 # 8 PTs and each are int16_t
+PLC_PT_DATA_SIZE = 5 * 2 # 5 PTs and each are int16_t
 PLC_VALVE_DATA_SIZE = 18 # 18 valves and each are int8_t
 
 # Class Definitions ===============================================================================
