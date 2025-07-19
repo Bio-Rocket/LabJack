@@ -21,7 +21,7 @@ class StateTruth:
     current_state: Dict[str, Any]
 
     @classmethod
-    def init_state_truth(cls, shared_dict: Dict[str, Any]) -> None:
+    def init_state_truth(cls, shared_dict: Any) -> None:
         """
         Initialize the static state of the system.
         This method sets the initial state to ABORT.

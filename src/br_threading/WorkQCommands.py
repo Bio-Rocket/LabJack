@@ -7,7 +7,6 @@ class WorkQCmnd_e(Enum):
 
     ## Internal DB Commands
     DB_GS_COMMAND = auto() # Command from the database
-    DB_LC_COMMAND = auto() # Internal DB Command for the Load Cell Handler
     DB_STATE_COMMAND = auto() # Command for DB to send to the state machine
     DB_STATE_CHANGE = auto() # Change the system state in the DB
     DB_HEARTBEAT = auto() # Heartbeat
@@ -22,7 +21,7 @@ class WorkQCmnd_e(Enum):
     ## PLC Data from PLC to the DB
     PLC_DATA = auto() # Includes TC, LC, PT, and Valve data in a PlcData object
 
-    ## PLC Commands to adjust the valves, Pumps, Igniters, and Heater
+    ## PLC Commands to adjust the valves, SOL, Igniters
     PLC_OPEN_PBV = auto() # Open the Pneumatic Ball Valve, expects the PBV number
     PLC_CLOSE_PBV = auto() # Close the Pneumatic Ball Valve, expects a PBV number
 

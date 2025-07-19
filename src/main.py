@@ -3,7 +3,6 @@ from StateTruth import StateTruth, SystemStates
 from br_threading.ThreadManager import ThreadManager as tm
 import time
 
-
 from DatabaseHandler import database_thread
 from PlcHandler import plc_thread
 from LabjackProcess import t7_pro_thread
@@ -20,6 +19,8 @@ if __name__ == "__main__":
     shared_state = manager.dict({"state": SystemStates.ABORT})
     #TODO: this will need updated for embedded mode
     StateTruth.init_state_truth(shared_state)
+
+    #TODO SHOULD GET STATE FROM DB IF IT EXISTS
 
     db_workq = mp.Queue()
     plc_workq = mp.Queue()
