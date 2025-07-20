@@ -60,19 +60,18 @@ if __name__ == "__main__":
     while 1:
         # If there is any workq messages, process them
         main_command:WorkQCmnd = main_workq.get(block=True)
+        t7_pro_workq.put(WorkQCmnd(WorkQCmnd_e.KILL_PROCESS, None))
+        tm.kill_thread(lj_thread)
         if main_command.command == WorkQCmnd_e.LJ_SLOW_LOGGING:
             print("Main - Switching to LJ slow logging")
-            t7_pro_workq.put(WorkQCmnd(WorkQCmnd_e.KILL_PROCESS, None))
-            tm.kill_thread(lj_thread)
             lj_thread = tm.create_thread(
                 target=process_wrapper,
                 args=(t7_pro_thread, shared_state, t7_pro_workq, db_workq)
             )
         elif main_command.command == WorkQCmnd_e.LJ_FAST_LOGGING:
             print("Main - Switching to LJ fast logging")
-            t7_pro_workq.put(WorkQCmnd(WorkQCmnd_e.KILL_PROCESS, None))
-            tm.kill_thread(lj_thread)
             lj_thread = tm.create_thread(
                 target=process_wrapper,
                 args=(t7_pro_cmd_response_thread, shared_state, t7_pro_workq, db_workq)
             )
+        tm.start_threads()
