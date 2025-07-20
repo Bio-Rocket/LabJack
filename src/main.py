@@ -6,6 +6,7 @@ import time
 from DatabaseHandler import database_thread
 from PlcHandler import plc_thread
 from LabjackProcess import t7_pro_thread
+from LabjackCRProcess import t7_pro_cmd_response_thread
 from StateMachine import state_thread
 from HeartbeatHandler import heartbeat_thread
 
@@ -33,9 +34,13 @@ if __name__ == "__main__":
         target=process_wrapper,
         args=(database_thread, shared_state, db_workq, state_workq, heartbeat_workq)
     )
+    # tm.create_thread(
+    #     target=process_wrapper,
+    #     args=(t7_pro_thread, shared_state, t7_pro_workq, db_workq)
+    # )
     tm.create_thread(
         target=process_wrapper,
-        args=(t7_pro_thread, shared_state, t7_pro_workq, db_workq)
+        args=(t7_pro_cmd_response_thread, shared_state, t7_pro_workq, db_workq)
     )
     tm.create_thread(
         target=process_wrapper,
@@ -49,7 +54,6 @@ if __name__ == "__main__":
         target=process_wrapper,
         args=(heartbeat_thread, shared_state, heartbeat_workq, db_workq, state_workq)
     )
-
 
     tm.start_threads()
     while 1:

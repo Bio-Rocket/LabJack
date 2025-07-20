@@ -410,6 +410,46 @@ class DatabaseHandler():
                 except Exception as e:
                     print(f"failed to create a lj_data entry {e}")
                 DatabaseHandler.lj_data_packet.clear()
+    @staticmethod
+    def write_lj_data(lj_data: LjData, lc_handler: LoadCellHandler) -> None:
+        """
+        Attempt to write incoming labjack data to the database.
+
+        Batch Write Feature:
+        Based on LjData scan rate, the DB handler will
+        collect that many pieces of data and write to the DB once the
+        full package is complete, this allows for faster DB writes.
+
+        Args:
+            lj_data (tuple): The labjack data, with the first position
+                containing the list of data
+            lc_handler (LoadCellHandler):
+                The load cell handler to handle the load cell mass conversions.
+        """
+        for i in range(GET_SCANS_PER_READ(lj_data.scan_rate)):
+            for key in lj_data.lc_data:
+                DatabaseHandler.lj_data_packet[key].append(
+                    lc_handler.convert_raw_voltage(key, lj_data.lc_data[key].pop(0))
+                )
+            for key in lj_data.pt_data:
+                DatabaseHandler.lj_data_packet[key].append(
+                    lj_data.pt_data[key].pop(0)
+                )
+
+            if lj_data.scan_rate <= 10:
+                try:
+                    DatabaseHandler.client.collection("LabJack").create(DatabaseHandler.lj_data_packet)
+                except Exception as e:
+                    print(f"failed to create a lj_data entry {e}")
+                DatabaseHandler.lj_data_packet.clear()
+                return
+
+            if len(DatabaseHandler.lj_data_packet[key]) == lj_data.scan_rate:
+                try:
+                    DatabaseHandler.client.collection("LabJack").create(DatabaseHandler.lj_data_packet)
+                except Exception as e:
+                    print(f"failed to create a lj_data entry {e}")
+                DatabaseHandler.lj_data_packet.clear()
 
     @staticmethod
     def write_system_state(state: str) -> None:
