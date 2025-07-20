@@ -144,4 +144,8 @@ def t7_pro_thread(
 
     print("LJ - thread started")
     while 1:
-        t7_pro_workq.get(block=True)
+        if t7_pro_workq.get(block=True).command == WorkQCmnd_e.KILL_PROCESS:
+            lji.stop_stream()
+            lji.close()
+            print("LJ - thread stopped")
+            return
