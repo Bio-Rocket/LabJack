@@ -16,14 +16,26 @@ class ThreadManager:
         Start the threads in the thread pool
         '''
         for thread in ThreadManager.thread_pool:
-            thread.start()
+            if not thread.is_alive():
+                thread.start()
         return
 
     @staticmethod
-    def create_thread(target, args):
+    def create_thread(target, args) -> mp.Process:
         '''
         Create a thread and add it to the thread pool
         '''
         thread = mp.Process(target=target, args=args)
         ThreadManager.thread_pool.append(thread)
+        return thread
+
+    @staticmethod
+    def kill_thread(thread: mp.Process):
+        '''
+        Kill a thread in the thread pool
+        '''
+        if thread.is_alive():
+            thread.terminate()
+            thread.join()
+            ThreadManager.thread_pool.remove(thread)
         return

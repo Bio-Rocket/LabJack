@@ -47,4 +47,4 @@ while True:
         num_of_records += 1
     except ClientResponseError:
         print(f"Deleted {num_of_records} entries")
-        breakgi
+        break

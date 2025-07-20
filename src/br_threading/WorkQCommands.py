@@ -14,6 +14,8 @@ class WorkQCmnd_e(Enum):
 
     ## Labjack Data from LJ to the DB
     LJ_DATA = auto() # Log LabJack data to DB, expects dictionary [str: float]
+    LJ_SLOW_LOGGING = auto() # Start slow logging on the LabJack, expects a scan rate in Hz
+    LJ_FAST_LOGGING = auto() # Start fast logging on the
 
     ## PLC Internal Commands
     PLC_REQUEST_DATA = auto() # Request data from the PLC (Internal PLC Command)

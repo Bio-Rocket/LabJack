@@ -9,6 +9,7 @@ from LabjackProcess import t7_pro_thread
 from LabjackCRProcess import t7_pro_cmd_response_thread
 from StateMachine import state_thread
 from HeartbeatHandler import heartbeat_thread
+from br_threading.WorkQCommands import WorkQCmnd, WorkQCmnd_e
 
 def process_wrapper(func, shared_dict, *args):
     # Set up shared state in all the subprocess
@@ -23,6 +24,9 @@ if __name__ == "__main__":
 
     #TODO SHOULD GET STATE FROM DB IF IT EXISTS
 
+    # Main work queue for deciding which labjack process to run
+    main_workq = mp.Queue()
+
     db_workq = mp.Queue()
     plc_workq = mp.Queue()
     t7_pro_workq = mp.Queue()
@@ -34,11 +38,8 @@ if __name__ == "__main__":
         target=process_wrapper,
         args=(database_thread, shared_state, db_workq, state_workq, heartbeat_workq)
     )
-    # tm.create_thread(
-    #     target=process_wrapper,
-    #     args=(t7_pro_thread, shared_state, t7_pro_workq, db_workq)
-    # )
-    tm.create_thread(
+
+    lj_thread = tm.create_thread(
         target=process_wrapper,
         args=(t7_pro_cmd_response_thread, shared_state, t7_pro_workq, db_workq)
     )
@@ -48,7 +49,7 @@ if __name__ == "__main__":
     )
     tm.create_thread(
         target=process_wrapper,
-        args=(state_thread, shared_state, state_workq, plc_workq, db_workq)
+        args=(state_thread, shared_state, main_workq, state_workq, plc_workq, db_workq)
     )
     tm.create_thread(
         target=process_wrapper,
@@ -57,4 +58,17 @@ if __name__ == "__main__":
 
     tm.start_threads()
     while 1:
-        time.sleep(1)
+        # If there is any workq messages, process them
+        main_command:WorkQCmnd = main_workq.get(block=True)
+        if main_command.command == WorkQCmnd_e.LJ_SLOW_LOGGING:
+            tm.kill_thread(lj_thread)
+            lj_thread = tm.create_thread(
+                target=process_wrapper,
+                args=(t7_pro_thread, shared_state, t7_pro_workq, db_workq)
+            )
+        elif main_command.command == WorkQCmnd_e.LJ_FAST_LOGGING:
+            tm.kill_thread(lj_thread)
+            lj_thread = tm.create_thread(
+                target=process_wrapper,
+                args=(t7_pro_cmd_response_thread, shared_state, t7_pro_workq, db_workq)
+            )
