@@ -3,13 +3,17 @@ from collections import defaultdict
 from dataclasses import dataclass
 from typing import Dict, List
 import multiprocessing as mp
+
 from br_threading.WorkQCommands import WorkQCmnd, WorkQCmnd_e
 from br_labjack.LabJackInterface import LabJack
 from labjack.ljm import LJMError
 
 CMD_RESPONSE_RATE_HZ = 5
 CMD_RESPONSE_PERIOD = 1.0 / CMD_RESPONSE_RATE_HZ
-AIN_LIST = ["AIN1", "AIN2", "AIN3", "AIN4", "AIN5", "AIN6", "AIN7", "AIN8", "AIN9", "AIN10", "AIN11", "AIN12", "AIN13"]
+AIN_LIST = [
+    "AIN1", "AIN2", "AIN3", "AIN4", "AIN5", "AIN6", "AIN7",
+    "AIN8", "AIN9", "AIN10", "AIN11", "AIN12", "AIN13"
+]
 
 @dataclass
 class LjData():
@@ -19,18 +23,10 @@ class LjData():
 
 def connect_to_labjack():
     try:
-        lji = LabJack("ANY", "USB", "ANY")
+        lji = LabJack("T7", "USB", "ANY")
     except LJMError as e:
         return False, None, str(e.errorString)
     return True, lji, ""
-
-def read_command_response(lji: LabJack, a_scan_list: List[str]):
-    try:
-        results = lji.read_names(a_scan_list)
-    except LJMError as e:
-        print(f"LJ - Command/Response read error: {e}")
-        return None
-    return results
 
 def t7_pro_cmd_response_thread(
     t7_pro_workq: mp.Queue,
@@ -58,8 +54,11 @@ def t7_pro_cmd_response_thread(
 
     while True:
         start = time.time()
-        values = read_command_response(lji, a_scan_list)
-        if values is None:
+
+        try:
+            values = lji.read_names(a_scan_list)
+        except LJMError as e:
+            print(f"LJ - Command/Response read error: {e}")
             continue
 
         pt_data = defaultdict(list)
@@ -74,12 +73,11 @@ def t7_pro_cmd_response_thread(
         cmnd = WorkQCmnd(WorkQCmnd_e.LJ_DATA, LjData(scan_frequency, lc_data, pt_data))
         db_workq.put(cmnd)
 
-        # Block for commands (non-blocking or short timeout)
         try:
             t7_pro_workq.get(timeout=0.01)
         except:
             pass
 
-        # Sleep to maintain 5 Hz rate
+        # CR rate
         elapsed = time.time() - start
         time.sleep(max(0, CMD_RESPONSE_PERIOD - elapsed))
