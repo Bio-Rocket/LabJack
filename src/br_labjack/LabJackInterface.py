@@ -166,6 +166,14 @@ class LabJack:
 
     def get_handle(self):
         return self.handle
+    
+        
+    def read_names(self, name_list: List[str]) -> List[float]:
+        """
+        Read multiple named registers in one call (e.g., ["AIN0", "AIN1", "AIN2"]).
+        Returns list of float values.
+        """
+        return ljm.eReadNames(self.handle, len(name_list), name_list)
 
 class AnalogInput:
     def __init__(self, lj, channel_name, resolution_index):
@@ -222,14 +230,6 @@ class AnalogInput:
 
     def read(self):
         return ljm.eReadName(self.lj.handle, self.channel_name)
-    
-    def read_names(self, name_list: List[str]) -> List[float]:
-        """
-        Read multiple named registers in one call (e.g., ["AIN0", "AIN1", "AIN2"]).
-        Returns list of float values.
-        """
-        return ljm.eReadNames(self.handle, len(name_list), name_list)
-
 
 class AnalogOutput:
     def __init__(self, lj, channel_name):
