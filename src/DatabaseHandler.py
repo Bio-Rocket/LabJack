@@ -474,7 +474,6 @@ def process_workq_message(message: WorkQCmnd, state_workq: mp.Queue, hb_workq: m
     elif message.command == WorkQCmnd_e.FRONTEND_HEARTBEAT:
         hb_workq.put(WorkQCmnd(WorkQCmnd_e.FRONTEND_HEARTBEAT, None))
     elif message.command == WorkQCmnd_e.PLC_DATA:
-        print("got data from PLC")
         DatabaseHandler.write_plc_data(message.data, lc_handler)
     elif message.command == WorkQCmnd_e.LJ_DATA:
         DatabaseHandler.write_lj_data(message.data, lc_handler)
