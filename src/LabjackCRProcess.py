@@ -75,7 +75,6 @@ def t7_pro_cmd_response_thread(
 
         try:
             if t7_pro_workq.get(timeout=0.01).command == WorkQCmnd_e.KILL_PROCESS:
-                lji.stop_stream()
                 lji.close()
                 print("LJ - Command/Response thread stopped")
                 return
