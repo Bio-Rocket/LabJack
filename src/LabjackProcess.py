@@ -198,13 +198,19 @@ def t7_pro_thread(
 
         if lj_command is not None:
             if lj_command.command == WorkQCmnd_e.KILL_PROCESS:
-                lji.stop_stream()
-                lji.close()
+                try:
+                    lji.stop_stream()
+                    lji.close()
+                except:
+                    pass
                 print("LJ - thread stopped")
                 return
             elif lj_command.command == WorkQCmnd_e.LJ_SLOW_LOGGING:
                 print("LJ - Switching to slow logging")
-                lji.stop_stream()
+                try:
+                    lji.stop_stream()
+                except:
+                    pass
                 scan_mode = LJ_SCAN_MODE.SLOW
             elif lj_command.command == WorkQCmnd_e.LJ_FAST_LOGGING:
                 print("LJ - Switching to fast logging")
