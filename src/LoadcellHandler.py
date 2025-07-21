@@ -8,6 +8,7 @@ from pathlib import Path
 
 # Constants ======================================================================================
 EXPECTED_SCHEMA_JSON = os.path.join(Path(__file__).parents[1], "LoadCellConfig.json")
+AMPLIFIER_BOARD_MULTIPLIER = 333
 
 # Class Definitions ===============================================================================
 class LoadCell():
@@ -16,8 +17,44 @@ class LoadCell():
         self.load_cell_name = load_cell_name
         self.slope = 0.0
         self.intercept = 0.0
+        self.calibration_voltages = [] # List of voltages in Volts
+        self.calibration_weights = [] # List of weights in kg
 
-    def set_calibration(self, voltages: List[float], weights: List[float]) -> None:
+    def set_calibration_voltages(self, voltages_mV: List[float]) -> None:
+        """
+        Sets the calibration voltages for the load cell.
+        Convert mV to V and apply amplifier board multiplier.
+
+        Args:
+            voltages_mV (List[float]): A list of voltage readings from the load cell in millivolts.
+        """
+        self.calibration_voltages = [v / 1000 * AMPLIFIER_BOARD_MULTIPLIER for v in voltages_mV]
+
+    def set_calibration_weights(self, weights_lbs: List[float]) -> None:
+        """
+        Sets the calibration weights for the load cell.
+        Convert lbs to kg.
+
+        Args:
+            weights (List[float]): A list of corresponding weights for the voltage readings in lbs.
+        """
+        self.calibration_weights = [w / 2.2 for w in weights_lbs]
+
+    def apply_reference_voltage(self, ref_voltage: float) -> None:
+        """
+        Applies the reference voltage to the load cell voltage calibrations.
+        This is used to adjust the calibration data based on the reference voltage.
+
+        Args:
+            ref_voltage (float): The reference voltage in Volts.
+        """
+        if ref_voltage <= 0:
+            print(f"LC - Invalid reference voltage {ref_voltage} for {self.load_cell_name}.")
+            return
+
+        self.calibration_voltages = [v * ref_voltage / 10 for v in self.calibration_voltages]
+
+    def set_calibration(self) -> None:
         """
         Sets the calibration data for the load cell.
 
@@ -26,11 +63,11 @@ class LoadCell():
             weights (List[float]): A list of corresponding weights for the voltage readings.
         """
 
-        if len(voltages) != len(weights):
+        if len(self.calibration_voltages) != len(self.calibration_weights):
             print(f"LC - Calibration data poorly formatted for {self.load_cell_name}. ")
             return
 
-        self.slope, self.intercept = np.polyfit(voltages, weights, 1)
+        self.slope, self.intercept = np.polyfit(self.calibration_voltages, self.calibration_weights, 1)
 
     def convert_voltage_to_mass(self, raw_voltage: float) -> float:
         """
@@ -58,10 +95,9 @@ class LoadCellHandler():
                 data = json.load(f)
                 for lc_name in data:
                     self.loadCells[lc_name] = LoadCell(lc_name)
-                    calibration_voltages = data[lc_name].get('voltage', [])
-                    calibration_weights = data[lc_name].get('weight', [])
-                    self.loadCells[lc_name].set_calibration(calibration_voltages, calibration_weights)
-
+                    self.loadCells[lc_name].set_calibration_voltages(data[lc_name].get('voltage', []))
+                    self.loadCells[lc_name].set_calibration_weights(data[lc_name].get('weight', []))
+                    self.loadCells[lc_name].set_calibration()
         except Exception as e:
             print(f"LC - Error loading LoadCellConfig file: {e}")
 
@@ -80,3 +116,15 @@ class LoadCellHandler():
             print(f"LC - Load cell {load_cell_name} does not exist.")
 
         return self.loadCells[load_cell_name].convert_voltage_to_mass(raw_voltage)
+
+    def apply_reference_voltage(self, ref_voltage: float) -> None:
+        """
+        Applies the reference voltage to all load cells in the handler.
+
+        Args:
+            ref_voltage (float):
+                The reference voltage in Volts.
+        """
+        for lc in self.loadCells.values():
+            lc.apply_reference_voltage(ref_voltage)
+            lc.set_calibration()

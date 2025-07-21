@@ -15,6 +15,7 @@ STREAM_RATE_HZ = 1000 # Scan rate in Hz
 DEFAULT_A_LIST_NAMES = ["AIN1", "AIN2", "AIN3", "AIN4", "AIN5", "AIN6", "AIN7", "AIN8", "AIN9", "AIN10", "AIN11", "AIN12", "AIN13"]
 GET_SCANS_PER_READ = lambda x: int(x/2) if int(x/2) != 0 else 1
 
+REFERENCE_VOLTAGE_NAME = ["AIN0",]  # The reference voltage for the load cell, which is AIN0
 
 PT_MAP = {
     "AIN1": "PT14", "AIN2": "PT13", "AIN3": "PT12", "AIN4": "PT11",
@@ -227,6 +228,27 @@ def t7_pro_thread(
         if scan_mode == LJ_SCAN_MODE.SLOW:
             # If in slow mode, read single samples
             read_single_sample(lji, a_scan_list_names, db_workq, CMD_RESPONSE_RATE_HZ)
+            try:
+                reference_voltage = lji.read_names(REFERENCE_VOLTAGE_NAME)[0]
+                db_workq.put(WorkQCmnd(WorkQCmnd_e.LC_REFERENCE_VOLTAGE, reference_voltage))
+            except LJMError as e:
+                print(f"LJ - Unable to get Load cell reference voltage: {e}")
+                return
+
+        else:
+            # If in fast mode, read from the stream
+            try:
+                lji.start_stream(
+                    a_scan_list_names,
+                    STREAM_RATE_HZ,
+                    scans_per_read=GET_SCANS_PER_READ(STREAM_RATE_HZ),
+                    callback=labjack_stream_callback,
+                    obj=stream_cb_obj,
+                    stream_resolution_index=stream_resolution_index
+                )
+            except LJMError as e:
+                print(f"LJ - Error starting stream: {e}")
+                return
 
         # CR rate
         elapsed = time.time() - start

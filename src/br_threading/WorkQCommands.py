@@ -37,6 +37,9 @@ class WorkQCmnd_e(Enum):
     STATE_HANDLE_VALVE_COMMAND = auto() # Handle a valve command from the database then send to PLC if valid
     STATE_TRANSITION = auto() # Attempt to transition to a new state
 
+    ## Load Cell Commands
+    LC_REFERENCE_VOLTAGE = auto() # Set the reference voltage for the load cell calibration, expects a float
+
 
 class WorkQCmnd:
     def __init__(self, command: WorkQCmnd_e, data: Any):
