@@ -44,7 +44,7 @@ if __name__ == "__main__":
     )
     tm.create_thread(
         target=process_wrapper,
-        args=(state_thread, shared_state, t7_pro_workq, state_workq, plc_workq, db_workq)
+        args=(state_thread, shared_state, state_workq, t7_pro_workq, plc_workq, db_workq)
     )
     tm.create_thread(
         target=process_wrapper,
