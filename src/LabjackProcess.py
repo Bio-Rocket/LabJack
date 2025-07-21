@@ -188,6 +188,15 @@ def t7_pro_thread(
 
     print("LJ - thread started")
 
+    lc_ref_calibrated = False
+
+    try:
+        reference_voltage = lji.read_names(REFERENCE_VOLTAGE_NAME)[0]
+        db_workq.put(WorkQCmnd(WorkQCmnd_e.LC_REFERENCE_VOLTAGE, reference_voltage))
+        lc_ref_calibrated = True
+    except LJMError as e:
+        print(f"LJ - Unable to get Load cell reference voltage: {e}")
+
     stream_cb_obj = _CallbackClass(lji, [db_workq,], STREAM_RATE_HZ)
 
     while True:
@@ -228,12 +237,13 @@ def t7_pro_thread(
         if scan_mode == LJ_SCAN_MODE.SLOW:
             # If in slow mode, read single samples
             read_single_sample(lji, a_scan_list_names, db_workq, CMD_RESPONSE_RATE_HZ)
-            try:
-                reference_voltage = lji.read_names(REFERENCE_VOLTAGE_NAME)[0]
-                db_workq.put(WorkQCmnd(WorkQCmnd_e.LC_REFERENCE_VOLTAGE, reference_voltage))
-            except LJMError as e:
-                print(f"LJ - Unable to get Load cell reference voltage: {e}")
-                return
+            if not lc_ref_calibrated:
+                try:
+                    reference_voltage = lji.read_names(REFERENCE_VOLTAGE_NAME)[0]
+                    db_workq.put(WorkQCmnd(WorkQCmnd_e.LC_REFERENCE_VOLTAGE, reference_voltage))
+                    lc_ref_calibrated = True
+                except LJMError as e:
+                    print(f"LJ - Unable to get Load cell reference voltage: {e}")
 
         else:
             # If in fast mode, read from the stream
