@@ -1,5 +1,6 @@
 from collections import defaultdict
 from dataclasses import dataclass
+from enum import Enum
 import time
 from typing import Any, Callable, Dict, List
 from br_threading.WorkQCommands import WorkQCmnd, WorkQCmnd_e
@@ -7,9 +8,28 @@ import multiprocessing as mp
 from br_labjack.LabJackInterface import LabJack
 from labjack.ljm import LJMError
 
-LAB_JACK_SCAN_RATE = 1000 # Scan rate in Hz
+CMD_RESPONSE_RATE_HZ = 5
+CMD_RESPONSE_PERIOD = 1.0 / CMD_RESPONSE_RATE_HZ
+
+STREAM_RATE_HZ = 1000 # Scan rate in Hz
 DEFAULT_A_LIST_NAMES = ["AIN1", "AIN2", "AIN3", "AIN4", "AIN5", "AIN6", "AIN7", "AIN8", "AIN9", "AIN10", "AIN11", "AIN12", "AIN13"]
 GET_SCANS_PER_READ = lambda x: int(x/2) if int(x/2) != 0 else 1
+
+
+PT_MAP = {
+    "AIN1": "PT14", "AIN2": "PT13", "AIN3": "PT12", "AIN4": "PT11",
+    "AIN5": "PT10", "AIN6": "PT9",  "AIN7": "PT8",  "AIN8": "PT7",
+    "AIN9": "PT6"
+}
+LC_MAP = {
+    "AIN10": "LC6", "AIN11": "LC5", "AIN12": "LC4", "AIN13": "LC3"
+}
+
+class LJ_SCAN_MODE(Enum):
+    SLOW = 0
+    FAST = 1
+
+
 
 @dataclass
 class LjData():
@@ -75,6 +95,43 @@ def t7_pro_callback(obj: _CallbackClass, stream_handle: Any):
     for workq in obj.subscribed_workq_list:
         workq.put(cmnd)
 
+def read_single_sample(
+        lji: LabJack,
+        a_scan_list: List[str],
+        db_workq: mp.Queue,
+        scan_frequency: int
+    ):
+    """
+    Read a single sample from the LabJack T7 Pro.
+
+    Args:
+        lji (LabJack):
+            The LabJack T7 Pro object to read from.
+        a_scan_list (List[str]):
+            The list of AIN channels to read from.
+        db_workq (mp.Queue):
+            The work queue for the database thread.
+        scan_frequency (int):
+            The scan frequency in Hz.
+    """
+    try:
+        values = lji.read_names(a_scan_list)
+    except LJMError as e:
+        print(f"LJ - Command/Response read error: {e}")
+        return
+
+    pt_data = defaultdict(list)
+    lc_data = defaultdict(list)
+
+    for name, value in zip(a_scan_list, values):
+        if name in PT_MAP:
+            pt_data[PT_MAP[name]].append(value)
+        elif name in LC_MAP:
+            lc_data[LC_MAP[name]].append(value)
+
+    cmnd = WorkQCmnd(WorkQCmnd_e.LJ_DATA, LjData(scan_frequency, lc_data, pt_data))
+    db_workq.put(cmnd)
+
 def connect_to_labjack():
     """
     Connect to the LabJack T7 Pro.
@@ -85,7 +142,7 @@ def connect_to_labjack():
         err (str): The error message if the connection failed.
     """
     try:
-        lji = LabJack("ANY", "USB", "ANY")
+        lji = LabJack("T7", "USB", "ANY")
     except LJMError as e:
         return False, None, str(e.errorString)
     return True, lji, ""
@@ -93,7 +150,6 @@ def connect_to_labjack():
 def t7_pro_thread(
         t7_pro_workq: mp.Queue,
         db_workq: mp.Queue,
-        scan_frequency: int = LAB_JACK_SCAN_RATE,
         a_scan_list: List[str] = DEFAULT_A_LIST_NAMES,
         labjack_stream_callback: Callable = t7_pro_callback):
     """
@@ -107,8 +163,6 @@ def t7_pro_thread(
         db_workq (mp.Queue):
             The work queue for the database thread. Used for
             storing sensor data in the database.
-        scan_frequency (int):
-            The scan frequency in Hz. Default is 4 Hz.
         a_scan_list (List[str]):
             The list of AIN channels to stream from the LabJack T7 Pro.
             Default is DEFAULT_A_LIST_NAMES.
@@ -118,11 +172,11 @@ def t7_pro_thread(
             for when the LabJack T7 Pro receives stream data.
             Default is t7_pro_callback.
     """
-
     a_scan_list_names = a_scan_list
-    scan_rate = scan_frequency
     stream_resolution_index = 4
     lji = None
+
+    scan_mode = LJ_SCAN_MODE.SLOW
 
     # Connect to the LabJack T7 Pro
     while lji is None:
@@ -131,21 +185,43 @@ def t7_pro_thread(
             print(f"LJ - Error connecting to LabJack, {err}, retrying...")
             time.sleep(5)
 
-    obj = _CallbackClass(lji, [db_workq,], scan_rate)
-
-    lji.start_stream(
-        a_scan_list_names,
-        scan_rate,
-        scans_per_read=GET_SCANS_PER_READ(scan_rate),
-        callback=labjack_stream_callback,
-        obj=obj,
-        stream_resolution_index=stream_resolution_index)
-
-
     print("LJ - thread started")
-    while 1:
-        if t7_pro_workq.get(block=True).command == WorkQCmnd_e.KILL_PROCESS:
-            lji.stop_stream()
-            lji.close()
-            print("LJ - thread stopped")
-            return
+
+    stream_cb_obj = _CallbackClass(lji, [db_workq,], STREAM_RATE_HZ)
+
+    while True:
+        start = time.time()
+        try:
+            lj_command = t7_pro_workq.get(timeout=0.01)
+        except:
+            lj_command = None
+
+        if lj_command is not None:
+            if lj_command.command == WorkQCmnd_e.KILL_PROCESS:
+                lji.stop_stream()
+                lji.close()
+                print("LJ - thread stopped")
+                return
+            elif lj_command.command == WorkQCmnd_e.LJ_SLOW_LOGGING:
+                print("LJ - Switching to slow logging")
+                lji.stop_stream()
+                scan_mode = LJ_SCAN_MODE.SLOW
+            elif lj_command.command == WorkQCmnd_e.LJ_FAST_LOGGING:
+                print("LJ - Switching to fast logging")
+                scan_mode = LJ_SCAN_MODE.FAST
+                lji.start_stream(
+                    a_scan_list_names,
+                    STREAM_RATE_HZ,
+                    scans_per_read=GET_SCANS_PER_READ(STREAM_RATE_HZ),
+                    callback=labjack_stream_callback,
+                    obj=stream_cb_obj,
+                    stream_resolution_index=stream_resolution_index
+                )
+
+        if scan_mode == LJ_SCAN_MODE.SLOW:
+            # If in slow mode, read single samples
+            read_single_sample(lji, a_scan_list_names, db_workq, CMD_RESPONSE_RATE_HZ)
+
+        # CR rate
+        elapsed = time.time() - start
+        time.sleep(max(0, CMD_RESPONSE_PERIOD - elapsed))

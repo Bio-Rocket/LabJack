@@ -4,24 +4,24 @@ from StateTruth import StateTruth, SystemStates
 from br_threading.WorkQCommands import WorkQCmnd, WorkQCmnd_e
 
 class StateMachine():
-    def __init__(self, main_workq: mp.Queue, state_workq: mp.Queue, plc_workq: mp.Queue, database_workq: mp.Queue):
+    def __init__(self, state_workq: mp.Queue, t7_pro_workq: mp.Queue, plc_workq: mp.Queue, database_workq: mp.Queue):
         """
         Initialize the state machine with the work queues.
         Args:
-            main_workq (mp.Queue):
-                The main work queue for the state machine, used to
-                send commands about what logging speed we should be using
-                for the LabJack.
             state_workq (mp.Queue):
                 The work queue for the state machine, primarily for
                 a state change request.
+            t7_pro_workq (mp.Queue):
+                The main work queue for the state machine, used to
+                send commands about what logging speed we should be using
+                for the LabJack.
             plc_workq (mp.Queue):
                 The work queue for the PLC commands.
             database_workq (mp.Queue):
                 The work queue for the database commands.
         """
-        self.main_workq = main_workq
         self.state_workq = state_workq
+        self.t7_pro_workq = t7_pro_workq
         self.plc_workq = plc_workq
         self.db_workq = database_workq
         self.manual_override = False
@@ -129,9 +129,9 @@ class StateMachine():
                 The current state of the system.
         """
         if state == SystemStates.TEST or state == SystemStates.ABORT:
-            self.main_workq.put(WorkQCmnd(WorkQCmnd_e.LJ_SLOW_LOGGING, None))
+            self.t7_pro_workq.put(WorkQCmnd(WorkQCmnd_e.LJ_SLOW_LOGGING, None))
         else:
-            self.main_workq.put(WorkQCmnd(WorkQCmnd_e.LJ_FAST_LOGGING, None))
+            self.t7_pro_workq.put(WorkQCmnd(WorkQCmnd_e.LJ_FAST_LOGGING, None))
 
     def handle_valve_change(self, command: str) -> None:
         """
@@ -263,25 +263,25 @@ class StateMachine():
             print(f"SM - Invalid transition command: from {current_state} to {next_state}")
             return False
 
-def state_thread(main_workq: mp.Queue, state_workq: mp.Queue, plc_workq: mp.Queue, database_workq: mp.Queue):
+def state_thread(state_workq: mp.Queue, t7_pro_workq: mp.Queue, plc_workq: mp.Queue, database_workq: mp.Queue):
     """
     Start the state machine which controls the valve states and
     the manual value states.
 
     Args:
-        main_workq (mp.Queue):
-            The main work queue for the state machine, used to
-            send commands about what logging speed we should be using
-            for the LabJack.
         state_workq (mp.Queue):
             The work queue for the state machine, primarily for
             a state change request.
+        t7_pro_workq (mp.Queue):
+            The main work queue for the state machine, used to
+            send commands about what logging speed we should be using
+            for the LabJack.
         plc_workq (mp.Queue):
             The work queue for the PLC commands.
         database_workq (mp.Queue):
             The work queue for the database commands.
     """
-    state_machine = StateMachine(main_workq, state_workq, plc_workq, database_workq)
+    state_machine = StateMachine(state_workq, t7_pro_workq, plc_workq, database_workq)
     print("SM - thread started")
 
     while 1:
