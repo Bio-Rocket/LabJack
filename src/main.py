@@ -9,6 +9,11 @@ from LabjackProcess import t7_pro_thread
 from StateMachine import state_thread
 from HeartbeatHandler import heartbeat_thread
 
+from GPIOThread import gpio_abort_thread          # <— add this
+from br_threading.WorkQCommands import WorkQCmnd, WorkQCmnd_e  # for KILL_PROCESS on shutdown
+
+
+
 def process_wrapper(func, shared_dict, *args):
     # Set up shared state in all the subprocess
     StateTruth.init_state_truth(shared_dict)
@@ -27,6 +32,7 @@ if __name__ == "__main__":
     t7_pro_workq = mp.Queue()
     state_workq = mp.Queue()
     heartbeat_workq = mp.Queue()
+    gpio_workq = mp.Queue()    
 
     # Initialize the threads
     tm.create_thread(
@@ -49,6 +55,12 @@ if __name__ == "__main__":
     tm.create_thread(
         target=process_wrapper,
         args=(heartbeat_thread, shared_state, heartbeat_workq, db_workq, state_workq)
+    )
+    tm.create_thread(                               
+        target=process_wrapper,
+        args=(gpio_abort_thread, shared_state,
+              gpio_workq, state_workq, 40),              
+        kwargs={"pull_up": True, "bounce_ms": 50}
     )
 
     tm.start_threads()

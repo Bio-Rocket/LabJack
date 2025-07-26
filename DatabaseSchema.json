@@ -226,6 +226,10 @@
                 {
                     "name": "command",
                     "type": "text"
+                },
+                {
+                    "name": "hardware_abort",
+                    "type": "text"
                 }
             ]
         },

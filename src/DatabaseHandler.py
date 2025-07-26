@@ -454,6 +454,21 @@ class DatabaseHandler():
         except Exception:
             print(f"failed to create a heartbeat")
 
+    @staticmethod
+    def write_state_command(payload: dict) -> None:
+        """
+        Write the current system state and hardware_abort flag to the StateCommand collection.
+
+        Args:
+            payload (dict): {"command": <state>, "hardware_abort": "true"/"false"}
+        """
+        try:
+            DatabaseHandler.client.collection("StateCommand").create(payload)
+            print(f"DB - Updated StateCommand: {payload}")
+        except Exception as e:
+            print(f"DB - Failed to write StateCommand: {e}")
+
+
 # Procedures ======================================================================================
 
 def process_workq_message(message: WorkQCmnd, state_workq: mp.Queue, hb_workq: mp.Queue, lc_handler: LoadCellHandler) -> bool:
@@ -477,7 +492,12 @@ def process_workq_message(message: WorkQCmnd, state_workq: mp.Queue, hb_workq: m
     elif message.command == WorkQCmnd_e.DB_GS_COMMAND:
         state_workq.put(WorkQCmnd(WorkQCmnd_e.STATE_HANDLE_VALVE_COMMAND, message.data))
     elif message.command == WorkQCmnd_e.DB_STATE_COMMAND:
-        state_workq.put(WorkQCmnd(WorkQCmnd_e.STATE_TRANSITION, message.data))
+        if isinstance(message.data, dict):
+            # StateMachine -> DB update
+            DatabaseHandler.write_state_command(message.data)
+        else:
+            # Frontend -> StateMachine transition request
+            state_workq.put(WorkQCmnd(WorkQCmnd_e.STATE_TRANSITION, message.data))
     elif message.command == WorkQCmnd_e.DB_STATE_CHANGE:
         DatabaseHandler.write_system_state(message.data)
     elif message.command == WorkQCmnd_e.DB_HEARTBEAT:
@@ -490,7 +510,6 @@ def process_workq_message(message: WorkQCmnd, state_workq: mp.Queue, hb_workq: m
         DatabaseHandler.write_lj_data(message.data, lc_handler)
     elif message.command == WorkQCmnd_e.LC_REFERENCE_VOLTAGE:
         lc_handler.apply_reference_voltage(message.data)
-
     return True
 
 def database_thread(db_workq: mp.Queue, state_workq: mp.Queue, hb_workq: mp.Queue, data_base_format_file: str = EXPECTED_SCHEMA_JSON) -> None:

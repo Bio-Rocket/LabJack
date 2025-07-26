@@ -40,6 +40,9 @@ class WorkQCmnd_e(Enum):
     ## Load Cell Commands
     LC_REFERENCE_VOLTAGE = auto() # Set the reference voltage for the load cell calibration, expects a float
 
+    ## Hardware Abort
+    RPI_HARDWARE_ABORT = auto()
+    RPI_HARDWARE_ABORT_CLEAR = auto()
 
 class WorkQCmnd:
     def __init__(self, command: WorkQCmnd_e, data: Any):
