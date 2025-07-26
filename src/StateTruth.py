@@ -1,7 +1,6 @@
 # NOTE: THIS FILE IS ONLY USED FOR STATIC FIRE AND COLD FLOW.
 #       THE STATE WILL NORMALLY BE HANDLED BY THE DMB ON THE ROCKET.
 
-from multiprocessing.managers import DictProxy
 from enum import Enum, auto
 from typing import Any, Dict
 

@@ -50,10 +50,6 @@ def get_all_records(client, collection_name):
     return all_records
 
 
-
-
-
-
 # MAIN ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 # Connect
