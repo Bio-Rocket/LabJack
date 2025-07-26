@@ -142,6 +142,26 @@
                 {
                     "name": "IGN2",
                     "type": "json"
+                },
+                {
+                    "name": "COLD_FLOW_VALVE_1",
+                    "type": "json"
+                },
+                {
+                    "name": "COLD_FLOW_VALVE_2",
+                    "type": "json"
+                },
+                {
+                    "name": "COLD_FLOW_VALVE_3",
+                    "type": "json"
+                },
+                {
+                    "name": "COLD_FLOW_VALVE_4",
+                    "type": "json"
+                },
+                {
+                    "name": "COLD_FLOW_VALVE_5",
+                    "type": "json"
                 }
             ]
         },

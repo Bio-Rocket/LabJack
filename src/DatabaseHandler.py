@@ -373,6 +373,12 @@ class DatabaseHandler():
         DatabaseHandler.plc_data_packet["IGN1"].append(valve_data[16])
         DatabaseHandler.plc_data_packet["IGN2"].append(valve_data[17])
 
+        DatabaseHandler.plc_data_packet["COLD_FLOW_VALVE_1"].append(valve_data[18])
+        DatabaseHandler.plc_data_packet["COLD_FLOW_VALVE_2"].append(valve_data[19])
+        DatabaseHandler.plc_data_packet["COLD_FLOW_VALVE_3"].append(valve_data[20])
+        DatabaseHandler.plc_data_packet["COLD_FLOW_VALVE_4"].append(valve_data[21])
+        DatabaseHandler.plc_data_packet["COLD_FLOW_VALVE_5"].append(valve_data[22])
+
         if len(DatabaseHandler.plc_data_packet["TC1"]) == 1:
             try:
                 DatabaseHandler.client.collection("Plc").create(DatabaseHandler.plc_data_packet)

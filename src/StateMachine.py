@@ -227,6 +227,27 @@ class StateMachine():
         elif command == "SOL5_CLOSE":
             self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_SOL, 5))
 
+        elif command == "COLD_FLOW_VALVE_1_OPEN":
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_CFV, 1))
+        elif command == "COLD_FLOW_VALVE_2_OPEN":
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_CFV, 2))
+        elif command == "COLD_FLOW_VALVE_3_OPEN":
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_CFV, 3))
+        elif command == "COLD_FLOW_VALVE_4_OPEN":
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_CFV, 4))
+        elif command == "COLD_FLOW_VALVE_5_OPEN":
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_CFV, 5))
+        elif command == "COLD_FLOW_VALVE_1_CLOSE":
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_CFV, 1))
+        elif command == "COLD_FLOW_VALVE_2_CLOSE":
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_CFV, 2))
+        elif command == "COLD_FLOW_VALVE_3_CLOSE":
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_CFV, 3))
+        elif command == "COLD_FLOW_VALVE_4_CLOSE":
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_CFV, 4))
+        elif command == "COLD_FLOW_VALVE_5_CLOSE":
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_CFV, 5))
+
     def attempt_transition(self, new_state_cmd: str) -> bool:
         """
         Attempt to transition to a new state.

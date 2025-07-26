@@ -93,7 +93,7 @@ print(f"DB - WRITE PLC DATA TO {PLC_FILE_PATH}")
 os.makedirs(os.path.dirname(PLC_FILE_PATH), exist_ok=True)
 
 with open(PLC_FILE_PATH, 'w') as f:
-    f.write("time,TC1,TC2,TC3,TC4,TC5,TC6,TC7,TC8,TC9,LC1,LC2,LC7,PT1,PT2,PT3,PT4,PT5,PBV1,PBV2,PBV3,PBV4,PBV5,PBV6,PBV7,PBV8,PBV9,PBV10,PBV11,SOL1,SOL2,SOL3,SOL4,SOL5,IGN1,IGN2\n")
+    f.write("time,TC1,TC2,TC3,TC4,TC5,TC6,TC7,TC8,TC9,LC1,LC2,LC7,PT1,PT2,PT3,PT4,PT5,PBV1,PBV2,PBV3,PBV4,PBV5,PBV6,PBV7,PBV8,PBV9,PBV10,PBV11,SOL1,SOL2,SOL3,SOL4,SOL5,IGN1,IGN2,CFV1,CFV2,CFV3,CFV4,CFV5\n")
 
     previous_time = datetime.datetime.now()
     for set_of_records in plc_all_records:
@@ -142,6 +142,12 @@ with open(PLC_FILE_PATH, 'w') as f:
             ign1 = set_of_records.ign1[i]
             ign2 = set_of_records.ign2[i]
 
+            cfv1 = set_of_records.cold_flow_valve_1[i]
+            cfv2 = set_of_records.cold_flow_valve_2[i]
+            cfv3 = set_of_records.cold_flow_valve_3[i]
+            cfv4 = set_of_records.cold_flow_valve_4[i]
+            cfv5 = set_of_records.cold_flow_valve_5[i]
+
             time_of_record = set_of_records.created + datetime.timedelta(milliseconds=milliseconds_offset)
 
             f.write(f"{time_of_record},{tc1},{tc2},{tc3},{tc4},{tc5},{tc6},{tc7},{tc8},{tc9},"
@@ -149,7 +155,7 @@ with open(PLC_FILE_PATH, 'w') as f:
                     f"{pbv1},{pbv2},{pbv3},{pbv4},{pbv5},{pbv6},{pbv7},"
                     f"{pbv8},{pbv9},{pbv10},{pbv11},"
                     f"{sol1},{sol2},{sol3},{sol4},{sol5},"
-                    f"{ign1},{ign2}\n")
+                    f"{ign1},{ign2},{cfv1},{cfv2},{cfv3},{cfv4},{cfv5}\n")
 
 print("DB - Data stored in file:", PLC_FILE_PATH)
 

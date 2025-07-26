@@ -40,6 +40,10 @@ class WorkQCmnd_e(Enum):
     ## Load Cell Commands
     LC_REFERENCE_VOLTAGE = auto() # Set the reference voltage for the load cell calibration, expects a float
 
+    ## Cold Flow Commands (TEMPORARY FOR COLD FLOW TESTING)
+    PLC_OPEN_CFV = auto() # Open Cold Flow Valve, expects an int for which valve to open (1-5)
+    PLC_CLOSE_CFV = auto() # Close Cold Flow Valve, expects an int for which valve to close (1-5)
+
 
 class WorkQCmnd:
     def __init__(self, command: WorkQCmnd_e, data: Any):

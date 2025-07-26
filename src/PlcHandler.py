@@ -27,7 +27,9 @@ PLC_IGN_OFFSET = 25
 PLC_TC_DATA_SIZE = 9 * 2 # 9 TCs 2 LCs and each are int16_t
 PLC_LC_DATA_SIZE = 3 * 2 # 3 LCs all int16_t
 PLC_PT_DATA_SIZE = 5 * 2 # 5 PTs and each are int16_t
-PLC_VALVE_DATA_SIZE = 18 # 18 valves and each are int8_t
+
+PLC_VALVE_DATA_SIZE = 18 + 5 # 18 valves and each are int8_t !! ADDING 5 FOR COLD FLOW VALVES !!
+PLC_CFV_OFFSET = 27
 
 # Class Definitions ===============================================================================
 @dataclass
@@ -166,6 +168,17 @@ def process_workq_message(message: WorkQCmnd, db_workq: mp.Queue) -> bool:
         ign_num = message.data + PLC_IGN_OFFSET
         state = 0
         plc_command = int.to_bytes(ign_num, 1, "little") + int.to_bytes(state, 1, "little")
+        PlcHandler.send_command(plc_command)
+
+    elif message.command == WorkQCmnd_e.PLC_OPEN_CFV:
+        cfv_num = message.data + PLC_CFV_OFFSET
+        state = 1
+        plc_command = int.to_bytes(cfv_num, 1, "little") + int.to_bytes(state, 1, "little")
+        PlcHandler.send_command(plc_command)
+    elif message.command == WorkQCmnd_e.PLC_CLOSE_CFV:
+        cfv_num = message.data + PLC_CFV_OFFSET
+        state = 0
+        plc_command = int.to_bytes(cfv_num, 1, "little") + int.to_bytes(state, 1, "little")
         PlcHandler.send_command(plc_command)
 
     return True
