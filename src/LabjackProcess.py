@@ -189,6 +189,7 @@ def t7_pro_thread(
     print("LJ - thread started")
 
     lc_ref_calibrated = False
+    stream_started = False
 
     try:
         reference_voltage = lji.read_names(REFERENCE_VOLTAGE_NAME)[0]
@@ -211,6 +212,7 @@ def t7_pro_thread(
                 try:
                     lji.stop_stream()
                     lji.close()
+                    stream_started = False
                 except:
                     pass
                 print("LJ - thread stopped")
@@ -219,20 +221,26 @@ def t7_pro_thread(
                 print("LJ - Switching to slow logging")
                 try:
                     lji.stop_stream()
+                    stream_started = False
                 except:
                     pass
                 scan_mode = LJ_SCAN_MODE.SLOW
             elif lj_command.command == WorkQCmnd_e.LJ_FAST_LOGGING:
                 print("LJ - Switching to fast logging")
                 scan_mode = LJ_SCAN_MODE.FAST
-                lji.start_stream(
-                    a_scan_list_names,
-                    STREAM_RATE_HZ,
-                    scans_per_read=GET_SCANS_PER_READ(STREAM_RATE_HZ),
-                    callback=labjack_stream_callback,
-                    obj=stream_cb_obj,
-                    stream_resolution_index=stream_resolution_index
-                )
+                try:
+                    lji.start_stream(
+                        a_scan_list_names,
+                        STREAM_RATE_HZ,
+                        scans_per_read=GET_SCANS_PER_READ(STREAM_RATE_HZ),
+                        callback=labjack_stream_callback,
+                        obj=stream_cb_obj,
+                        stream_resolution_index=stream_resolution_index
+                    )
+                    stream_started = True
+                except LJMError as e:
+                    print(f"LJ - Error starting stream: {e}")
+                    stream_started = False
 
         if scan_mode == LJ_SCAN_MODE.SLOW:
             # If in slow mode, read single samples
@@ -245,7 +253,7 @@ def t7_pro_thread(
                 except LJMError as e:
                     print(f"LJ - Unable to get Load cell reference voltage: {e}")
 
-        else:
+        elif (not stream_started and scan_mode == LJ_SCAN_MODE.FAST):
             # If in fast mode, read from the stream
             try:
                 lji.start_stream(
@@ -256,9 +264,10 @@ def t7_pro_thread(
                     obj=stream_cb_obj,
                     stream_resolution_index=stream_resolution_index
                 )
+                stream_started = True
             except LJMError as e:
                 print(f"LJ - Error starting stream: {e}")
-                return
+                stream_started = False
 
         # CR rate
         elapsed = time.time() - start
