@@ -103,7 +103,7 @@ os.makedirs(os.path.dirname(PLC_FILE_PATH), exist_ok=True)
 with open(PLC_FILE_PATH, 'w') as f:
     f.write("time,TC1,TC2,TC3,TC4,TC5,TC6,TC7,TC8,TC9,LC1,LC2,LC7,PT1,PT2,PT3,PT4,PT5,PBV1,PBV2,PBV3,PBV4,PBV5,PBV6,PBV7,PBV8,PBV9,PBV10,PBV11,SOL1,SOL2,SOL3,SOL4,SOL5,IGN1,IGN2,CFV1,CFV2,CFV3,CFV4,CFV5\n")
 
-    previous_time = 0
+    previous_time = None
     current_time = 0
     all_current_time_entries = []
     current_entries = []
@@ -177,7 +177,7 @@ with open(PLC_FILE_PATH, 'w') as f:
 
             for entry in all_current_time_entries:
                 f.write(f"{entry_time}," + entry)
-                entry_time += time_step
+                entry_time += datetime.timedelta(milliseconds=time_step)
 
             all_current_time_entries.clear()
 
