@@ -182,6 +182,7 @@ with open(PLC_FILE_PATH, 'w') as f:
             all_current_time_entries.clear()
 
         all_current_time_entries.extend(current_entries)
+        current_entries.clear()
         previous_time = current_time
 
 print("DB - Data stored in file:", PLC_FILE_PATH)
