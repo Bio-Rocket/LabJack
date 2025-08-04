@@ -208,7 +208,7 @@ with open(LJ_FILE_PATH, 'w') as f:
         if previous_time is None:
             previous_time = current_time
 
-        for i in range(len(set_of_records.pt1)):
+        for i in range(len(set_of_records.lc3)):
             lc3 = set_of_records.lc3[i]
             lc4 = set_of_records.lc4[i]
             lc5 = set_of_records.lc5[i]
