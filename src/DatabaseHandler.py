@@ -492,7 +492,7 @@ class DatabaseHandler():
 
 # Procedures ======================================================================================
 
-def process_workq_message(message: WorkQCmnd, state_workq: mp.Queue, hb_workq: mp.Queue, lc_handler: LoadCellHandler) -> bool:
+def process_workq_message(message: WorkQCmnd, state_workq: mp.Queue, hb_workq: mp.Queue, lj_workq: mp.Queue, lc_handler: LoadCellHandler) -> bool:
     """
     Process the message from the workq.
 
@@ -504,6 +504,8 @@ def process_workq_message(message: WorkQCmnd, state_workq: mp.Queue, hb_workq: m
             along with the system state changes.
         hb_workq (mp.Queue):
             The heartbeat handler workq, used to verify the heartbeat messages.
+        lj_workq (mp.Queue):
+            The labjack handler workq, used to send commands to the labjack handler.
         lc_handler (LoadCellHandler):
             The load cell handler to handle the load cell commands.
     """
@@ -511,7 +513,10 @@ def process_workq_message(message: WorkQCmnd, state_workq: mp.Queue, hb_workq: m
         print("DB - Received kill command")
         return False
     elif message.command == WorkQCmnd_e.DB_GS_COMMAND:
-        state_workq.put(WorkQCmnd(WorkQCmnd_e.STATE_HANDLE_VALVE_COMMAND, message.data))
+        if message.data == "PLC_RESET":
+            lj_workq.put(WorkQCmnd(WorkQCmnd_e.LJ_FIO0_TOGGLE, None))
+        else:
+            state_workq.put(WorkQCmnd(WorkQCmnd_e.STATE_HANDLE_VALVE_COMMAND, message.data))
     elif message.command == WorkQCmnd_e.DB_STATE_COMMAND:
         state_workq.put(WorkQCmnd(WorkQCmnd_e.STATE_TRANSITION, message.data))
     elif message.command == WorkQCmnd_e.DB_STATE_CHANGE:
@@ -528,7 +533,7 @@ def process_workq_message(message: WorkQCmnd, state_workq: mp.Queue, hb_workq: m
         lc_handler.apply_reference_voltage(message.data)
     return True
 
-def database_thread(db_workq: mp.Queue, state_workq: mp.Queue, hb_workq: mp.Queue, data_base_format_file: str = EXPECTED_SCHEMA_JSON) -> None:
+def database_thread(db_workq: mp.Queue, state_workq: mp.Queue, hb_workq: mp.Queue, lj_workq: mp.Queue, data_base_format_file: str = EXPECTED_SCHEMA_JSON) -> None:
     """
     The main loop of the database handler. It subscribes to the CommandMessage collection
     """
@@ -539,5 +544,5 @@ def database_thread(db_workq: mp.Queue, state_workq: mp.Queue, hb_workq: mp.Queu
 
     while 1:
         # If there is any workq messages, process them
-        if not process_workq_message(db_workq.get(block=True), state_workq, hb_workq, lc_handler):
+        if not process_workq_message(db_workq.get(block=True), state_workq, hb_workq, lj_workq, lc_handler):
             return

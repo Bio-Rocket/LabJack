@@ -32,12 +32,12 @@ if __name__ == "__main__":
     t7_pro_workq = mp.Queue()
     state_workq = mp.Queue()
     heartbeat_workq = mp.Queue()
-    gpio_workq = mp.Queue()    
+    gpio_workq = mp.Queue()
 
     # Initialize the threads
     tm.create_thread(
         target=process_wrapper,
-        args=(database_thread, shared_state, db_workq, state_workq, heartbeat_workq)
+        args=(database_thread, shared_state, db_workq, state_workq, heartbeat_workq, t7_pro_workq)
     )
 
     tm.create_thread(
@@ -56,7 +56,7 @@ if __name__ == "__main__":
         target=process_wrapper,
         args=(heartbeat_thread, shared_state, heartbeat_workq, db_workq, state_workq)
     )
-    tm.create_thread(                               
+    tm.create_thread(
         target=process_wrapper,
         args=(gpio_abort_thread, shared_state, gpio_workq, state_workq, 21)
     )
