@@ -16,7 +16,7 @@ def gpio_abort_thread(gpio_workq: mp.Queue,
 
     signal.signal(signal.SIGINT, signal.SIG_IGN)
 
-    GPIO.setmode(GPIO.BCM)
+    GPIO.setmode(GPIO.BOARD)
     GPIO.setup(pin, GPIO.IN, pull_up_down=GPIO.PUD_UP if pull_up else GPIO.PUD_DOWN)
 
     stop_evt = threading.Event()
