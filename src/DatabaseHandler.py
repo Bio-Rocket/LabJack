@@ -64,7 +64,9 @@ class DatabaseHandler():
             print("DB - Failed to authenticate as admin.")
             return
 
-        DatabaseHandler.updated_collections(data_base_format_file)
+        if not DatabaseHandler.updated_collections(data_base_format_file):
+            print("DB - Failed to update collections, exiting database thread.")
+            return
 
         DatabaseHandler.client.collection('GroundSystemsCommand').subscribe(DatabaseHandler._handle_ground_systems_command_callback)
         DatabaseHandler.client.collection('StateCommand').subscribe(DatabaseHandler._handle_state_command_callback)
@@ -141,30 +143,68 @@ class DatabaseHandler():
                 "fields": new_schema
             }
 
-            updated_collection = DatabaseHandler.client.collections.update(created_collection.id, update_data)
+            DatabaseHandler.client.collections.update(created_collection.id, update_data)
 
         except Exception as e:
             print(f"Error creating collection: {e}")
 
-
     @staticmethod
-    def delete_collection(collection_name: str) -> None:
+    def update_collection(collection_name: str, schema: Dict[str, str]) -> None:
         """
-        Delete a collection from the database.
+        Update an existing collection in the database.
 
         Args:
-            collection_name (str): The name of the collection to delete.
+            collection_name (str): The name of the collection to update.
+            schema (Dict[str, str]): The schema of the collection to update.
         """
 
-        # Clear the collection first
-        for record in DatabaseHandler.client.collection(collection_name).get_full_list():
-            DatabaseHandler.client.collection(collection_name).delete(record.id)
+        try:
+            # Write a collection data structure
+            collection_data = {
+                "name": collection_name,
+                "type": "base",  # Standard collection type
+                "schema": [],  # Will be updated after creation
+                "listRule": "",  # Public access
+                "viewRule": "",
+                "createRule": "",
+                "updateRule": "",
+                "deleteRule": "",
+                "options": {}
+            }
 
-        # Update the collection with the new schema.
-        collection_to_update = DatabaseHandler.client.collections.get_one(collection_name)
+            # Get the collection
+            update_collection = DatabaseHandler.client.collections.get_one(collection_name)
 
-        # Delete the existing collection
-        DatabaseHandler.client.collections.delete(collection_to_update.id)
+            # Build schema fields
+            new_schema = []
+            for field_name, field_type in schema.items():
+                field_data = {
+                    "name": field_name,
+                    "type": field_type,
+                    "required": False,
+                    "options": {}
+                }
+
+                # Apply type-specific options
+                if field_type == "text":
+                    field_data["options"] = {"maxSize": 100000}
+                elif field_type == "number":
+                    field_data["options"] = {"min": None, "max": None}
+                new_schema.append(field_data)
+
+            # Include the created and updated timestamps
+            new_schema.append({'name': 'updated', 'onCreate': True, 'onUpdate': True, 'type': 'autodate'})
+            new_schema.append({'name': 'created', 'onCreate': True, 'onUpdate': False, 'type': 'autodate'})
+
+            # Step 3: Update collection with schema (ensure full schema is provided)
+            update_data = {
+                "schema": new_schema
+            }
+
+            DatabaseHandler.client.collections.update(update_collection.id, update_data)
+
+        except Exception as e:
+            print(f"Error creating collection: {e}")
 
     @staticmethod
     def updated_collections(format_file: str) -> bool:
@@ -242,18 +282,11 @@ class DatabaseHandler():
                 continue
 
             if expected_schema[expected_collection] != current_schema[expected_collection]:
-                print(f"DB - Clearing and updating collection {expected_collection}")
-                # Drop the collection and recreate it with the new schema.
-                DatabaseHandler.delete_collection(expected_collection)
-                # Create the new schema by combining the default schema with the expected schema.
-                DatabaseHandler.create_collection(expected_collection, expected_schema[expected_collection])
+                print(f"DB - Updating collection {expected_collection}")
+                DatabaseHandler.update_collection(expected_collection, expected_schema[expected_collection])
                 continue
 
-        # Remove any collections that are not in the expected schema
-        for current_collection in current_schema:
-            if current_collection not in expected_schema:
-                print(f"DB - Removing deprecated collection {current_collection}")
-                DatabaseHandler.delete_collection(current_collection)
+        return True
 
     @staticmethod
     def _handle_ground_systems_command_callback(document: MessageData):
