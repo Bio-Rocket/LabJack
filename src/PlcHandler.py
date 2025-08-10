@@ -220,5 +220,11 @@ def plc_thread(plc_workq: mp.Queue, db_workq: mp.Queue) -> None:
 
     while 1:
         # If there is any workq messages, process them
-        if not process_workq_message(plc_workq.get(block=True), db_workq):
-            return
+        try:
+            if not process_workq_message(plc_workq.get(block=True), db_workq):
+                return
+        except TimeoutError as e:
+            print(f"PLC - Timeout error: {e}")
+            print("PLC - Retrying connection...")
+            PlcHandler(plc_workq)
+
