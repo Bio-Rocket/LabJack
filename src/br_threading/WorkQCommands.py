@@ -33,6 +33,8 @@ class WorkQCmnd_e(Enum):
     PLC_IGN_ON = auto() # Turn on the igniter, expects the igniter number
     PLC_IGN_OFF = auto() # Turn off the igniter, expects the igniter number
 
+    PLC_STATE_LIGHT_COMMAND = auto() # Command to change the state of the light, expects SystemStates object
+
     ## State Machine Commands
     STATE_HANDLE_VALVE_COMMAND = auto() # Handle a valve command from the database then send to PLC if valid
     STATE_TRANSITION = auto() # Attempt to transition to a new state

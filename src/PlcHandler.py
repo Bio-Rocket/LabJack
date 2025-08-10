@@ -5,6 +5,7 @@ import struct
 import threading
 import time
 from typing import Union
+from StateTruth import SystemStates
 from br_threading.WorkQCommands import WorkQCmnd, WorkQCmnd_e
 from dataclasses import dataclass
 
@@ -28,6 +29,14 @@ PLC_TC_DATA_SIZE = 9 * 2 # 9 TCs 2 LCs and each are int16_t
 PLC_LC_DATA_SIZE = 3 * 2 # 3 LCs all int16_t
 PLC_PT_DATA_SIZE = 5 * 2 # 5 PTs and each are int16_t
 PLC_VALVE_DATA_SIZE = 18 # 18 valves and each are int8_t
+
+#PLC Light Numbers
+PLC_ABORT_LIGHT = 27
+PLC_TEST_LIGHT = 28
+PLC_FILL_LIGHT = 29
+PLC_IGNITION_LIGHT = 30
+PLC_FIRE_LIGHT = 31
+PLC_POST_FIRE_LIGHT = 32
 
 # Class Definitions ===============================================================================
 @dataclass
@@ -166,6 +175,24 @@ def process_workq_message(message: WorkQCmnd, db_workq: mp.Queue) -> bool:
         ign_num = message.data + PLC_IGN_OFFSET
         state = 0
         plc_command = int.to_bytes(ign_num, 1, "little") + int.to_bytes(state, 1, "little")
+        PlcHandler.send_command(plc_command)
+    elif message.command == WorkQCmnd_e.PLC_STATE_LIGHT_COMMAND:
+        current_state = message.data
+        if current_state == SystemStates.TEST:
+            plc_command = int.to_bytes(PLC_ABORT_LIGHT, 1, "little") + int.to_bytes(0, 1, "little")
+        elif current_state == SystemStates.FILL:
+            plc_command = int.to_bytes(PLC_TEST_LIGHT, 1, "little") + int.to_bytes(0, 1, "little")
+        elif current_state == SystemStates.IGNITION:
+            plc_command = int.to_bytes(PLC_FILL_LIGHT, 1, "little") + int.to_bytes(0, 1, "little")
+        elif current_state == SystemStates.FIRE:
+            plc_command = int.to_bytes(PLC_IGNITION_LIGHT, 1, "little") + int.to_bytes(0, 1, "little")
+        elif current_state == SystemStates.POST_FIRE:
+            plc_command = int.to_bytes(PLC_FIRE_LIGHT, 1, "little") + int.to_bytes(0, 1, "little")
+        elif current_state == SystemStates.ABORT:
+            plc_command = int.to_bytes(PLC_POST_FIRE_LIGHT, 1, "little") + int.to_bytes(0, 1, "little")
+        else:
+            print(f"PLC - Unknown state for light command: {current_state}")
+            return False
         PlcHandler.send_command(plc_command)
 
     return True

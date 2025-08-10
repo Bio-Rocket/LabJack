@@ -31,6 +31,7 @@ class StateMachine():
         current_state = StateTruth.get_state()
         self.set_valve_for_state(current_state)
         self.publish_state(current_state)
+        self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_STATE_LIGHT_COMMAND, current_state))
 
     def set_hardware_abort(self, enabled: bool) -> None:
         """
@@ -60,7 +61,7 @@ class StateMachine():
             return SystemStates.ABORT
         else:
             return SystemStates.UNKNOWN
-        
+
     def publish_state(self, state: SystemStates) -> None:
         """
         Push the current state + hardware_abort flag to the DB for UI sync.
@@ -283,6 +284,7 @@ class StateMachine():
             self.update_labjack_logging(current_state)
             self.set_valve_for_state(current_state)
             self.publish_state(current_state)
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_STATE_LIGHT_COMMAND, current_state))
             print(f"SM - In state: {current_state}")
             return True
         else:
