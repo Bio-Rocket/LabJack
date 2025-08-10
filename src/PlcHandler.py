@@ -31,12 +31,12 @@ PLC_PT_DATA_SIZE = 5 * 2 # 5 PTs and each are int16_t
 PLC_VALVE_DATA_SIZE = 18 # 18 valves and each are int8_t
 
 #PLC Light Numbers
-PLC_ABORT_LIGHT = 27
-PLC_TEST_LIGHT = 28
-PLC_FILL_LIGHT = 29
-PLC_IGNITION_LIGHT = 30
-PLC_FIRE_LIGHT = 31
-PLC_POST_FIRE_LIGHT = 32
+PLC_ABORT_LIGHT = 28
+PLC_TEST_LIGHT = 29
+PLC_FILL_LIGHT = 30
+PLC_IGNITION_LIGHT = 31
+PLC_FIRE_LIGHT = 32
+PLC_POST_FIRE_LIGHT = 33
 
 # Class Definitions ===============================================================================
 @dataclass
