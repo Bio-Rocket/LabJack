@@ -229,6 +229,7 @@ def t7_pro_thread(
                 print("LJ - Switching to fast logging")
                 scan_mode = LJ_SCAN_MODE.FAST
                 try:
+                    lji.stop_stream()
                     lji.start_stream(
                         a_scan_list_names,
                         STREAM_RATE_HZ,
