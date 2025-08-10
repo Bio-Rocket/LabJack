@@ -151,15 +151,15 @@ class DatabaseHandler():
     @staticmethod
     def update_collection(collection_name: str, schema: Dict[str, str]) -> None:
         """
-        Create a new collection in the database.
+        Update an existing collection in the database.
 
         Args:
-            collection_name (str): The name of the collection to create.
-            schema (Dict[str, str]): The schema of the collection to create.
+            collection_name (str): The name of the collection to update.
+            schema (Dict[str, str]): The schema of the collection to update.
         """
 
         try:
-            # Create a new collection first
+            # Write a collection data structure
             collection_data = {
                 "name": collection_name,
                 "type": "base",  # Standard collection type
@@ -172,7 +172,7 @@ class DatabaseHandler():
                 "options": {}
             }
 
-            # Create the collection (without schema first)
+            # Get the collection
             update_collection = DatabaseHandler.client.collections.get_one(collection_name)
 
             # Build schema fields
