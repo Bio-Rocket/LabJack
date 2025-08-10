@@ -515,6 +515,13 @@ def process_workq_message(message: WorkQCmnd, state_workq: mp.Queue, hb_workq: m
     elif message.command == WorkQCmnd_e.DB_GS_COMMAND:
         if message.data == "PLC_RESET":
             lj_workq.put(WorkQCmnd(WorkQCmnd_e.LJ_FIO0_TOGGLE, None))
+
+            # Start a non-blocking timer to send the command again in 3 seconds
+            def send_command_again():
+                lj_workq.put(WorkQCmnd(WorkQCmnd_e.LJ_FIO0_TOGGLE, None))
+
+            timer = mp.Process(target=lambda: (time.sleep(3), send_command_again()))
+            timer.start()
         else:
             state_workq.put(WorkQCmnd(WorkQCmnd_e.STATE_HANDLE_VALVE_COMMAND, message.data))
     elif message.command == WorkQCmnd_e.DB_STATE_COMMAND:

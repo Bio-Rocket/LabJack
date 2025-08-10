@@ -243,10 +243,10 @@ def t7_pro_thread(
                     stream_started = False
             elif lj_command.command == WorkQCmnd_e.LJ_FIO0_TOGGLE:
                 try:
-                    dio0 = DigitalOutput(lji, "DIO0")  # ensures _DIR = 1
+                    dio0 = DigitalOutput(lji, "FIO0")  # ensures _DIR = 1
                     dio0.toggle()
                 except Exception as e:
-                    print(f"LJ - DIO_TOGGLE error: {e}")
+                    print(f"LJ - FIO_TOGGLE error: {e}")
 
 
         if scan_mode == LJ_SCAN_MODE.SLOW:
