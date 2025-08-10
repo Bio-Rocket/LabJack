@@ -58,7 +58,7 @@ if __name__ == "__main__":
     )
     tm.create_thread(                               
         target=process_wrapper,
-        args=(gpio_abort_thread, shared_state, gpio_workq, state_workq, 40)
+        args=(gpio_abort_thread, shared_state, gpio_workq, state_workq, 21)
     )
 
     tm.start_threads()
