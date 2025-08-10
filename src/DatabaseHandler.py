@@ -456,7 +456,7 @@ class DatabaseHandler():
                 DatabaseHandler.lj_data_packet.clear()
 
     @staticmethod
-    def write_system_state(state: str) -> None:
+    def write_system_state(state_payload: Dict[str, str]) -> None:
         """
         Write the system state to the database.
 
@@ -464,7 +464,8 @@ class DatabaseHandler():
             state (str): The system state to write to the database.
         """
         entry = {}
-        entry["system_state"] = state
+        entry["system_state"] = state_payload["current_state"]
+        entry["hardware_abort"] = state_payload["hardware_abort"]
 
         try:
             DatabaseHandler.client.collection("SystemState").create(entry)
@@ -487,19 +488,6 @@ class DatabaseHandler():
         except Exception:
             print(f"failed to create a heartbeat")
 
-    @staticmethod
-    def write_state_command(payload: dict) -> None:
-        """
-        Write the current system state and hardware_abort flag to the StateCommand collection.
-
-        Args:
-            payload (dict): {"command": <state>, "hardware_abort": "true"/"false"}
-        """
-        try:
-            DatabaseHandler.client.collection("StateCommand").create(payload)
-            print(f"DB - Updated StateCommand: {payload}")
-        except Exception as e:
-            print(f"DB - Failed to write StateCommand: {e}")
 
 
 # Procedures ======================================================================================
@@ -525,12 +513,7 @@ def process_workq_message(message: WorkQCmnd, state_workq: mp.Queue, hb_workq: m
     elif message.command == WorkQCmnd_e.DB_GS_COMMAND:
         state_workq.put(WorkQCmnd(WorkQCmnd_e.STATE_HANDLE_VALVE_COMMAND, message.data))
     elif message.command == WorkQCmnd_e.DB_STATE_COMMAND:
-        if isinstance(message.data, dict):
-            # StateMachine -> DB update
-            DatabaseHandler.write_state_command(message.data)
-        else:
-            # Frontend -> StateMachine transition request
-            state_workq.put(WorkQCmnd(WorkQCmnd_e.STATE_TRANSITION, message.data))
+        state_workq.put(WorkQCmnd(WorkQCmnd_e.STATE_TRANSITION, message.data))
     elif message.command == WorkQCmnd_e.DB_STATE_CHANGE:
         DatabaseHandler.write_system_state(message.data)
     elif message.command == WorkQCmnd_e.DB_HEARTBEAT:

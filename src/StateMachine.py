@@ -38,9 +38,9 @@ class StateMachine():
         Set or clear the hardware abort flag. Does NOT force the software to
         switch to ABORT; it only blocks transitions & valve/solenoid commands.
         """
-        if self.hardware_abort == enabled:
-            self.publish_state(StateTruth.get_state())
-            return
+        if enabled is True and not self.hardware_abort:
+            print("SM - Hardware abort set")
+            self.attempt_transition("GOTO_ABORT")
 
         self.hardware_abort = enabled
         self.publish_state(StateTruth.get_state())
@@ -66,13 +66,11 @@ class StateMachine():
         """
         Push the current state + hardware_abort flag to the DB for UI sync.
         """
-        self.db_workq.put(WorkQCmnd(WorkQCmnd_e.DB_STATE_CHANGE, state.name))
-
         payload = {
-            "command": state.name,
+            "current_state": state.name,
             "hardware_abort": "true" if self.hardware_abort else "false"
         }
-        self.db_workq.put(WorkQCmnd(WorkQCmnd_e.DB_STATE_COMMAND, payload))
+        self.db_workq.put(WorkQCmnd(WorkQCmnd_e.DB_STATE_CHANGE, payload))
 
     def set_valve_for_state(self, state: SystemStates) -> None:
         """
@@ -263,7 +261,7 @@ class StateMachine():
             return False
 
         # Block while hardware abort is active, unless going to ABORT
-        if self.hardware_abort and next_state != SystemStates.ABORT:
+        if self.hardware_abort:
             print("SM - HW abort active: transition blocked")
             self.publish_state(StateTruth.get_state())
             return False

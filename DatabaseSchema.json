@@ -226,10 +226,6 @@
                 {
                     "name": "command",
                     "type": "text"
-                },
-                {
-                    "name": "hardware_abort",
-                    "type": "text"
                 }
             ]
         },
@@ -238,6 +234,10 @@
             "schema": [
                 {
                     "name": "system_state",
+                    "type": "text"
+                },
+                {
+                    "name": "hardware_abort",
                     "type": "text"
                 }
             ]
