@@ -246,12 +246,32 @@
             "name": "LoadCellTareValues",
             "schema": [
                 {
-                    "name": "LoadCell",
-                    "type": "text"
+                    "name": "LC1",
+                    "type": "Number"
                 },
                 {
-                    "name": "tare",
-                    "type": "number"
+                    "name": "LC2",
+                    "type": "Number"
+                },
+                {
+                    "name": "LC3",
+                    "type": "Number"
+                },
+                {
+                    "name": "LC4",
+                    "type": "Number"
+                },
+                {
+                    "name": "LC5",
+                    "type": "Number"
+                },
+                {
+                    "name": "LC6",
+                    "type": "Number"
+                },
+                {
+                    "name": "LC7",
+                    "type": "Number"
                 }
             ]
         }
