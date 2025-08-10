@@ -178,17 +178,17 @@ def process_workq_message(message: WorkQCmnd, db_workq: mp.Queue) -> bool:
         PlcHandler.send_command(plc_command)
     elif message.command == WorkQCmnd_e.PLC_STATE_LIGHT_COMMAND:
         current_state = message.data
-        if current_state == SystemStates.TEST:
+        if current_state == SystemStates.ABORT:
             plc_command = int.to_bytes(PLC_ABORT_LIGHT, 1, "little") + int.to_bytes(0, 1, "little")
-        elif current_state == SystemStates.FILL:
+        elif current_state == SystemStates.TEST:
             plc_command = int.to_bytes(PLC_TEST_LIGHT, 1, "little") + int.to_bytes(0, 1, "little")
-        elif current_state == SystemStates.IGNITION:
+        elif current_state == SystemStates.FILL:
             plc_command = int.to_bytes(PLC_FILL_LIGHT, 1, "little") + int.to_bytes(0, 1, "little")
-        elif current_state == SystemStates.FIRE:
+        elif current_state == SystemStates.IGNITION:
             plc_command = int.to_bytes(PLC_IGNITION_LIGHT, 1, "little") + int.to_bytes(0, 1, "little")
-        elif current_state == SystemStates.POST_FIRE:
+        elif current_state == SystemStates.FIRE:
             plc_command = int.to_bytes(PLC_FIRE_LIGHT, 1, "little") + int.to_bytes(0, 1, "little")
-        elif current_state == SystemStates.ABORT:
+        elif current_state == SystemStates.POST_FIRE:
             plc_command = int.to_bytes(PLC_POST_FIRE_LIGHT, 1, "little") + int.to_bytes(0, 1, "little")
         else:
             print(f"PLC - Unknown state for light command: {current_state}")
