@@ -247,31 +247,31 @@
             "schema": [
                 {
                     "name": "LC1",
-                    "type": "Number"
+                    "type": "number"
                 },
                 {
                     "name": "LC2",
-                    "type": "Number"
+                    "type": "number"
                 },
                 {
                     "name": "LC3",
-                    "type": "Number"
+                    "type": "number"
                 },
                 {
                     "name": "LC4",
-                    "type": "Number"
+                    "type": "number"
                 },
                 {
                     "name": "LC5",
-                    "type": "Number"
+                    "type": "number"
                 },
                 {
                     "name": "LC6",
-                    "type": "Number"
+                    "type": "number"
                 },
                 {
                     "name": "LC7",
-                    "type": "Number"
+                    "type": "number"
                 }
             ]
         }
