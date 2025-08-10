@@ -15,6 +15,9 @@ PLC_FILE_PATH = os.path.join(Path(__file__).parent, "data_files", PLC_FILE_NAME)
 LJ_FILE_NAME = "lj_data.csv"
 LJ_FILE_PATH = os.path.join(Path(__file__).parent, "data_files", LJ_FILE_NAME)
 
+SET_ALLOWED_READ_LIMIT = False  # Limit for the number of records to read from the database
+ALLOWED_READ_LIMIT = 50000
+
 def verify_connection(client) -> bool:
     """
     Verify the connection to the database.
@@ -35,12 +38,17 @@ def get_all_records(client, collection_name):
     all_records = []
     page = 1
     per_page = 100  # Adjust as needed
+    num_read = 0
 
     while True:
         try:
             records = client.collection(collection_name).get_list(page, per_page)
             all_records.extend(records.items)
+            num_read += len(records.items)
             if len(records.items) < per_page:
+                break
+            if SET_ALLOWED_READ_LIMIT and num_read > ALLOWED_READ_LIMIT:
+                print(f"DB - Read limit reached: {num_read} records.")
                 break
             page += 1
         except ClientResponseError as e:
@@ -95,15 +103,19 @@ os.makedirs(os.path.dirname(PLC_FILE_PATH), exist_ok=True)
 with open(PLC_FILE_PATH, 'w') as f:
     f.write("time,TC1,TC2,TC3,TC4,TC5,TC6,TC7,TC8,TC9,LC1,LC2,LC7,PT1,PT2,PT3,PT4,PT5,PBV1,PBV2,PBV3,PBV4,PBV5,PBV6,PBV7,PBV8,PBV9,PBV10,PBV11,SOL1,SOL2,SOL3,SOL4,SOL5,IGN1,IGN2\n")
 
-    previous_time = datetime.datetime.now()
+    previous_time = None
+    current_time = 0
+    all_current_time_entries = []
+    current_entries = []
+    total_time_count = -1
     for set_of_records in plc_all_records:
-        if previous_time != set_of_records.created:
-            previous_time = set_of_records.created
-            milliseconds_offset = 0
+
+        current_time = set_of_records.created
+
+        if previous_time is None:
+            previous_time = current_time
 
         for i in range(len(set_of_records.pt1)):
-            milliseconds_offset += 1000 / len(set_of_records.pt1)
-
             tc1 = set_of_records.tc1[i]
             tc2 = set_of_records.tc2[i]
             tc3 = set_of_records.tc3[i]
@@ -142,14 +154,30 @@ with open(PLC_FILE_PATH, 'w') as f:
             ign1 = set_of_records.ign1[i]
             ign2 = set_of_records.ign2[i]
 
-            time_of_record = set_of_records.created + datetime.timedelta(milliseconds=milliseconds_offset)
+            current_entries.append(
+                f"{tc1},{tc2},{tc3},{tc4},{tc5},{tc6},{tc7},{tc8},{tc9},"
+                f"{lc1},{lc2},{lc7},{pt1},{pt2},{pt3},{pt4},{pt5},"
+                f"{pbv1},{pbv2},{pbv3},{pbv4},{pbv5},{pbv6},{pbv7},"
+                f"{pbv8},{pbv9},{pbv10},{pbv11},"
+                f"{sol1},{sol2},{sol3},{sol4},{sol5},"
+                f"{ign1},{ign2}\n"
+            )
 
-            f.write(f"{time_of_record},{tc1},{tc2},{tc3},{tc4},{tc5},{tc6},{tc7},{tc8},{tc9},"
-                    f"{lc1},{lc2},{lc7},{pt1},{pt2},{pt3},{pt4},{pt5},"
-                    f"{pbv1},{pbv2},{pbv3},{pbv4},{pbv5},{pbv6},{pbv7},"
-                    f"{pbv8},{pbv9},{pbv10},{pbv11},"
-                    f"{sol1},{sol2},{sol3},{sol4},{sol5},"
-                    f"{ign1},{ign2}\n")
+        if current_time != previous_time:
+
+            num_entries = len(all_current_time_entries)
+            time_step = 1000 / num_entries
+            entry_time = previous_time
+
+            for entry in all_current_time_entries:
+                f.write(f"{entry_time}," + entry)
+                entry_time += datetime.timedelta(milliseconds=time_step)
+
+            all_current_time_entries.clear()
+
+        all_current_time_entries.extend(current_entries)
+        current_entries.clear()
+        previous_time = current_time
 
 print("DB - Data stored in file:", PLC_FILE_PATH)
 
@@ -161,15 +189,20 @@ os.makedirs(os.path.dirname(LJ_FILE_PATH), exist_ok=True)
 with open(LJ_FILE_PATH, 'w') as f:
     f.write("time,LC3,LC4,LC5,LC6,PT6,PT7,PT8,PT9,PT10,PT11,PT12,PT13,PT14\n")
 
-    previous_time = datetime.datetime.now()
+
+    previous_time = None
+    current_time = 0
+    all_current_time_entries = []
+    current_entries = []
+    total_time_count = -1
     for set_of_records in lj_all_records:
-        if previous_time != set_of_records.created:
-            previous_time = set_of_records.created
-            milliseconds_offset = 0
+
+        current_time = set_of_records.created
+
+        if previous_time is None:
+            previous_time = current_time
 
         for i in range(len(set_of_records.lc3)):
-            milliseconds_offset += 1000 / len(set_of_records.lc3)
-
             lc3 = set_of_records.lc3[i]
             lc4 = set_of_records.lc4[i]
             lc5 = set_of_records.lc5[i]
@@ -184,10 +217,26 @@ with open(LJ_FILE_PATH, 'w') as f:
             pt13 = set_of_records.pt13[i]
             pt14 = set_of_records.pt14[i]
 
-            time_of_record = set_of_records.created + datetime.timedelta(milliseconds=milliseconds_offset)
+            current_entries.append(
+                f"{lc3},{lc4},{lc5},{lc6},"
+                f"{pt6},{pt7},{pt8},{pt9},{pt10},{pt11},{pt12},{pt13},{pt14}\n"
+            )
 
-            f.write(f"{time_of_record},{lc3},{lc4},{lc5},{lc6},"
-                    f"{pt6},{pt7},{pt8},{pt9},{pt10},{pt11},{pt12},{pt13},{pt14}\n")
+        if current_time != previous_time:
 
-print("DB - Data stored in file:", PLC_FILE_PATH)
+            num_entries = len(all_current_time_entries)
+            time_step = 1000 / num_entries
+            entry_time = previous_time
+
+            for entry in all_current_time_entries:
+                f.write(f"{entry_time}," + entry)
+                entry_time += datetime.timedelta(milliseconds=time_step)
+
+            all_current_time_entries.clear()
+
+        all_current_time_entries.extend(current_entries)
+        current_entries.clear()
+        previous_time = current_time
+
+print("DB - Data stored in file:", LJ_FILE_PATH)
 
