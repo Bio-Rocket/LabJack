@@ -44,6 +44,9 @@ class WorkQCmnd_e(Enum):
     RPI_HARDWARE_ABORT = auto()
     RPI_HARDWARE_ABORT_CLEAR = auto()
 
+    ## PLC RESET
+    LJ_FIO0_TOGGLE = auto()
+
 class WorkQCmnd:
     def __init__(self, command: WorkQCmnd_e, data: Any):
         self.command = command

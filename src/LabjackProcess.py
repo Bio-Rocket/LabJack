@@ -241,6 +241,13 @@ def t7_pro_thread(
                 except LJMError as e:
                     print(f"LJ - Error starting stream: {e}")
                     stream_started = False
+            elif lj_command.command == WorkQCmnd_e.LJ_DIO_TOGGLE:
+                try:
+                    lji.write_name("DIO0_DIR", 1)
+                    cur = int(round(float(lji.read_name("DIO0"))))
+                    lji.write_name("DIO0", 0 if cur else 1)
+                except Exception as e:
+                    print(f"LJ - DIO_TOGGLE error: {e}")
 
         if scan_mode == LJ_SCAN_MODE.SLOW:
             # If in slow mode, read single samples
