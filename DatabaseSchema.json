@@ -241,6 +241,19 @@
                     "type": "text"
                 }
             ]
+        },
+        {
+            "name": "LoadCellTareValues",
+            "schema": [
+                {
+                    "name": "LoadCell",
+                    "type": "text"
+                },
+                {
+                    "name": "tare",
+                    "type": "number"
+                }
+            ]
         }
     ]
 
