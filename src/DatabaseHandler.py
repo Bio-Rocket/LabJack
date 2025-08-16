@@ -198,7 +198,7 @@ class DatabaseHandler():
 
             # Step 3: Update collection with schema (ensure full schema is provided)
             update_data = {
-                "schema": new_schema
+                "fields": new_schema
             }
 
             DatabaseHandler.client.collections.update(update_collection.id, update_data)

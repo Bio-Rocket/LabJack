@@ -274,6 +274,15 @@
                     "type": "number"
                 }
             ]
+        },
+        {
+            "name": "RecordingWindow",
+            "schema": [
+                {
+                    "name": "start_stop",
+                    "type": "text"
+                }
+            ]
         }
     ]
 
