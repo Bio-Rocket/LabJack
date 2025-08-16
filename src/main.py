@@ -8,11 +8,14 @@ from PlcHandler import plc_thread
 from LabjackProcess import t7_pro_thread
 from StateMachine import state_thread
 from HeartbeatHandler import heartbeat_thread
+from br_util.PlatformUtil import is_raspberry_pi
 
-from GPIOThread import gpio_abort_thread          # <— add this
-from br_threading.WorkQCommands import WorkQCmnd, WorkQCmnd_e  # for KILL_PROCESS on shutdown
-
-
+if is_raspberry_pi():
+    ON_PI = True
+    from GPIOThread import gpio_abort_thread
+else:
+    ON_PI = False
+    gpio_abort_thread = None
 
 def process_wrapper(func, shared_dict, *args):
     # Set up shared state in all the subprocess
@@ -56,10 +59,16 @@ if __name__ == "__main__":
         target=process_wrapper,
         args=(heartbeat_thread, shared_state, heartbeat_workq, db_workq, state_workq)
     )
-    tm.create_thread(
-        target=process_wrapper,
-        args=(gpio_abort_thread, shared_state, gpio_workq, state_workq, 21)
-    )
+    if ON_PI:
+        print("Main - Running on Raspberry Pi, importing GPIO thread")
+        tm.create_thread(
+            target=process_wrapper,
+            args=(gpio_abort_thread, shared_state, gpio_workq, state_workq, 21)
+        )
+    else:
+        # If not on a Raspberry Pi, we can still create the thread but it won't do anything
+        # This is useful for testing on other platforms
+        print("Main - Not running on Raspberry Pi, GPIO thread will not be active")
 
     tm.start_threads()
     while 1:
