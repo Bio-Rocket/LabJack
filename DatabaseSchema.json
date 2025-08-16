@@ -280,7 +280,7 @@
             "schema": [
                 {
                     "name": "start_stop",
-                    "type": "text"
+                    "type": "bool"
                 }
             ]
         }
