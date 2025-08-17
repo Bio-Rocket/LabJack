@@ -497,7 +497,7 @@ class DatabaseHandler():
         entry["system_state"] = state_payload["current_state"]
         entry["hardware_abort"] = state_payload["hardware_abort"]
 
-        if StateTruth.get_state() in [SystemStates.ABORT, SystemStates.POST_FIRE, SystemStates.FILL]:
+        if StateTruth.get_state() in [SystemStates.ABORT, SystemStates.POST_FIRE, SystemStates.FILL, SystemStates.FIRE]:
             DatabaseHandler.ignitor_desired_states["IGN1"] = False
             DatabaseHandler.ignitor_desired_states["IGN2"] = False
 
