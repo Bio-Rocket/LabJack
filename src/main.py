@@ -24,7 +24,7 @@ def process_wrapper(func, shared_dict, *args):
 
 if __name__ == "__main__":
     manager = mp.Manager()
-    shared_state = manager.dict({"state": SystemStates.ABORT})
+    shared_state = manager.dict({})
     #TODO: this will need updated for embedded mode
     StateTruth.init_state_truth(shared_state)
 

@@ -1,5 +1,6 @@
 import multiprocessing as mp
-from typing import Dict
+import time
+from typing import Dict, Optional
 
 from StateTruth import StateTruth, SystemStates
 from br_threading.WorkQCommands import StateTransitionData, WorkQCmnd, WorkQCmnd_e
@@ -29,7 +30,9 @@ class StateMachine():
         self.hardware_abort = False
 
         current_state = StateTruth.get_state()
-        self.set_valve_for_state(current_state, {})
+        valve_state_dict = StateTruth.get_valve_state_dict()
+
+        self.set_initial_valve_for_state(current_state, valve_state_dict)
         self.publish_state(current_state)
         self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_STATE_LIGHT_COMMAND, current_state))
 
@@ -72,9 +75,117 @@ class StateMachine():
         }
         self.db_workq.put(WorkQCmnd(WorkQCmnd_e.DB_STATE_CHANGE, payload))
 
-    def set_valve_for_state(self, state: SystemStates, ignitor_desired_states: Dict[str, bool]) -> None:
+    def set_initial_valve_for_state(self, state: SystemStates, valve_state_dict: Optional[Dict[str, bool]] = None) -> None:
+        """
+        Set the initial valve states based on the current state.
+        This is called when the state machine is initialized.
+
+        Args:
+            state (SystemStates): The current state of the system.
+            valve_state_dict (Optional[Dict[str, bool]]): A dictionary containing the state of all valves and pumps.
+                If None, the default states will be set based on the current state.
+                If valve_state_dict is provided, it will override the default states.
+        """
+        if valve_state_dict is None:
+            self.set_default_valve_for_state(state)
+            return
+
+        if state == SystemStates.ABORT:
+            self.manual_override = False
+        elif state == SystemStates.TEST:
+            self.manual_override = True
+        elif state == SystemStates.FILL:
+            self.manual_override = True
+        elif state == SystemStates.IGNITION:
+            self.manual_override = False
+        elif state == SystemStates.FIRE:
+            self.manual_override = False
+        elif state == SystemStates.POST_FIRE:
+            self.manual_override = True
+        elif state == SystemStates.UNKNOWN:
+            print("STATE TRUTH - Cannot set valve state for UNKNOWN state, skipping")
+            return
+
+        if valve_state_dict["PBV1"]:
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_PBV, 1))
+        else:
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_PBV, 1))
+        if valve_state_dict["PBV2"]:
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_PBV, 2))
+        else:
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_PBV, 2))
+        if valve_state_dict["PBV3"]:
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_PBV, 3))
+        else:
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_PBV, 3))
+        if valve_state_dict["PBV4"]:
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_PBV, 4))
+        else:
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_PBV, 4))
+        if valve_state_dict["PBV5"]:
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_PBV, 5))
+        else:
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_PBV, 5))
+        if valve_state_dict["PBV6"]:
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_PBV, 6))
+        else:
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_PBV, 6))
+        if valve_state_dict["PBV7"]:
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_PBV, 7))
+        else:
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_PBV, 7))
+        if valve_state_dict["PBV8"]:
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_PBV, 8))
+        else:
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_PBV, 8))
+        if valve_state_dict["PBV9"]:
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_PBV, 9))
+        else:
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_PBV, 9))
+        if valve_state_dict["PBV10"]:
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_PBV, 10))
+        else:
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_PBV, 10))
+        if valve_state_dict["PBV11"]:
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_PBV, 11))
+        else:
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_PBV, 11))
+        if valve_state_dict["SOL1"]:
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_SOL, 1))
+        else:
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_SOL, 1))
+        if valve_state_dict["SOL2"]:
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_SOL, 2))
+        else:
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_SOL, 2))
+        if valve_state_dict["SOL3"]:
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_SOL, 3))
+        else:
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_SOL, 3))
+        if valve_state_dict["SOL4"]:
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_SOL, 4))
+        else:
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_SOL, 4))
+        if valve_state_dict["SOL5"]:
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_SOL, 5))
+        else:
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_SOL, 5))
+        if valve_state_dict["IGN1"]:
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_IGN_ON, 1))
+        else:
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_IGN_OFF, 1))
+        if valve_state_dict["IGN2"]:
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_IGN_ON, 2))
+        else:
+            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_IGN_OFF, 2))
+
+    def set_default_valve_for_state(self, state: SystemStates, ignitor_desired_states: Optional[Dict[str, bool]] = None) -> None:
         """
         Set the default state positions for the valves and pumps based on the current state.
+
+        Args:
+            state (SystemStates): The current state of the system.
+            ignitor_desired_states (Optional[Dict[str, bool]]): A dictionary containing the desired states of
         """
         if state == SystemStates.ABORT:
             self.manual_override = False
@@ -127,6 +238,8 @@ class StateMachine():
             self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_SOL, 4))
             self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_SOL, 5))
 
+            if ignitor_desired_states is None:
+                ignitor_desired_states = {"IGN1": False, "IGN2": False}
             if ignitor_desired_states.get("IGN1", False):
                 self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_IGN_ON, 1))
             else:
@@ -142,7 +255,8 @@ class StateMachine():
             self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_PBV, 7))
 
             self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_PBV, 10))
-            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_PBV, 11))
+            timer = mp.Process(target=lambda: (time.sleep(0.31), self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_PBV, 11))))
+            timer.start()
 
             self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_IGN_OFF, 1))
             self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_IGN_OFF, 2))
@@ -299,7 +413,7 @@ class StateMachine():
                 return False
 
             self.update_labjack_logging(current_state)
-            self.set_valve_for_state(current_state, new_state_cmd.ignition_stats)
+            self.set_default_valve_for_state(current_state, ignitor_desired_states=new_state_cmd.ignition_stats)
             self.publish_state(current_state)
             self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_STATE_LIGHT_COMMAND, current_state))
             print(f"SM - In state: {current_state}")
