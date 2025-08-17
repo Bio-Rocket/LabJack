@@ -5,7 +5,7 @@ import struct
 import threading
 import time
 from typing import Union
-from StateTruth import SystemStates
+from StateTruth import StateTruth, SystemStates
 from br_threading.WorkQCommands import WorkQCmnd, WorkQCmnd_e
 from dataclasses import dataclass
 
@@ -59,6 +59,8 @@ class PlcHandler():
             PlcHandler.socket.settimeout(5)
 
         PlcHandler.plc_workq = plc_workq
+
+        PlcHandler.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_STATE_LIGHT_COMMAND, StateTruth.get_state()))
         print("PLC - thread started")
 
     @staticmethod
