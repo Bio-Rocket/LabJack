@@ -1,6 +1,14 @@
+from dataclasses import dataclass
 from enum import Enum, auto
-from typing import Any
+from typing import Any, Dict
 
+@dataclass
+class StateTransitionData:
+    """
+    Data class to hold the
+    """
+    state_command: str # e.g., "GOTO_ABORT"
+    ignition_stats: Dict[str, bool]
 
 class WorkQCmnd_e(Enum):
     KILL_PROCESS = 0 # Kill the process
@@ -37,7 +45,7 @@ class WorkQCmnd_e(Enum):
 
     ## State Machine Commands
     STATE_HANDLE_VALVE_COMMAND = auto() # Handle a valve command from the database then send to PLC if valid
-    STATE_TRANSITION = auto() # Attempt to transition to a new state
+    STATE_TRANSITION = auto() # Attempt to transition to a new state expecting a StateTransitionData object
 
     ## Load Cell Commands
     LC_REFERENCE_VOLTAGE = auto() # Set the reference voltage for the load cell calibration, expects a float

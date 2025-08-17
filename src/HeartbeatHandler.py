@@ -2,7 +2,7 @@ import multiprocessing as mp
 import threading
 import time
 
-from br_threading.WorkQCommands import WorkQCmnd, WorkQCmnd_e
+from br_threading.WorkQCommands import StateTransitionData, WorkQCmnd, WorkQCmnd_e
 
 # Project specific imports ========================================================================
 BACKEND_HEARTBEAT_DELAY = 30
@@ -26,7 +26,15 @@ def wait_for_frontend(frontend_notification: threading.Event, state_workq: mp.Qu
             # The system will continue to run even if no frontend heartbeat is received
             # until it is either stopped through SSH or the frontend connects
             print("HB - No Heartbeat from frontend: GOING TO ABORT")
-            state_workq.put(WorkQCmnd(WorkQCmnd_e.STATE_TRANSITION, "GOTO_ABORT"))
+            state_workq.put(
+                WorkQCmnd(
+                    WorkQCmnd_e.STATE_TRANSITION,
+                    StateTransitionData(
+                        state_command="GOTO_ABORT",
+                        ignition_stats={}
+                    )
+                )
+            )
         frontend_notification.clear()
 
 def process_workq_message(message: WorkQCmnd, frontend_notification: threading.Event) -> bool:

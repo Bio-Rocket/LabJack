@@ -1,4 +1,5 @@
 # General imports =================================================================================
+from dataclasses import dataclass
 import json
 import multiprocessing as mp
 from pathlib import Path
@@ -11,7 +12,8 @@ from collections import defaultdict
 import requests
 
 from LoadcellHandler import LoadCellHandler
-from br_threading.WorkQCommands import WorkQCmnd, WorkQCmnd_e
+from StateTruth import StateTruth, SystemStates
+from br_threading.WorkQCommands import StateTransitionData, WorkQCmnd, WorkQCmnd_e
 from PlcHandler import PlcData
 from LabjackProcess import GET_SCANS_PER_READ, LjData
 from dotenv import load_dotenv
@@ -21,6 +23,7 @@ PB_URL = 'http://192.168.8.68:8090' # Database Pi IP
 
 EXPECTED_SCHEMA_JSON = os.path.join(Path(__file__).parents[1], "DatabaseSchema.json")
 
+IGNITOR_COMMANDS = ["IGN1_ON", "IGN1_OFF", "IGN2_ON", "IGN2_OFF"]
 
 # Class Definitions ===============================================================================
 class DatabaseHandler():
@@ -74,6 +77,7 @@ class DatabaseHandler():
 
         DatabaseHandler.lj_data_packet: Dict[str, List] = defaultdict(list)
         DatabaseHandler.plc_data_packet: Dict[str, List] = defaultdict(list)
+        DatabaseHandler.ignitor_desired_states: Dict[str, bool] = defaultdict(bool)
         print("DB - thread started")
 
     @staticmethod
@@ -299,13 +303,35 @@ class DatabaseHandler():
         Args:
             document (MessageData): the change notification from the database.
         """
-        print(f"DB - PLC Command: {document.record.command}") # type: ignore
-        DatabaseHandler.db_thread_workq.put(
-            WorkQCmnd(
-                WorkQCmnd_e.DB_GS_COMMAND,
-                document.record.command # type: ignore
+        command = document.record.command # type: ignore
+
+        print(f"DB - PLC Command: {command}")
+
+        if command in IGNITOR_COMMANDS:
+            if command == "IGN1_ON":
+                DatabaseHandler.ignitor_desired_states["IGN1"] = True
+            elif command == "IGN1_OFF":
+                DatabaseHandler.ignitor_desired_states["IGN1"] = False
+            elif command == "IGN2_ON":
+                DatabaseHandler.ignitor_desired_states["IGN2"] = True
+            elif command == "IGN2_OFF":
+                DatabaseHandler.ignitor_desired_states["IGN2"] = False
+
+            # If the command is an ignitor command, store it unless we are in ignition state
+            if StateTruth.get_state() == SystemStates.IGNITION:
+                DatabaseHandler.db_thread_workq.put(
+                    WorkQCmnd(
+                        WorkQCmnd_e.DB_GS_COMMAND,
+                        command
+                    )
+                )
+        else:
+            DatabaseHandler.db_thread_workq.put(
+                WorkQCmnd(
+                    WorkQCmnd_e.DB_GS_COMMAND,
+                    command
+                )
             )
-        )
 
     @staticmethod
     def _handle_state_command_callback(document: MessageData):
@@ -403,8 +429,12 @@ class DatabaseHandler():
         DatabaseHandler.plc_data_packet["SOL4"].append(valve_data[14])
         DatabaseHandler.plc_data_packet["SOL5"].append(valve_data[15])
 
-        DatabaseHandler.plc_data_packet["IGN1"].append(valve_data[16])
-        DatabaseHandler.plc_data_packet["IGN2"].append(valve_data[17])
+        if StateTruth.get_state() == SystemStates.IGNITION:
+            DatabaseHandler.plc_data_packet["IGN1"].append(valve_data[16])
+            DatabaseHandler.plc_data_packet["IGN2"].append(valve_data[17])
+        else:
+            DatabaseHandler.plc_data_packet["IGN1"].append(1 if DatabaseHandler.ignitor_desired_states["IGN1"] else 0)
+            DatabaseHandler.plc_data_packet["IGN2"].append(1 if DatabaseHandler.ignitor_desired_states["IGN2"] else 0)
 
         if len(DatabaseHandler.plc_data_packet["TC1"]) == 1:
             try:
@@ -525,7 +555,15 @@ def process_workq_message(message: WorkQCmnd, state_workq: mp.Queue, hb_workq: m
         else:
             state_workq.put(WorkQCmnd(WorkQCmnd_e.STATE_HANDLE_VALVE_COMMAND, message.data))
     elif message.command == WorkQCmnd_e.DB_STATE_COMMAND:
-        state_workq.put(WorkQCmnd(WorkQCmnd_e.STATE_TRANSITION, message.data))
+        state_workq.put(
+            WorkQCmnd(
+                WorkQCmnd_e.STATE_TRANSITION,
+                StateTransitionData(
+                    state_command = message.data,
+                    ignition_stats = DatabaseHandler.ignitor_desired_states,
+                ),
+            )
+        )
     elif message.command == WorkQCmnd_e.DB_STATE_CHANGE:
         DatabaseHandler.write_system_state(message.data)
     elif message.command == WorkQCmnd_e.DB_HEARTBEAT:

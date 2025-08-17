@@ -1,8 +1,8 @@
 import multiprocessing as mp
-from typing import Optional
+from typing import Dict
 
 from StateTruth import StateTruth, SystemStates
-from br_threading.WorkQCommands import WorkQCmnd, WorkQCmnd_e
+from br_threading.WorkQCommands import StateTransitionData, WorkQCmnd, WorkQCmnd_e
 
 class StateMachine():
     def __init__(self, state_workq: mp.Queue, t7_pro_workq: mp.Queue, plc_workq: mp.Queue, database_workq: mp.Queue):
@@ -29,7 +29,7 @@ class StateMachine():
         self.hardware_abort = False
 
         current_state = StateTruth.get_state()
-        self.set_valve_for_state(current_state)
+        self.set_valve_for_state(current_state, {})
         self.publish_state(current_state)
         self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_STATE_LIGHT_COMMAND, current_state))
 
@@ -72,7 +72,7 @@ class StateMachine():
         }
         self.db_workq.put(WorkQCmnd(WorkQCmnd_e.DB_STATE_CHANGE, payload))
 
-    def set_valve_for_state(self, state: SystemStates) -> None:
+    def set_valve_for_state(self, state: SystemStates, ignitor_desired_states: Dict[str, bool]) -> None:
         """
         Set the default state positions for the valves and pumps based on the current state.
         """
@@ -122,6 +122,15 @@ class StateMachine():
             self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_SOL, 4))
             self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_SOL, 5))
 
+            if ignitor_desired_states.get("IGN1", False):
+                self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_IGN_ON, 1))
+            else:
+                self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_IGN_OFF, 1))
+            if ignitor_desired_states.get("IGN2", False):
+                self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_IGN_ON, 2))
+            else:
+                self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_IGN_OFF, 2))
+
         if state == SystemStates.FIRE:
             self.manual_override = False
             self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_OPEN_PBV, 6))
@@ -147,8 +156,6 @@ class StateMachine():
         else:
             self.t7_pro_workq.put(WorkQCmnd(WorkQCmnd_e.LJ_FAST_LOGGING, None))
 
-
-
     def handle_valve_change(self, command: str) -> None:
         """
         Process a valve/solenoid/ignition command coming from the DB/front-end.
@@ -162,18 +169,19 @@ class StateMachine():
             return
 
         # First handle the commands that do not require a certain state to occur
-        if command == "IGN1_ON":
-            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_IGN_ON, 1))
-            return
-        elif command == "IGN1_OFF":
-            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_IGN_OFF, 1))
-            return
-        elif command == "IGN2_ON":
-            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_IGN_ON, 2))
-            return
-        elif command == "IGN2_OFF":
-            self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_IGN_OFF, 2))
-            return
+        if StateTruth.get_state() == SystemStates.IGNITION:
+            if command == "IGN1_ON":
+                self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_IGN_ON, 1))
+                return
+            elif command == "IGN1_OFF":
+                self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_IGN_OFF, 1))
+                return
+            elif command == "IGN2_ON":
+                self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_IGN_ON, 2))
+                return
+            elif command == "IGN2_OFF":
+                self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_IGN_OFF, 2))
+                return
 
         # Check if manual override is enabled
         if not self.manual_override:
@@ -249,15 +257,15 @@ class StateMachine():
             self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_CLOSE_SOL, 5))
 
 
-    def attempt_transition(self, new_state_cmd: str) -> bool:
+    def attempt_transition(self, new_state_cmd: StateTransitionData) -> bool:
         """
         Attempt to transition to a new state.
 
         Blocks all transitions (except GOTO_ABORT) while hardware_abort is set.
         """
-        next_state = StateMachine.state_transition_cmnd_to_state(new_state_cmd)
+        next_state = StateMachine.state_transition_cmnd_to_state(new_state_cmd.state_command)
         if next_state is SystemStates.UNKNOWN:
-            print(f"SM - Invalid transition command: {new_state_cmd}")
+            print(f"SM - Invalid transition command: {new_state_cmd.state_command}")
             return False
 
         # Block while hardware abort is active, unless going to ABORT
@@ -280,7 +288,7 @@ class StateMachine():
                 return False
 
             self.update_labjack_logging(current_state)
-            self.set_valve_for_state(current_state)
+            self.set_valve_for_state(current_state, new_state_cmd.ignition_stats)
             self.publish_state(current_state)
             self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_STATE_LIGHT_COMMAND, current_state))
             print(f"SM - In state: {current_state}")
