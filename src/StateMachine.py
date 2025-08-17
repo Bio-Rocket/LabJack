@@ -169,7 +169,7 @@ class StateMachine():
             return
 
         # First handle the commands that do not require a certain state to occur
-        if StateTruth.get_state() == SystemStates.IGNITION:
+        if StateTruth.get_state() in [SystemStates.IGNITION, SystemStates.TEST]:
             if command == "IGN1_ON":
                 self.plc_workq.put(WorkQCmnd(WorkQCmnd_e.PLC_IGN_ON, 1))
                 return

@@ -317,8 +317,8 @@ class DatabaseHandler():
             elif command == "IGN2_OFF":
                 DatabaseHandler.ignitor_desired_states["IGN2"] = False
 
-            # If the command is an ignitor command, store it unless we are in ignition state
-            if StateTruth.get_state() == SystemStates.IGNITION:
+            # If the command is an ignitor command, store it unless we are in ignition or test state
+            if StateTruth.get_state() in [SystemStates.IGNITION, SystemStates.TEST]:
                 DatabaseHandler.db_thread_workq.put(
                     WorkQCmnd(
                         WorkQCmnd_e.DB_GS_COMMAND,
@@ -429,7 +429,7 @@ class DatabaseHandler():
         DatabaseHandler.plc_data_packet["SOL4"].append(valve_data[14])
         DatabaseHandler.plc_data_packet["SOL5"].append(valve_data[15])
 
-        if StateTruth.get_state() == SystemStates.IGNITION:
+        if StateTruth.get_state() in [SystemStates.IGNITION, SystemStates.TEST]:
             DatabaseHandler.plc_data_packet["IGN1"].append(valve_data[16])
             DatabaseHandler.plc_data_packet["IGN2"].append(valve_data[17])
         else:
