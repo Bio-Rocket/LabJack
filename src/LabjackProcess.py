@@ -30,8 +30,6 @@ class LJ_SCAN_MODE(Enum):
     SLOW = 0
     FAST = 1
 
-
-
 @dataclass
 class LjData():
     scan_rate: int
