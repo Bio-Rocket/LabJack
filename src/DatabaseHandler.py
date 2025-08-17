@@ -553,6 +553,15 @@ def process_workq_message(message: WorkQCmnd, state_workq: mp.Queue, hb_workq: m
             # Start a non-blocking timer to send the command again in 3 seconds
             def send_command_again():
                 lj_workq.put(WorkQCmnd(WorkQCmnd_e.LJ_FIO0_TOGGLE, None))
+                state_workq.put(
+                    WorkQCmnd(
+                        WorkQCmnd_e.STATE_TRANSITION,
+                        StateTransitionData(
+                            state_command = "GOTO_ABORT",
+                            ignition_stats = DatabaseHandler.ignitor_desired_states,
+                        ),
+                    )
+                )
 
             timer = mp.Process(target=lambda: (time.sleep(3), send_command_again()))
             timer.start()
